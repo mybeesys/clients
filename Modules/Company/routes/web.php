@@ -17,17 +17,17 @@ use Illuminate\Support\Facades\Route;
 Route::group(['middleware' => ['web']], function () {
 
 
-    Route::middleware(['auth:company'])->group(function () {
-        Route::get('/plans', [Modules\Company\Http\Controllers\Site\PlanController::class, 'index'])->name('site.company.plans_subscription_page');
-    });
-
-
     // Company registration routes
     Route::get('/company-register', [Modules\Company\Http\Controllers\Site\CompanyController::class, 'show_registration_form'])->name('site.company.register.form');
     Route::post('/company-register', [Modules\Company\Http\Controllers\Site\CompanyController::class, 'register'])->name('site.company.register');
 
     Route::post('/company-logout', [Modules\Company\Http\Controllers\Site\CompanyController::class, 'logout'])->name('site.company.logout');
 
+    Route::get('/company-login', [Modules\Company\Http\Controllers\Site\CompanyController::class, 'show_login_form'])->name('site.company.login');
 
     Route::resource('company', Modules\Company\Http\Controllers\Site\CompanyController::class)->names('company');
+
+    Route::middleware(['auth:company'])->group(function () {
+        Route::get('/plans', [Modules\Company\Http\Controllers\Site\PlanController::class, 'index'])->name('site.company.plans_subscription_page');
+    });
 });

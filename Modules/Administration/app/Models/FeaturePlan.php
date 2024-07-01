@@ -13,10 +13,7 @@ class FeaturePlan extends Model
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = [];
+    protected $table = 'plan_feature';
 
-    protected static function newFactory(): FeaturePlanFactory
-    {
-        //return FeaturePlanFactory::new();
-    }
+    protected $fillable = ['plan_id', 'feature_id', 'value'];
 }

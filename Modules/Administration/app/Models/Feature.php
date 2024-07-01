@@ -13,10 +13,12 @@ class Feature extends Model
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = [];
+    protected $fillable = ['name','description','active'];
 
-    protected static function newFactory(): FeatureFactory
+
+    public function plans()
     {
-        //return FeatureFactory::new();
+        return $this->belongsToMany(Plan::class, 'feature_plan')->withPivot('value')->withTimestamps();
     }
+
 }

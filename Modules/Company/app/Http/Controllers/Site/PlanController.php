@@ -6,15 +6,20 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Redirect;
+use Modules\Administration\Models\Plan;
 
 class PlanController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
+
     public function index()
     {
-        return view('site.pages.plans-subscription-page');
+        $plans = Plan::all();
+        return view('site.pages.plans-subscription-page',compact('plans'));
     }
 
     /**

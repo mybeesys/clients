@@ -1,4 +1,13 @@
-<footer class="text-center text-white">
+<style>
+    .footer {
+            position: fixed ;
+            bottom: 0 ;
+            width: 100%     ;
+            background-color: #6666cc;
+            color: wheat;
+        }
+</style>
+<footer class="footer text-center text-white">
 
     <div class="text-center p-3" style="background-color: #6666cc;">
         <!-- Facebook -->
