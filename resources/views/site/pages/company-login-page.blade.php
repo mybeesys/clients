@@ -4,7 +4,7 @@
         <div class="card bg-light" style="max-width: 800px;  margin-right: auto; margin-left: auto;">
             <article class="card-body ">
                 <h2 class="text-center" style="color:#6666cc;">Sign in</h2>
-                <form method="POST" action="{{ route('site.company.login') }}">
+                <form method="POST" action="{{ route('login') }}">
                     @csrf
                     <fieldset>
 

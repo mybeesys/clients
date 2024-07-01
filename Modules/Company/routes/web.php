@@ -23,7 +23,7 @@ Route::group(['middleware' => ['web']], function () {
 
     Route::post('/company-logout', [Modules\Company\Http\Controllers\Site\CompanyController::class, 'logout'])->name('site.company.logout');
 
-    Route::get('/company-login', [Modules\Company\Http\Controllers\Site\CompanyController::class, 'show_login_form'])->name('site.company.login');
+    Route::get('/company-login', [Modules\Company\Http\Controllers\Site\CompanyController::class, 'show_login_form'])->name('login');
 
     Route::resource('company', Modules\Company\Http\Controllers\Site\CompanyController::class)->names('company');
 
