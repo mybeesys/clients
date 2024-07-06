@@ -14,6 +14,10 @@ use Modules\Administration\Http\Controllers\AdministrationController;
 |
 */
 
-Route::group([], function () {
-    Route::resource('administration', AdministrationController::class)->names('administration');
-});
+foreach (config('tenancy.central_domains') as $domain) {
+    Route::domain($domain)->group(function () {
+        Route::group([], function () {
+            Route::resource('administration', AdministrationController::class)->names('administration');
+        });
+    });
+}

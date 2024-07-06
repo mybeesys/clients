@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Modules\Company\Models\Company;
@@ -78,6 +79,28 @@ class CompanyController extends Controller
         return view('site.pages.company-login-page');
     }
 
+    public function login(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $credentials = $request->validate([
+                'email' => 'required|email',
+                'password' => 'required|min:8',
+            ]);
+
+            if (Auth::guard('company')->attempt($request->only('email', 'password'))) {
+                $user = Auth::guard('company')->user();
+                return redirect()->intended('plans');
+            }
+
+
+            DB::commit();
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return redirect()->back();
+        }
+    }
+
 
     public function register(Request $request)
     {
@@ -104,13 +127,14 @@ class CompanyController extends Controller
             auth()->guard('company')->login($user);
 
             DB::commit();
+            return redirect('plans');
         } catch (\Throwable $th) {
             DB::rollBack();
             return redirect()->back();
         }
     }
 
-        
+
 
     public function logout()
     {
