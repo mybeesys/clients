@@ -7,11 +7,8 @@
                 <form method="POST" action="{{ route('login') }}">
                     @csrf
                     <fieldset>
-
-
                         <div class="mt-4 row-fluid">
                             <div class="control-group">
-
                                 <label for="" class="control-label  mb-1" data-original-title=""> Email
                                 </label>
                                 <input type="email" name="email" size="20" maxlength="255"

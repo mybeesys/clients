@@ -71,12 +71,12 @@ class CompanyController extends Controller
 
     public function show_registration_form()
     {
-        return view('site.pages.company-registation-page');
+        return view('site.pages.auth.company-registation-page');
     }
 
     public function show_login_form()
     {
-        return view('site.pages.company-login-page');
+        return view('site.pages.auth.company-login-page');
     }
 
     public function login(Request $request)

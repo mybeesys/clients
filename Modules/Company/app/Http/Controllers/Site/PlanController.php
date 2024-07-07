@@ -19,7 +19,7 @@ class PlanController extends Controller
     public function index()
     {
         $plans = Plan::all();
-        return view('site.pages.plans-subscription-page',compact('plans'));
+        return view('site.pages.subscriptions.plans-subscription-page', compact('plans'));
     }
 
     /**

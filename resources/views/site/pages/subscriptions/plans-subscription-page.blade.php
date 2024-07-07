@@ -19,7 +19,7 @@
                             <form action="{{ route('site.company.subscribe') }}" method="POST">
                                 @csrf
                                 <input type="hidden" name="plan_id" value="{{ $plan->id }}">
-                               
+
                                 <button type="submit" class="btn btn-lg btn-block btn-primary">Subscribe</button>
                             </form>
                         </div>

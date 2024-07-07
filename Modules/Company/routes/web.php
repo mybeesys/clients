@@ -28,7 +28,8 @@ foreach (config('tenancy.central_domains') as $domain) {
             Route::get('/company-login', [Modules\Company\Http\Controllers\Site\CompanyController::class, 'show_login_form'])->name('login');
             Route::post('/company-login', [Modules\Company\Http\Controllers\Site\CompanyController::class, 'login'])->name('login');
 
-            Route::post('/company-subscribe', [Modules\Administration\Http\Controllers\Site\SubscriptionController::class, 'subscribe'])->name('site.company.subscribe');
+            // Route::get('/company-subscribe', [Modules\Administration\Http\Controllers\Site\SubscriptionController::class, 'index'])->name('site.company.subscribe');
+            Route::post('/company-subscribe', [Modules\Administration\Http\Controllers\Site\SubscriptionController::class, 'store'])->name('site.company.subscribe');
             Route::resource('/category', Modules\Company\Http\Controllers\Site\CategoryController::class)->only(['index']);
 
             Route::resource('company', Modules\Company\Http\Controllers\Site\CompanyController::class)->names('company');

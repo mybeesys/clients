@@ -184,7 +184,7 @@ return [
      * Parameters used by the tenants:migrate command.
      */
     'migration_parameters' => [
-        '--force' => true, // This needs to be true to run migrations in production.
+        '--force' => true, 
         '--path' => [
             database_path('migrations/tenant'),
             base_path('Modules/Company/database/migrations/tenant'),
