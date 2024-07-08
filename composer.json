@@ -8,6 +8,7 @@
         "php": "^8.2",
         "laravel/framework": "^11.9",
         "laravel/tinker": "^2.9",
+        "lucasdotvin/laravel-soulbscription": "^4.2",
         "nwidart/laravel-modules": "^11.0",
         "stancl/tenancy": "^3.8"
     },

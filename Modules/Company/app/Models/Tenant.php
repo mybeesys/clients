@@ -10,5 +10,8 @@ use Stancl\Tenancy\Database\Concerns\HasDomains;
 class Tenant extends BaseTenant implements TenantWithDatabase
 {
     use HasDatabase, HasDomains;
-    protected $fillable = ['company_id', 'user_id', 'plan_id'];
+    protected $fillable = [
+        'company_id', 'user_id', 'plan_id',  'id',
+        'tenancy_db_name',
+    ];
 }

@@ -5,21 +5,16 @@ namespace Modules\Administration\Http\Controllers\Site;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use App\Services\SubdomainService;
+
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use Modules\Administration\Models\Plan;
+use Modules\Company\Models\Company;
 use Modules\Company\Models\Tenant;
+use Stancl\Tenancy\Database\Models\Domain;
 
 class SubscriptionController extends Controller
 {
-    protected $subdomainService;
 
-
-    public function __construct(SubdomainService $subdomainService)
-    {
-        $this->subdomainService = $subdomainService;
-    }
     /**
      * Display a listing of the resource.
      */
@@ -39,9 +34,34 @@ class SubscriptionController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request)
     {
-        //
+        DB::beginTransaction();
+        try {
+            $user =  auth()->guard('company')->user();
+            $currentDate = Carbon::now()->format('Ymd') . Carbon::now()->timestamp;
+
+            $subdomain_name = strtolower($user->name) . '-' . $currentDate;
+            $tenant = Tenant::create([
+                'id' => $subdomain_name,
+                'company_id' => $user->company->id,
+                'tenancy_db_name' => $subdomain_name . '_db'
+            ]);
+
+            $domain = new Domain([
+                'domain' =>    $subdomain_name .  env('BASE_DOMAIN'),
+            ]);
+
+            $tenant->domains()->save($domain);
+
+            $plan = \LucasDotVin\Soulbscription\Models\Plan::find($request->plan_id);
+            $company = Company::find($user->company->id);
+            $company->subscribeTo($plan);
+            DB::commit();
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return redirect()->back();
+        }
     }
 
     /**
@@ -63,7 +83,7 @@ class SubscriptionController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id): RedirectResponse
+    public function update(Request $request, $id)
     {
         //
     }
@@ -90,34 +110,18 @@ class SubscriptionController extends Controller
         $currentDate = Carbon::now()->format('Ymd');
         $subdomain_name = strtolower($user->name) . '-' . $currentDate;
         $tenant = Tenant::create([
-            'domain' => $user->name . 'Company' . $currentDate.'.erp.localhost',
+            'domain' => $user->name . 'Company' . $currentDate . '.erp.localhost',
             'company_id' => $company_id
 
         ]);
 
         dd($tenant);
 
-        $res =  $this->subdomainService->create_subdomain($subdomain_name);
-        dd($res);
 
         //     DB::commit();
         // } catch (\Throwable $th) {
         //     DB::rollBack();
         //     return redirect()->back();
         // }
-    }
-
-
-    public function create_subdomain(Request $request)
-    {
-        $subdomain = $request->input('subdomain');
-
-        $result = $this->subdomainService->create_subdomain($subdomain);
-
-        if (isset($result['error'])) {
-            return response()->json(['error' => $result['error']], 500);
-        }
-
-        return response()->json(['message' => $result['message']]);
     }
 }

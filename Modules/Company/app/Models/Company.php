@@ -6,10 +6,11 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Company\Database\Factories\CompanyFactory;
+use LucasDotVin\Soulbscription\Models\Concerns\HasSubscriptions;
 
 class Company extends Model
 {
-    use HasFactory;
+    use HasFactory, HasSubscriptions;
 
     protected $table = "companies";
     /**
