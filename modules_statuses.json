@@ -1,0 +1,10 @@
+{
+    "Administration": true,
+    "Company": true,
+    "Restaurant": true,
+    "Inventory": true,
+    "Sales": true,
+    "Employee": true,
+    "Reporting": true,
+    "Accounting": true
+}
