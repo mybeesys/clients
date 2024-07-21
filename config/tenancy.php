@@ -21,6 +21,9 @@ return [
         'localhost',
     ],
 
+    'identify_by' => [
+        Stancl\Tenancy\Middleware\InitializeTenancyBySubdomain::class,
+    ],
     /**
      * Tenancy bootstrappers are executed when tenancy is initialized.
      * Their responsibility is making Laravel features tenant-aware.
@@ -51,8 +54,8 @@ return [
          * Tenant database names are created like this:
          * prefix + tenant_id + suffix.
          */
-        'prefix' => 'tenant',
-        'suffix' => '',
+        'prefix' => '',
+        'suffix' => '_db',
 
         /**
          * TenantDatabaseManagers are classes that handle the creation & deletion of tenant databases.
@@ -184,10 +187,12 @@ return [
      * Parameters used by the tenants:migrate command.
      */
     'migration_parameters' => [
-        '--force' => true, 
+        '--force' => true,
         '--path' => [
             database_path('migrations/tenant'),
             base_path('Modules/Company/database/migrations/tenant'),
+            base_path('Modules/Administration/database/migrations/tenant'),
+
         ],
         '--realpath' => true,
     ],
@@ -196,7 +201,6 @@ return [
      * Parameters used by the tenants:seed command.
      */
     'seeder_parameters' => [
-        '--class' => 'DatabaseSeeder', // root seeder class
-        // '--force' => true,
+        '--class' => 'Modules\\Administration\\Database\\Seeders\\Tenant\\DatabaseSeeder',
     ],
 ];

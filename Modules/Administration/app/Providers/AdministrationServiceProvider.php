@@ -31,6 +31,9 @@ class AdministrationServiceProvider extends ServiceProvider
     {
         $this->app->register(EventServiceProvider::class);
         $this->app->register(RouteServiceProvider::class);
+		if (class_exists('Filament\FilamentServiceProvider')) {
+			$this->app->register(\Filament\FilamentServiceProvider::class);
+		}
     }
 
     /**

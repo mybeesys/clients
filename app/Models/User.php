@@ -8,7 +8,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Modules\Company\Models\Company;
 
-class User extends Authenticatable
+
+class User extends Authenticatable 
 {
     use HasFactory, Notifiable;
     protected $table = "users";

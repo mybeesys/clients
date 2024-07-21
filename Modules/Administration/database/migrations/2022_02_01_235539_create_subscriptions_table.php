@@ -22,7 +22,6 @@ return new class() extends Migration {
             $table->date('started_at')->nullable();
             $table->date('end_at')->nullable();
             $table->string('status')->nullable();
-
             $table->timestamp('suppressed_at')->nullable();
             $table->boolean('was_switched')->default(false);
             $table->softDeletes();

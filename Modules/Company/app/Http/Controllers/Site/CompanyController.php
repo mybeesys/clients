@@ -90,14 +90,15 @@ class CompanyController extends Controller
 
             if (Auth::guard('company')->attempt($request->only('email', 'password'))) {
                 $user = Auth::guard('company')->user();
+                DB::commit();
                 return redirect()->intended('plans');
+            } else {
+                DB::rollBack();
+                return redirect()->back()->withErrors(['email' => 'The provided credentials do not match our records.']);
             }
-
-
-            DB::commit();
         } catch (\Throwable $th) {
             DB::rollBack();
-            return redirect()->back();
+            return redirect()->back()->withErrors(['error' => 'An unexpected error occurred. Please try again.']);
         }
     }
 
@@ -115,6 +116,7 @@ class CompanyController extends Controller
 
             $user = User::create([
                 'name' => $request->name,
+                'username' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password)
             ]);
