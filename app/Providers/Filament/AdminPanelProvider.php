@@ -28,6 +28,9 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->colors([
+                'primary' => Color::Purple,
+            ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
@@ -53,6 +56,9 @@ class AdminPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             ->domains(config('tenancy.central_domains'))
-            ->plugin(AdministrationPlugin::make());
+            ->plugins([
+                AdministrationPlugin::make(),
+                \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make()
+            ]);
     }
 }

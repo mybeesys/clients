@@ -4,9 +4,10 @@ namespace Modules\Administration\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use LucasDotVin\Soulbscription\Models\Plan as ModelsPlan;
 use Modules\Administration\Database\Factories\PlanFactory;
 
-class Plan extends Model
+class Plan extends ModelsPlan
 {
     use HasFactory;
 
@@ -15,10 +16,7 @@ class Plan extends Model
      */
     protected $fillable = ['name', 'description', 'price', 'duration', 'active'];
 
-    public function features()
-    {
-        return $this->belongsToMany(Feature::class, 'feature_plan')->withPivot('value')->withTimestamps();
-    }
+    
 
     public function scopeActive($q)
     {

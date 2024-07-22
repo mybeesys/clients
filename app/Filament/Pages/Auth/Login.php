@@ -15,14 +15,13 @@ use LucasDotVin\Soulbscription\Models\Subscription;
 
 class Login extends \Filament\Pages\Auth\Login
 {
+    //auth function for the company subdomain.
     public function authenticate(): ?LoginResponse
     {
-
         try {
             $this->rateLimit(5);
         } catch (TooManyRequestsException $exception) {
             $this->getRateLimitedNotification($exception)?->send();
-
             return null;
         }
 
@@ -38,6 +37,7 @@ class Login extends \Filament\Pages\Auth\Login
             $this->throwFailureValidationException();
         }
 
+        //ensure that the company is still subscribed if not deny the login.
         $subscription = Subscription::latest()->first();
         if (is_null($subscription) || Carbon::parse($subscription->expired_at)->isPast()) {
             Filament::auth()->logout();

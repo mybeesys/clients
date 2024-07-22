@@ -31,7 +31,7 @@ class CompanyPanelProvider extends PanelProvider
             ->path('company')
             ->login(Login::class)
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => Color::Rose,
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
@@ -58,6 +58,10 @@ class CompanyPanelProvider extends PanelProvider
             ->domains($domains)
             ->authMiddleware([
                 Authenticate::class,
+            ])
+            ->plugins([
+                \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make()
             ]);
+            ;
     }
 }

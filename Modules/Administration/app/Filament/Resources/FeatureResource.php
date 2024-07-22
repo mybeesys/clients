@@ -17,21 +17,30 @@ class FeatureResource extends Resource
 {
     protected static ?string $model = Feature::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationGroup = 'Subscribtions';
+    protected static ?string $navigationIcon = 'heroicon-o-star';
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                //
-            ]);
+                Forms\Components\TextInput::make('name')->required(),
+                Forms\Components\RichEditor::make('description')->required(),
+                Forms\Components\Toggle::make('consumable')->label('Active')
+                    ->onIcon('heroicon-m-bolt')
+                    ->offIcon('heroicon-m-user'),
+
+            ])->columns(1);
     }
 
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                //
+                Tables\Columns\TextColumn::make('name'),
+                Tables\Columns\TextColumn::make('description'),
+                Tables\Columns\ToggleColumn::make('consumable')->label('Active')->onIcon('heroicon-m-bolt')
+                    ->offIcon('heroicon-m-user'),
             ])
             ->filters([
                 //
