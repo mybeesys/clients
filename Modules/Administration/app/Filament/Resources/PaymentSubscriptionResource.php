@@ -1,0 +1,67 @@
+<?php
+
+namespace Modules\Administration\Filament\Resources;
+
+use Modules\Administration\Filament\Resources\PaymentSubscriptionResource\Pages;
+use Modules\Administration\Filament\Resources\PaymentSubscriptionResource\RelationManagers;
+use Filament\Forms;
+use Filament\Forms\Form;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Modules\Administration\Models\PaymentSubscription;
+
+class PaymentSubscriptionResource extends Resource
+{
+    protected static ?string $model = PaymentSubscription::class;
+
+    protected static ?string $navigationGroup = 'Subscribtions';
+
+    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+
+
+    public static function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                //
+            ]);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return $table
+            ->columns([
+                //
+            ])
+            ->filters([
+                //
+            ])
+            ->actions([
+                Tables\Actions\EditAction::make(),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                ]),
+            ]);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            //
+        ];
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => Pages\ListPaymentSubscriptions::route('/'),
+            'create' => Pages\CreatePaymentSubscription::route('/create'),
+            'edit' => Pages\EditPaymentSubscription::route('/{record}/edit'),
+        ];
+    }
+}

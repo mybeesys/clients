@@ -16,7 +16,11 @@ class Plan extends ModelsPlan
      */
     protected $fillable = ['name', 'description', 'price', 'duration', 'active'];
 
-    
+    public function payments()
+    {
+        return $this->hasMany(PaymentSubscription::class);
+    }
+
 
     public function scopeActive($q)
     {

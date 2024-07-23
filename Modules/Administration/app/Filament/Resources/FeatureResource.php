@@ -19,7 +19,6 @@ class FeatureResource extends Resource
 
     protected static ?string $navigationGroup = 'Subscribtions';
     protected static ?string $navigationIcon = 'heroicon-o-star';
-
     public static function form(Form $form): Form
     {
         return $form
@@ -38,7 +37,7 @@ class FeatureResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name'),
-                Tables\Columns\TextColumn::make('description'),
+                Tables\Columns\TextColumn::make('description')->html(),
                 Tables\Columns\ToggleColumn::make('consumable')->label('Active')->onIcon('heroicon-m-bolt')
                     ->offIcon('heroicon-m-user'),
             ])

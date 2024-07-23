@@ -14,7 +14,7 @@ class FeaturePlan extends ModelsFeaturePlan
     /**
      * The attributes that are mass assignable.
      */
-    protected $table = 'feature_plan';
+    protected $table = 'payments';
 
     protected $fillable = ['plan_id', 'feature_id', 'value'];
 }

@@ -16,5 +16,10 @@ class Subscription extends ModelsSubscription
      */
     protected $fillable = [];
 
+    public function payments()
+    {
+        return $this->hasMany(PaymentSubscription::class);
+    }
+
 
 }

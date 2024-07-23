@@ -5,6 +5,7 @@ namespace App\Providers\Filament;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationGroup;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -30,6 +31,11 @@ class AdminPanelProvider extends PanelProvider
             ->login()
             ->colors([
                 'primary' => Color::Purple,
+            ])
+            ->navigationGroups([
+                'Dashboard', 'Users Management', 'Subscriptions', 'Settings'
+
+
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
@@ -58,7 +64,12 @@ class AdminPanelProvider extends PanelProvider
             ->domains(config('tenancy.central_domains'))
             ->plugins([
                 AdministrationPlugin::make(),
-                \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make()
+                \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
+                // \Outerweb\FilamentSettings\Filament\Plugins\FilamentSettingsPlugin::make()->pages([
+                //     // \Modules\Administration\Filament\Pages\Settings\Settings::class,
+                //     // \Modules\Administration\Filament\Pages\Settings\StaticPageSettings::class,
+
+                // ]),
             ]);
     }
 }
