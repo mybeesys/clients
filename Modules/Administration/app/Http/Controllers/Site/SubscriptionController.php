@@ -38,9 +38,9 @@ class SubscriptionController extends Controller
      */
     public function store(Request $request)
     {
-        try {
-            DB::beginTransaction();
-
+        // try {
+        //     DB::beginTransaction();
+        dd(env('BASE_DOMAIN'));
         $user =  auth()->guard('company')->user();
         $currentDate = Carbon::now()->format('Ymd') . Carbon::now()->timestamp;
         $subdomain_name = strtolower($user->name) . '-' . $currentDate;
@@ -49,6 +49,7 @@ class SubscriptionController extends Controller
             'company_id' => $user->company->id,
             'tenancy_db_name' => $subdomain_name . '_db'
         ]);
+
 
         $domain = new Domain([
             'domain' =>    $subdomain_name .  env('BASE_DOMAIN'),
@@ -96,12 +97,12 @@ class SubscriptionController extends Controller
 
 
 
-            DB::commit();
-            return redirect()->route('site.company.plans_subscription_page');
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            return redirect()->back();
-        }
+        //     DB::commit();
+        //     return redirect()->route('site.company.plans_subscription_page');
+        // } catch (\Throwable $th) {
+        //     DB::rollBack();
+        //     return redirect()->back();
+        // }
     }
 
     /**
