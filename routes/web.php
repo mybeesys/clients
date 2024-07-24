@@ -7,7 +7,7 @@ foreach (config('tenancy.central_domains') as $domain) {
     Route::domain($domain)->group(function () {
 
         Route::get('/', function () {
-            dd(DB::connection()->getDatabaseName());
+            // dd(DB::connection()->getDatabaseName());
             return view('welcome');
         });
     });
