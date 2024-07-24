@@ -40,7 +40,6 @@ class SubscriptionController extends Controller
     {
         // try {
         //     DB::beginTransaction();
-        dd(env('BASE_DOMAIN'));
         $user =  auth()->guard('company')->user();
         $currentDate = Carbon::now()->format('Ymd') . Carbon::now()->timestamp;
         $subdomain_name = strtolower($user->name) . '-' . $currentDate;
