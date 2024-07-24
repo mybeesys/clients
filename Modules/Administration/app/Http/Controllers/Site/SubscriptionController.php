@@ -43,7 +43,7 @@ class SubscriptionController extends Controller
         $user =  auth()->guard('company')->user();
         $currentDate = Carbon::now()->format('Ymd') . Carbon::now()->timestamp;
         $subdomain_name = strtolower($user->name) . '-' . $currentDate;
-        dd(4);
+
 
         $tenant = Tenant::create([
             'id' => $subdomain_name,
