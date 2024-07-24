@@ -54,7 +54,7 @@ class SubscriptionController extends Controller
             'domain' =>    $subdomain_name .  env('BASE_DOMAIN'),
         ]);
 
-
+dd(4);
         $tenant->domains()->save($domain);
 
         $plan = Plan::find($request->plan_id);
