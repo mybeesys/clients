@@ -49,12 +49,12 @@ class SubscriptionController extends Controller
             'tenancy_db_name' => $subdomain_name . '_db'
         ]);
 
-
+        dd(4);
         $domain = new Domain([
             'domain' =>    $subdomain_name .  env('BASE_DOMAIN'),
         ]);
 
-dd(4);
+
         $tenant->domains()->save($domain);
 
         $plan = Plan::find($request->plan_id);
