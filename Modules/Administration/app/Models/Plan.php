@@ -16,6 +16,12 @@ class Plan extends ModelsPlan
      */
     protected $fillable = ['name', 'description', 'price', 'duration', 'active'];
 
+    public function features()
+    {
+        return $this->belongsToMany(config('soulbscription.models.feature'))
+            ->using(config('soulbscription.models.feature_plan'))
+            ->withPivot(['charges','value']);
+    }
     public function payments()
     {
         return $this->hasMany(PaymentSubscription::class);

@@ -3,6 +3,7 @@
 use Modules\Administration\Models\Feature;
 use Modules\Administration\Models\FeaturePlan;
 use Modules\Administration\Models\Plan;
+use Modules\Administration\Models\Subscription;
 
 return [
     'database' => [
@@ -27,7 +28,7 @@ return [
             'uses_uuid' => env('SOULBSCRIPTION_SUBSCRIBER_USES_UUID', false),
         ],
 
-        'subscription' => \LucasDotVin\Soulbscription\Models\Subscription::class,
+        'subscription' => Subscription::class,
 
         'subscription_renewal' => \LucasDotVin\Soulbscription\Models\SubscriptionRenewal::class,
     ],

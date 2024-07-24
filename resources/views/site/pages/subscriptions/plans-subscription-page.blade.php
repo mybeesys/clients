@@ -16,7 +16,7 @@
                                     <li>{{ $feature->name }}: {{ $feature->pivot->value }}</li>
                                 @endforeach
                             </ul>
-                          
+
                             @if (auth()->guard('company')->user()->company->subscribed)
                                 <button class="btn btn-lg btn-block btn-secondary" disabled>Already Subscribed</button>
                             @else

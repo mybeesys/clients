@@ -9,6 +9,7 @@ use Modules\Administration\Events\TenantCreated;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
+use Modules\Administration\Models\Plan;
 use Modules\Company\Models\Company;
 use Modules\Company\Models\Tenant;
 use Stancl\Tenancy\Database\Models\Domain;
@@ -40,38 +41,60 @@ class SubscriptionController extends Controller
         try {
             DB::beginTransaction();
 
-            $user =  auth()->guard('company')->user();
-            $currentDate = Carbon::now()->format('Ymd') . Carbon::now()->timestamp;
-            $subdomain_name = strtolower($user->name) . '-' . $currentDate;
-            $tenant = Tenant::create([
-                'id' => $subdomain_name,
-                'company_id' => $user->company->id,
-                'tenancy_db_name' => $subdomain_name . '_db'
-            ]);
+        $user =  auth()->guard('company')->user();
+        $currentDate = Carbon::now()->format('Ymd') . Carbon::now()->timestamp;
+        $subdomain_name = strtolower($user->name) . '-' . $currentDate;
+        $tenant = Tenant::create([
+            'id' => $subdomain_name,
+            'company_id' => $user->company->id,
+            'tenancy_db_name' => $subdomain_name . '_db'
+        ]);
 
-            $domain = new Domain([
-                'domain' =>    $subdomain_name .  env('BASE_DOMAIN'),
-            ]);
-
-            $tenant->domains()->save($domain);
-            $plan = \LucasDotVin\Soulbscription\Models\Plan::find($request->plan_id);
-            $company = Company::find($user->company->id);
-            $subscription = $company->subscribeTo($plan);
-            $company->subscribed = 1;
-            $company->save();
+        $domain = new Domain([
+            'domain' =>    $subdomain_name .  env('BASE_DOMAIN'),
+        ]);
 
 
+        $tenant->domains()->save($domain);
 
-            //insert the information of the plan/subscription in the tenant database.
-            Config::set('database.connections.mysql.database', $domain->tenant_id . '_db');
-            DB::purge('mysql');
-            DB::reconnect('mysql');
-            $tenantPlan = $plan->replicate();
-            $tenantPlan->save();
-            //send and event to make a tenant seeder.
-            event(new TenantCreated($tenant));
-            $tenantSubscription = $subscription->replicate();
-            $tenantSubscription->save();
+        $plan = Plan::find($request->plan_id);
+        $company = Company::find($user->company->id);
+
+        $subscription = $company->subscribeTo($plan);
+
+        $company->subscribed = 1;
+        $company->save();
+
+        //insert the information of the plan/subscription in the tenant database.
+        Config::set('database.connections.mysql.database', $domain->tenant_id . '_db');
+        DB::purge('mysql');
+        DB::reconnect('mysql');
+        $tenantPlan = $plan->replicate();
+        $tenantPlan->save();
+
+
+        //send and event to make a tenant seeder.
+        event(new TenantCreated($tenant));
+        $tenantSubscription = $subscription->replicate();
+        $tenantSubscription->save();
+
+        DB::table('tenants')->insert([
+            'id' => $subdomain_name,
+            'tenancy_db_name' => $tenant->id . '_db',
+            'created_at' => now(),
+            'updated_at' => now(),
+            'data' => null
+        ]);
+
+        DB::table('domains')->insert([
+            "domain" => $tenant->id . "erp.localhost",
+            "tenant_id" => $tenant->id,
+            'created_at' => now(),
+            'updated_at' => now(),
+
+        ]);
+
+
 
             DB::commit();
             return redirect()->route('site.company.plans_subscription_page');

@@ -22,4 +22,11 @@ class Feature extends ModelsFeature
         'quota',
         'postpaid', 'description', 'active'
     ];
+
+    public function plans()
+    {
+        return $this->belongsToMany(config('soulbscription.models.plan'))
+            ->using(config('soulbscription.models.feature_plan'))
+            ->withPivot(['value','charges']);
+    }
 }

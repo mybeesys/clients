@@ -21,9 +21,7 @@ return [
         'localhost',
     ],
 
-    'identify_by' => [
-        Stancl\Tenancy\Middleware\InitializeTenancyBySubdomain::class,
-    ],
+    
     /**
      * Tenancy bootstrappers are executed when tenancy is initialized.
      * Their responsibility is making Laravel features tenant-aware.

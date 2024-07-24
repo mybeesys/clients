@@ -11,11 +11,16 @@ class Subscription extends ModelsSubscription
 {
     use HasFactory;
 
-    /**
-     * The attributes that are mass assignable.
-     */
-    protected $fillable = [];
+    protected $fillable = [
+        'canceled_at',
+        'expired_at',
+        'grace_days_ended_at',
+        'started_at',
+        'suppressed_at',
+        'was_switched',
+    ];
 
+   
     public function payments()
     {
         return $this->hasMany(PaymentSubscription::class);
