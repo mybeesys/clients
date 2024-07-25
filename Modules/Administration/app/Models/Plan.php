@@ -20,13 +20,17 @@ class Plan extends ModelsPlan
     {
         return $this->belongsToMany(config('soulbscription.models.feature'))
             ->using(config('soulbscription.models.feature_plan'))
-            ->withPivot(['charges','value']);
+            ->withPivot(['charges', 'value']);
     }
     public function payments()
     {
         return $this->hasMany(PaymentSubscription::class);
     }
 
+    public function coupons()
+    {
+        return $this->belongsToMany(Coupon::class, 'coupon_plan');
+    }
 
     public function scopeActive($q)
     {

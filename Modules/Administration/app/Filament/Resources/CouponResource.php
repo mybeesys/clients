@@ -26,7 +26,26 @@ class CouponResource extends Resource
     {
         return $form
             ->schema([
-                //
+                Forms\Components\TextInput::make('name')->required(),
+                Forms\Components\RichEditor::make('description')->columnSpan('full'),
+                Forms\Components\Select::make('descount_type')
+                    ->label('Descount Type')
+                    ->options([
+                        'Percentage' => 'Percentage',
+                        'Fixed' => 'Fixed',
+                    ])->required(),
+                Forms\Components\TextInput::make('amount')->required()->numeric(),
+                Forms\Components\TextInput::make('max_use')->numeric(),
+                Forms\Components\DatePicker::make('expired_at')->required(),
+                Forms\Components\Select::make('plans')
+                    ->label('Plans')
+                    ->multiple()
+                    ->relationship('plans', 'name')
+                    ->required(),
+                Forms\Components\Toggle::make('active')->label('Active')
+                    ->onIcon('heroicon-m-bolt')
+                    ->offIcon('heroicon-m-user'),
+
             ]);
     }
 
@@ -34,7 +53,17 @@ class CouponResource extends Resource
     {
         return $table
             ->columns([
-                //
+                Tables\Columns\TextColumn::make('name'),
+                Tables\Columns\TextColumn::make('descount_type')
+                    ->label('Descount Type'),
+                Tables\Columns\TextColumn::make('amount'),
+                Tables\Columns\TextColumn::make('max_use'),
+                Tables\Columns\ToggleColumn::make('active')->label('Active')->onIcon('heroicon-m-bolt')
+                    ->offIcon('heroicon-m-user'),
+
+                Tables\Columns\TextColumn::make('usage_count')
+                    ->label('Usage Count')
+                    ->getStateUsing(fn (Coupon $record): int => $record->coupon_subscriptions()->count()),
             ])
             ->filters([
                 //

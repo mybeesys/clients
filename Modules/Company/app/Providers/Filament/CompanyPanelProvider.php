@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Providers\Filament;
+namespace Modules\Company\Providers\Filament;
 
 use App\Filament\Pages\Auth\Login;
 use Filament\Http\Middleware\Authenticate;

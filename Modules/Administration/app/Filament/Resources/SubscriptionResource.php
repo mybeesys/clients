@@ -43,14 +43,11 @@ class SubscriptionResource extends Resource
                     ->relationship('Plan', 'name')
                     ->searchable()
                     ->preload(),
-                    Forms\Components\Select::make('subscriber_id')
+                Forms\Components\Select::make('subscriber_id')
                     ->label('Company')
                     ->options(function () {
-                        // Fetch company IDs from subscriptions table with the specified conditions
                         $companyIds = Subscription::where('subscriber_type', 'Modules\Company\Models\Company')
-                            ->pluck('subscriber_id'); // Assuming there is a company_id field in subscriptions table
-
-                        // Fetch companies based on the filtered company IDs
+                            ->pluck('subscriber_id');
                         return Company::whereIn('id', $companyIds)->pluck('name', 'id');
                     })
                     ->searchable()
