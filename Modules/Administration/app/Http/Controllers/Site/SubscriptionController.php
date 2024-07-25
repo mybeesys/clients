@@ -62,7 +62,7 @@ class SubscriptionController extends Controller
         $company = Company::find($user->company->id);
 
         $subscription = $company->subscribeTo($plan);
-
+        $subscription->update(['tenant_id' => $tenant->id, 'subdomain' => $domain->domain]);
         $company->subscribed = 1;
         $company->save();
 
@@ -73,29 +73,11 @@ class SubscriptionController extends Controller
         $tenantPlan = $plan->replicate();
         $tenantPlan->save();
 
-
-        //send and event to make a tenant seeder.
-        event(new TenantCreated($tenant));
         $tenantSubscription = $subscription->replicate();
         $tenantSubscription->save();
-
-        DB::table('tenants')->insert([
-            'id' => $subdomain_name,
-            'tenancy_db_name' => $tenant->id . '_db',
-            'created_at' => now(),
-            'updated_at' => now(),
-            'data' => null
-        ]);
-
-        DB::table('domains')->insert([
-            "domain" => $tenant->id . "erp.localhost",
-            "tenant_id" => $tenant->id,
-            'created_at' => now(),
-            'updated_at' => now(),
-
-        ]);
-
-
+        
+        //send and event to make a tenant seeder.
+        event(new TenantCreated($tenant));
 
         //     DB::commit();
         //     return redirect()->route('site.company.plans_subscription_page');

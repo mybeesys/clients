@@ -5,7 +5,8 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-return new class() extends Migration {
+return new class() extends Migration
+{
     /**
      * Run the migrations.
      *
@@ -26,7 +27,10 @@ return new class() extends Migration {
             $table->boolean('was_switched')->default(false);
             $table->softDeletes();
             $table->timestamps();
+            $table->string('comapny_id')->nullable();
+            $table->string('tenant_id')->nullable();
             
+            $table->string('subdomain')->nullable();
             if (config('soulbscription.models.subscriber.uses_uuid')) {
                 $table->uuidMorphs('subscriber');
             } else {

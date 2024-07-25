@@ -3,6 +3,8 @@
 namespace Modules\Administration\Providers;
 
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
+use Modules\Administration\Events\TenantCreated;
+use Modules\Administration\Listeners\SeedTenantDatabase;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -11,7 +13,11 @@ class EventServiceProvider extends ServiceProvider
      *
      * @var array<string, array<int, string>>
      */
-    protected $listen = [];
+    protected $listen = [
+        TenantCreated::class => [
+            SeedTenantDatabase::class,
+        ],
+    ];
 
     /**
      * Indicates if events should be discovered.
@@ -27,6 +33,5 @@ class EventServiceProvider extends ServiceProvider
      */
     protected function configureEmailVerification(): void
     {
-
     }
 }

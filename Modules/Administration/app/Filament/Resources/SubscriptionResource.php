@@ -36,8 +36,6 @@ class SubscriptionResource extends Resource
 
         return $form
             ->schema([
-                // Forms\Components\Select::make('subscriber.name')->label('Company Name'),
-                // Forms\Components\Select::make('plan.name')->label('Plan Name'),
                 Forms\Components\Select::make('plan_id')
                     ->label('Plan Name')
                     ->relationship('Plan', 'name')
@@ -54,6 +52,8 @@ class SubscriptionResource extends Resource
                     ->preload(),
                 Forms\Components\TextInput::make('expired_at')->label('Expires Date'),
                 Forms\Components\TextInput::make('created_at')->label('Subscribe Date'),
+                Forms\Components\TextInput::make('subdomain')
+                    ->label('Company Subdomain'),
 
             ]);
     }
@@ -63,9 +63,9 @@ class SubscriptionResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('plan.name'),
-                Tables\Columns\TextColumn::make('subscriber.name')->label('Company name'),
-                Tables\Columns\TextColumn::make('expired_at')->label('Expires Date'),
-                Tables\Columns\TextColumn::make('created_at')->label('Subscribe Date'),
+                Tables\Columns\TextColumn::make('subscriber.name')->label('Company'),
+                Tables\Columns\TextColumn::make('expired_at')->label('Expire at'),
+                Tables\Columns\TextColumn::make('created_at')->label('Subscribed at'),
                 Tables\Columns\TextColumn::make('plan.features')
                     ->label('Plan Features')
                     ->formatStateUsing(function ($state, $record) {
@@ -75,6 +75,12 @@ class SubscriptionResource extends Resource
                         })->implode('');
                         return "<ul>{$featureList}</ul>";
                     })
+                    ->html(),
+
+                Tables\Columns\TextColumn::make('subdomain')
+                    ->label('Subdomain')
+                    ->url(fn ($record) => 'https://' . $record->subdomain)
+                    ->openUrlInNewTab()
                     ->html(),
 
             ])
@@ -104,6 +110,7 @@ class SubscriptionResource extends Resource
             'index' => Pages\ListSubscriptions::route('/'),
             'create' => Pages\CreateSubscription::route('/create'),
             'edit' => Pages\EditSubscription::route('/{record}/edit'),
+
         ];
     }
 }
