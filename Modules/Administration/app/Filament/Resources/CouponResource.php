@@ -28,6 +28,12 @@ class CouponResource extends Resource
             ->schema([
                 Forms\Components\TextInput::make('name')->required(),
                 Forms\Components\RichEditor::make('description')->columnSpan('full'),
+                Forms\Components\TextInput::make('code')
+                    ->required()
+                    ->unique(Coupon::class, 'code')
+                    ->rule('regex:/^[a-zA-Z0-9._]+$/')
+                    ->rule('regex:/^[a-zA-Z0-9]/')
+                    ->maxLength(30),
                 Forms\Components\Select::make('descount_type')
                     ->label('Descount Type')
                     ->options([
@@ -56,6 +62,7 @@ class CouponResource extends Resource
                 Tables\Columns\TextColumn::make('name'),
                 Tables\Columns\TextColumn::make('descount_type')
                     ->label('Descount Type'),
+                Tables\Columns\TextColumn::make('code'),
                 Tables\Columns\TextColumn::make('amount'),
                 Tables\Columns\TextColumn::make('max_use'),
                 Tables\Columns\ToggleColumn::make('active')->label('Active')->onIcon('heroicon-m-bolt')
