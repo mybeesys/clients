@@ -15,7 +15,7 @@ class Coupon extends Model
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = ['expired_at', 'active', 'max_use', 'status', 'descount_type', 'description', 'name', 'amount'];
+    protected $fillable = ['code', 'expired_at', 'active', 'max_use', 'status', 'descount_type', 'description', 'name', 'amount'];
 
     public function plans()
     {
@@ -26,5 +26,4 @@ class Coupon extends Model
     {
         return $this->hasMany(CouponSubscription::class);
     }
-
 }
