@@ -12,7 +12,12 @@ class CreateCompany extends CreateRecord
 {
     protected static string $resource = CompanyResource::class;
 
-    protected function mutateFormDataBeforeCreate(array $data): array
+    protected function afterCreate(): void
     {
+        $this->record->update([
+            'name' => $this->record->user->name,
+        ]);
     }
+
+    
 }

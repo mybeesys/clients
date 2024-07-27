@@ -30,33 +30,32 @@ class CompanyResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\RichEditor::make('description')->columnSpan('full'),
                 Forms\Components\Fieldset::make('Main Info')
-                    ->relationship('user')
-                    ->schema([
-                        Forms\Components\TextInput::make('email')
-                            ->label('Email')
-                            ->email()
-                            ->required()
-                            ->maxLength(255),
-                        Forms\Components\TextInput::make('password')
-                            ->label('Password')
-                            ->password()
-                            ->required()
-                            ->maxLength(255),
-                        Forms\Components\TextInput::make('name')
-                            ->required()
-                            ->maxLength(255),
+                ->relationship('user')
+                ->schema([
+                    Forms\Components\TextInput::make('email')
+                        ->label('Email')
+                        ->email()
+                        ->required()
+                        ->maxLength(255),
+                    Forms\Components\TextInput::make('password')
+                        ->label('Password')
+                        ->password()
+                        ->required()
+                        ->maxLength(255),
+                    Forms\Components\TextInput::make('name')
+                        ->required()
+                        ->maxLength(255),
 
-                    ]),
-
+                ]),
+                Forms\Components\RichEditor::make('description')->columnSpan('full'),
                 Forms\Components\TextInput::make('ceo_name')->maxLength(255),
                 Forms\Components\TextInput::make('tax_name')->required(),
                 // Forms\Components\FileUpload::make('logo')
                 //     ->label('Logo')
                 //     ->image()
                 //     ->directory('companies/logo')
-                //     ->required(),
+                //     ,
                 Forms\Components\TextInput::make('zipcode')->required(),
                 Forms\Components\TextInput::make('national_address')->required(),
                 Forms\Components\TextInput::make('website')->label('Website')
