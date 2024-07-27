@@ -5,7 +5,7 @@ namespace Modules\Administration\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Administration\Database\Factories\PaymentSubscriptionFactory;
-use Modules\Company\Models\Company;
+use App\Models\Company;
 
 class PaymentSubscription extends Model
 {

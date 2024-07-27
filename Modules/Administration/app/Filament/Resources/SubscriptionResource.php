@@ -12,7 +12,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Modules\Administration\Models\Subscription;
-use Modules\Company\Models\Company;
+use App\Models\Company;
 
 class SubscriptionResource extends Resource
 {
@@ -44,7 +44,7 @@ class SubscriptionResource extends Resource
                 Forms\Components\Select::make('subscriber_id')
                     ->label('Company')
                     ->options(function () {
-                        $companyIds = Subscription::where('subscriber_type', 'Modules\Company\Models\Company')
+                        $companyIds = Subscription::where('subscriber_type', 'App\Models\Company')
                             ->pluck('subscriber_id');
                         return Company::whereIn('id', $companyIds)->pluck('name', 'id');
                     })

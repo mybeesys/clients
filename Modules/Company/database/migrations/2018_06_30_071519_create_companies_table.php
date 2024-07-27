@@ -17,6 +17,11 @@ return new class extends Migration
             $table->string('description')->nullable();
             $table->integer('user_id');
             $table->string('ceo_name')->nullable();
+            $table->integer('phone')->nullable();
+            $table->string('zipcode')->nullable();
+            $table->string('national_address')->nullable();
+            $table->string('website')->nullable();
+            $table->integer('country_id');
             $table->string('tax_name')->nullable();
             $table->string('logo')->nullable();
             $table->tinyInteger('subscribed')->default(0);

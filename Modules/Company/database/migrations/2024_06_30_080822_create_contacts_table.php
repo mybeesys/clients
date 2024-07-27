@@ -13,7 +13,10 @@ return new class extends Migration
     {
         Schema::create('contacts', function (Blueprint $table) {
             $table->id();
-            
+            $table->enum('type', ['email', 'phone'])->nullable();
+            $table->string('contact');
+            $table->string('company_id');
+
             $table->timestamps();
         });
     }

@@ -10,7 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Modules\Administration\Models\Plan;
-use Modules\Company\Models\Company;
+use App\Models\Company;
 use Modules\Company\Models\Tenant;
 use Stancl\Tenancy\Database\Models\Domain;
 
@@ -75,7 +75,7 @@ class SubscriptionController extends Controller
 
         $tenantSubscription = $subscription->replicate();
         $tenantSubscription->save();
-        
+
         //send and event to make a tenant seeder.
         event(new TenantCreated($tenant));
 
