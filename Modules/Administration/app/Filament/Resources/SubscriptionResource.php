@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Modules\Administration\Models\Subscription;
 use App\Models\Company;
+use Filament\Tables\Actions\Action;
 
 class SubscriptionResource extends Resource
 {
@@ -87,8 +88,14 @@ class SubscriptionResource extends Resource
             ->filters([
                 //
             ])
+            ->headerActions([
+                Action::make('Download pdf')
+                    ->icon('heroicon-o-squares-2x2')
+                    ->url(route('subscriptions.pdf.download'))->openUrlInNewTab(),
+            ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
+
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
