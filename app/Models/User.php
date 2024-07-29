@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Models\Company;
+use Modules\Administration\Models\Admin;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
@@ -22,6 +23,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'is_company'
     ];
 
     /**
@@ -50,5 +52,21 @@ class User extends Authenticatable
     public function company()
     {
         return $this->hasMany(Company::class);
+    }
+
+
+    public function admins()
+    {
+        return $this->hasMany(Admin::class, 'user_id');
+    }
+
+    public function is_admin()
+    {
+        return $this->admins()->exists();
+    }
+
+    public function is_company()
+    {
+        return $this->is_company;
     }
 }

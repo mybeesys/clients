@@ -6,6 +6,7 @@ use AymanAlhattami\FilamentPageWithSidebar\FilamentPageSidebar;
 use AymanAlhattami\FilamentPageWithSidebar\PageNavigationItem;
 use AymanAlhattami\FilamentPageWithSidebar\Traits\HasPageSidebar;
 use Closure;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Tabs;
 use Filament\Forms\Components\TextInput;
 use Outerweb\FilamentSettings\Filament\Pages\Settings as BaseSettings;
@@ -18,44 +19,26 @@ class PaymentConfiguration extends BaseSettings
     protected static bool $shouldRegisterNavigation = false;
     public function schema(): array|Closure
     {
-        return [
-            Tabs::make('Settings')
-                ->schema([
-                    Tabs\Tab::make('General')
-                        ->schema([
-                            TextInput::make('general.brand_name')
-                                ->required(),
-                        ]),
-                    Tabs\Tab::make('Seo')
-                        ->schema([
-                            TextInput::make('seo.title')
-                                ->required(),
-                            TextInput::make('seo.description')
-                                ->required(),
-                        ]),
 
-                    Tabs\Tab::make('Contact us')
-                        ->schema([
-                            TextInput::make('contacts.phone')
-                                ->required(),
-                            TextInput::make('contacts.email')
-                                ->required(),
-                        ]),
+        $payments = getAllPaymentsHelper();
+        $sections = [];
 
-                    Tabs\Tab::make('Social Media')
-                        ->schema([
-                            TextInput::make('media.facebook')
-                                ->required(),
-                            TextInput::make('media.instagram')
-                                ->required(),
-                            TextInput::make('media.linkedin')
-                                ->required(),
-                            TextInput::make('media.threads')
-                                ->required(),
-                        ]),
-                ]),
-        ];
+        foreach ($payments as $payment) {
+            $fields = [];
+
+            foreach ($payment['fields'] as $field) {
+                $fields[] = TextInput::make($field)
+                    ->label($field)
+                    ->placeholder($field);
+            }
+
+            $sections[] = Section::make($payment['name'])
+                ->schema($fields);
+        }
+
+        return $sections;
     }
+
     public static function sidebar(): FilamentPageSidebar
     {
         return FilamentPageSidebar::make()
@@ -77,7 +60,7 @@ class PaymentConfiguration extends BaseSettings
                 PageNavigationItem::make('Web Settings')
                     ->translateLabel()
                     ->url(WebsiteSettings::getUrl())
-                    ->icon('heroicon-o-cog-6-tooth')
+                    ->icon('heroicon-o-globe-alt')
                     ->isActiveWhen(function () {
                         return request()->routeIs(WebsiteSettings::getRouteName());
                     })
@@ -102,7 +85,7 @@ class PaymentConfiguration extends BaseSettings
                 PageNavigationItem::make('Email Configuration')
                     ->translateLabel()
                     ->url(EmailConfiguration::getUrl())
-                    ->icon('heroicon-o-truck')
+                    ->icon('heroicon-o-envelope')
                     ->isActiveWhen(function () {
                         return request()->routeIs(EmailConfiguration::getRouteName());
                     })

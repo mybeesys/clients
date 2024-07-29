@@ -13,7 +13,7 @@ class PaymentSubscription extends Model
 
 
     protected $table = 'payment_subscription';
-    protected $fillable = ['id', 'subscription_id', 'amount', 'payment_date', 'payment_method', 'transaction_id', 'company_id', 'plan_id', 'remaining_amount', 'paid_amount'];
+    protected $fillable = ['id', 'subscription_id', 'amount', 'status', 'payment_date', 'payment_method', 'transaction_id', 'company_id', 'plan_id', 'remaining_amount', 'paid_amount'];
 
     public function subscription()
     {

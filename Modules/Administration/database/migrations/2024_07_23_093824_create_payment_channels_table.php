@@ -19,8 +19,9 @@ return new class extends Migration
             $table->text('currencies')->nullable();
             $table->string('image')->nullable();
             $table->text('settings')->nullable();
-            $table->integer('created_at')->unsigned();
             $table->string('disabled_at')->nullable();
+            $table->timestamps();
+
         });
     }
 

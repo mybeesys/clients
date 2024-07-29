@@ -6,8 +6,10 @@ use AymanAlhattami\FilamentPageWithSidebar\FilamentPageSidebar;
 use AymanAlhattami\FilamentPageWithSidebar\PageNavigationItem;
 use AymanAlhattami\FilamentPageWithSidebar\Traits\HasPageSidebar;
 use Closure;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Tabs;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Outerweb\FilamentSettings\Filament\Pages\Settings as BaseSettings;
 
 class WebsiteSettings extends BaseSettings
@@ -19,41 +21,20 @@ class WebsiteSettings extends BaseSettings
     public function schema(): array|Closure
     {
         return [
-            Tabs::make('Settings')
-                ->schema([
-                    Tabs\Tab::make('General')
-                        ->schema([
-                            TextInput::make('general.brand_name')
-                                ->required(),
-                        ]),
-                    Tabs\Tab::make('Seo')
-                        ->schema([
-                            TextInput::make('seo.title')
-                                ->required(),
-                            TextInput::make('seo.description')
-                                ->required(),
-                        ]),
+            FileUpload::make('website.logo')
+                ->label('Website Logo')
+                ->directory('logos')
+                ->image(),
+            FileUpload::make('website.favicon')
+                ->label('Website Favicon')
+                ->directory('favicons')
+                ->image(),
+            Toggle::make('website.maintenance_mode')
+                ->label('Maintenance Mode')
+                ->onIcon('heroicon-m-bolt')
+                ->offIcon('heroicon-m-user'),
 
-                    Tabs\Tab::make('Contact us')
-                        ->schema([
-                            TextInput::make('contacts.phone')
-                                ->required(),
-                            TextInput::make('contacts.email')
-                                ->required(),
-                        ]),
 
-                    Tabs\Tab::make('Social Media')
-                        ->schema([
-                            TextInput::make('media.facebook')
-                                ->required(),
-                            TextInput::make('media.instagram')
-                                ->required(),
-                            TextInput::make('media.linkedin')
-                                ->required(),
-                            TextInput::make('media.threads')
-                                ->required(),
-                        ]),
-                ]),
         ];
     }
     public static function sidebar(): FilamentPageSidebar
@@ -75,7 +56,7 @@ class WebsiteSettings extends BaseSettings
                 PageNavigationItem::make('Web Settings')
                     ->translateLabel()
                     ->url(WebsiteSettings::getUrl())
-                    ->icon('heroicon-o-cog-6-tooth')
+                    ->icon('heroicon-o-globe-alt')
                     ->isActiveWhen(function () {
                         return request()->routeIs(WebsiteSettings::getRouteName());
                     })
@@ -100,7 +81,7 @@ class WebsiteSettings extends BaseSettings
                 PageNavigationItem::make('Email Configuration')
                     ->translateLabel()
                     ->url(EmailConfiguration::getUrl())
-                    ->icon('heroicon-o-truck')
+                    ->icon('heroicon-o-envelope')
                     ->isActiveWhen(function () {
                         return request()->routeIs(EmailConfiguration::getRouteName());
                     })

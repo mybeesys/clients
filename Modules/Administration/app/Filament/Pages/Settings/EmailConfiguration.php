@@ -21,41 +21,36 @@ class EmailConfiguration extends BaseSettings
     public function schema(): array|Closure
     {
         return [
-            Tabs::make('Settings')
-                ->schema([
-                    Tabs\Tab::make('General')
-                        ->schema([
-                            TextInput::make('general.brand_name')
-                                ->required(),
-                        ]),
-                    Tabs\Tab::make('Seo')
-                        ->schema([
-                            TextInput::make('seo.title')
-                                ->required(),
-                            TextInput::make('seo.description')
-                                ->required(),
-                        ]),
-
-                    Tabs\Tab::make('Contact us')
-                        ->schema([
-                            TextInput::make('contacts.phone')
-                                ->required(),
-                            TextInput::make('contacts.email')
-                                ->required(),
-                        ]),
-
-                    Tabs\Tab::make('Social Media')
-                        ->schema([
-                            TextInput::make('media.facebook')
-                                ->required(),
-                            TextInput::make('media.instagram')
-                                ->required(),
-                            TextInput::make('media.linkedin')
-                                ->required(),
-                            TextInput::make('media.threads')
-                                ->required(),
-                        ]),
-                ]),
+            TextInput::make('mail_host')
+                ->label('Mail Host')
+                ->placeholder('Mail Host')
+                ->maxLength(255),
+            TextInput::make('mail_port')
+                ->label('Mail Port')
+                ->placeholder('Mail Port')
+                ->numeric(),
+            TextInput::make('mail_username')
+                ->label('Mail Username')
+                ->placeholder('Mail Username')
+                ->maxLength(255),
+            TextInput::make('mail_password')
+                ->label('Mail Password')
+                ->password()
+                ->placeholder('Mail Password')
+                ->maxLength(255),
+            TextInput::make('mail_from_address')
+                ->label('Mail From Address')
+                ->placeholder('Mail From Address')
+                ->email()
+                ->maxLength(255),
+            TextInput::make('mail_from_name')
+                ->label('Mail From Name')
+                ->placeholder('Mail From Name')
+                ->maxLength(255),
+            TextInput::make('mail_encryption')
+                ->label('Mail Encryption')
+                ->placeholder('Mail Encryption')
+                ->maxLength(255),
         ];
     }
     public static function sidebar(): FilamentPageSidebar
@@ -77,7 +72,7 @@ class EmailConfiguration extends BaseSettings
                 PageNavigationItem::make('Web Settings')
                     ->translateLabel()
                     ->url(WebsiteSettings::getUrl())
-                    ->icon('heroicon-o-cog-6-tooth')
+                    ->icon('heroicon-o-globe-alt')
                     ->isActiveWhen(function () {
                         return request()->routeIs(WebsiteSettings::getRouteName());
                     })
@@ -102,7 +97,7 @@ class EmailConfiguration extends BaseSettings
                 PageNavigationItem::make('Email Configuration')
                     ->translateLabel()
                     ->url(EmailConfiguration::getUrl())
-                    ->icon('heroicon-o-truck')
+                    ->icon('heroicon-o-envelope')
                     ->isActiveWhen(function () {
                         return request()->routeIs(EmailConfiguration::getRouteName());
                     })

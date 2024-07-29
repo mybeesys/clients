@@ -25,35 +25,24 @@ class GeneralSettings extends BaseSettings
                 ->schema([
                     Tabs\Tab::make('General')
                         ->schema([
-                            TextInput::make('general.website_name')
-                                ->required(),
+                            TextInput::make('general.website_name'),
+                            TextInput::make('general.website_description'),
+
                         ]),
-                    Tabs\Tab::make('Seo')
-                        ->schema([
-                            TextInput::make('seo.title')
-                                ->required(),
-                            TextInput::make('seo.description')
-                                ->required(),
-                        ]),
+
 
                     Tabs\Tab::make('Contact us')
                         ->schema([
-                            TextInput::make('contacts.phone')
-                                ->required(),
-                            TextInput::make('contacts.email')
-                                ->required(),
+                            TextInput::make('contacts.phone'),
+                            TextInput::make('contacts.email'),
                         ]),
 
                     Tabs\Tab::make('Social Media')
                         ->schema([
-                            TextInput::make('media.facebook')
-                                ->required(),
-                            TextInput::make('media.instagram')
-                                ->required(),
-                            TextInput::make('media.linkedin')
-                                ->required(),
-                            TextInput::make('media.threads')
-                                ->required(),
+                            TextInput::make('media.facebook'),
+                            TextInput::make('media.instagram'),
+                            TextInput::make('media.linkedin'),
+                            TextInput::make('media.threads'),
                         ]),
                 ]),
         ];
@@ -78,7 +67,7 @@ class GeneralSettings extends BaseSettings
                 PageNavigationItem::make('Web Settings')
                     ->translateLabel()
                     ->url(WebsiteSettings::getUrl())
-                    ->icon('heroicon-o-cog-6-tooth')
+                    ->icon('heroicon-o-globe-alt')
                     ->isActiveWhen(function () {
                         return request()->routeIs(WebsiteSettings::getRouteName());
                     })
@@ -103,7 +92,7 @@ class GeneralSettings extends BaseSettings
                 PageNavigationItem::make('Email Configuration')
                     ->translateLabel()
                     ->url(EmailConfiguration::getUrl())
-                    ->icon('heroicon-o-truck')
+                    ->icon('heroicon-o-envelope')
                     ->isActiveWhen(function () {
                         return request()->routeIs(EmailConfiguration::getRouteName());
                     })

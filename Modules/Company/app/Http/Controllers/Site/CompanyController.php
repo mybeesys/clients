@@ -118,6 +118,7 @@ class CompanyController extends Controller
                 'name' => $request->name,
                 'username' => $request->name,
                 'email' => $request->email,
+                'is_company' => 1,
                 'password' => Hash::make($request->password)
             ]);
 

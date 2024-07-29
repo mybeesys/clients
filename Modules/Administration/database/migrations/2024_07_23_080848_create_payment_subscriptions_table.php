@@ -14,15 +14,16 @@ return new class extends Migration
 
         Schema::create('payment_subscription', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('subscription_id');
-            $table->decimal('amount', 10, 2);
-            $table->date('payment_date');
-            $table->string('payment_method');
+            $table->unsignedBigInteger('subscription_id')->nullable();
+            $table->decimal('amount', 10, 2)->nullable();
+            $table->date('payment_date')->nullable();
+            $table->string('payment_method')->nullable();
+            $table->enum('status', ['paid', 'not_paid'])->nullable();
             $table->string('transaction_id')->nullable();
-            $table->unsignedBigInteger('company_id');
-            $table->unsignedBigInteger('plan_id');
-            $table->decimal('remaining_amount', 10, 2);
-            $table->decimal('paid_amount', 10, 2);
+            $table->unsignedBigInteger('company_id')->nullable();
+            $table->unsignedBigInteger('plan_id')->nullable();
+            $table->decimal('remaining_amount', 10, 2)->nullable();
+            $table->decimal('paid_amount', 10, 2)->nullable();
             $table->foreign('subscription_id')->references('id')->on('subscriptions')->onDelete('cascade');
             $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
             $table->foreign('plan_id')->references('id')->on('plans')->onDelete('cascade');

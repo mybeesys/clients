@@ -75,7 +75,7 @@ class NotificationConfiguration extends BaseSettings
                 PageNavigationItem::make('Web Settings')
                     ->translateLabel()
                     ->url(WebsiteSettings::getUrl())
-                    ->icon('heroicon-o-cog-6-tooth')
+                    ->icon('heroicon-o-globe-alt')
                     ->isActiveWhen(function () {
                         return request()->routeIs(WebsiteSettings::getRouteName());
                     })
@@ -107,7 +107,7 @@ class NotificationConfiguration extends BaseSettings
                 PageNavigationItem::make('Shipping Configuration')
                     ->translateLabel()
                     ->url(EmailConfiguration::getUrl())
-                    ->icon('heroicon-o-truck')
+                    ->icon('heroicon-o-envelope')
                     ->isActiveWhen(function () {
                         return request()->routeIs(EmailConfiguration::getRouteName());
                     })

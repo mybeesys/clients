@@ -33,7 +33,6 @@ class SubscriptionResource extends Resource
 
     public static function form(Form $form): Form
     {
-
         return $form
             ->schema([
                 Forms\Components\Select::make('plan_id')
@@ -62,6 +61,7 @@ class SubscriptionResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('id'),
                 Tables\Columns\TextColumn::make('plan.name'),
                 Tables\Columns\TextColumn::make('subscriber.name')->label('Company'),
                 Tables\Columns\TextColumn::make('expired_at')->label('Expire at'),

@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('email')->nullable()->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->boolean('is_company')->default(1);
             $table->string('avatar')->nullable();
             $table->string('username', 190)->unique();
             $table->rememberToken();

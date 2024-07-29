@@ -37,11 +37,18 @@ class Login extends \Filament\Pages\Auth\Login
             $this->throwFailureValidationException();
         }
 
-        //ensure that the company is still subscribed if not deny the login.
-        $subscription = Subscription::latest()->first();
-        if (is_null($subscription) || Carbon::parse($subscription->expired_at)->isPast()) {
+        if (!$user->is_admin()) {
             Filament::auth()->logout();
-            $this->throwFailureSubscriptionException();
+            $this->throwFailureAdminException();
+        }
+
+
+        if ($user->is_company()) {
+            $subscription = Subscription::latest()->first();
+            if (is_null($subscription) || Carbon::parse($subscription->expired_at)->isPast()) {
+                Filament::auth()->logout();
+                $this->throwFailureSubscriptionException();
+            }
         }
 
         session()->regenerate();
@@ -53,6 +60,13 @@ class Login extends \Filament\Pages\Auth\Login
     {
         throw ValidationException::withMessages([
             'data.email' => __('No active subscription found.'),
+        ]);
+    }
+
+    protected function throwFailureAdminException(): never
+    {
+        throw ValidationException::withMessages([
+            'data.email' => __('This account is not an admin.'),
         ]);
     }
 }

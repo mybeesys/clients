@@ -12,7 +12,8 @@ class AdministrationDatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            PlanFeatureSeeder::class,
+            // PlanFeatureSeeder::class,
+            PaymentChannelSeeder::class
 
         ]);
     }

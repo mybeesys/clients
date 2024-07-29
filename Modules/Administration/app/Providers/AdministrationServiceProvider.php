@@ -36,6 +36,7 @@ class AdministrationServiceProvider extends ServiceProvider
         if (class_exists('Filament\FilamentServiceProvider') && Schema::hasTable('domains')) {
             $this->app->register(\Filament\FilamentServiceProvider::class);
         }
+
     }
 
     /**
@@ -80,6 +81,7 @@ class AdministrationServiceProvider extends ServiceProvider
     {
         $this->publishes([module_path($this->moduleName, 'config/config.php') => config_path($this->moduleNameLower . '.php')], 'config');
         $this->mergeConfigFrom(module_path($this->moduleName, 'config/config.php'), $this->moduleNameLower);
+       
     }
 
     /**
