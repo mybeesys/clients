@@ -2,6 +2,7 @@
 
 namespace Modules\Administration\Filament\Resources;
 
+use Filament\Tables\Actions\ExportBulkAction;
 use Modules\Administration\Filament\Resources\SubscriptionResource\Pages;
 use Modules\Administration\Filament\Resources\SubscriptionResource\RelationManagers;
 use Filament\Forms;
@@ -13,7 +14,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Modules\Administration\Models\Subscription;
 use App\Models\Company;
+use Filament\Tables\Actions\ExportAction;
 use Filament\Tables\Actions\Action;
+use Modules\Administration\Filament\Exports\SubscriptionExporter;
 
 class SubscriptionResource extends Resource
 {
@@ -48,6 +51,7 @@ class SubscriptionResource extends Resource
                             ->pluck('subscriber_id');
                         return Company::whereIn('id', $companyIds)->pluck('name', 'id');
                     })
+
                     ->searchable()
                     ->preload(),
                 Forms\Components\TextInput::make('expired_at')->label('Expires Date'),
@@ -89,6 +93,8 @@ class SubscriptionResource extends Resource
                 //
             ])
             ->headerActions([
+                ExportAction::make()
+                    ->exporter(SubscriptionExporter::class),
                 Action::make('Download pdf')
                     ->icon('heroicon-o-squares-2x2')
                     ->url(route('subscriptions.pdf.download'))->openUrlInNewTab(),

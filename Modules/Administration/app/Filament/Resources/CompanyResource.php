@@ -9,11 +9,13 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\HtmlString;
 use Illuminate\Validation\ValidationException;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 class CompanyResource extends Resource
 {
@@ -31,31 +33,34 @@ class CompanyResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Fieldset::make('Main Info')
-                ->relationship('user')
-                ->schema([
-                    Forms\Components\TextInput::make('email')
-                        ->label('Email')
-                        ->email()
-                        ->required()
-                        ->maxLength(255),
-                    Forms\Components\TextInput::make('password')
-                        ->label('Password')
-                        ->password()
-                        ->required()
-                        ->maxLength(255),
-                    Forms\Components\TextInput::make('name')
-                        ->required()
-                        ->maxLength(255),
+                    ->relationship('user')
+                    ->schema([
+                        Forms\Components\TextInput::make('email')
+                            ->label('Email')
+                            ->email()
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('password')
+                            ->label('Password')
+                            ->password()
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('name')
+                            ->required()
+                            ->maxLength(255),
 
-                ]),
+                    ]),
                 Forms\Components\RichEditor::make('description')->columnSpan('full'),
                 Forms\Components\TextInput::make('ceo_name')->maxLength(255),
                 Forms\Components\TextInput::make('tax_name')->required(),
-                // Forms\Components\FileUpload::make('logo')
-                //     ->label('Logo')
-                //     ->image()
-                //     ->directory('companies/logo')
-                //     ,
+                Forms\Components\FileUpload::make('logo')
+                    ->label('logo')
+                    ->directory('companies/logo')
+                    ->storeFileNamesIn('image_path')
+                    ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file): string {
+                        return (string) str($file->hashName());
+                    })
+                    ->image(),
                 Forms\Components\TextInput::make('zipcode')->required(),
                 Forms\Components\TextInput::make('national_address')->required(),
                 Forms\Components\TextInput::make('website')->label('Website')
@@ -96,7 +101,9 @@ class CompanyResource extends Resource
                 Tables\Columns\TextColumn::make('name'),
                 Tables\Columns\TextColumn::make('user.email')->label('Email'),
                 Tables\Columns\TextColumn::make('description')->html(),
-
+                ImageColumn::make('logo')
+                    ->label('Logo')
+                    ->circular(),
             ])
             ->filters([
                 //

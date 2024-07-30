@@ -7,9 +7,11 @@ use AymanAlhattami\FilamentPageWithSidebar\PageNavigationItem;
 use AymanAlhattami\FilamentPageWithSidebar\Traits\HasPageSidebar;
 use Closure;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Tabs;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Outerweb\FilamentSettings\Filament\Pages\Settings as BaseSettings;
 
 class WebsiteSettings extends BaseSettings
@@ -23,17 +25,30 @@ class WebsiteSettings extends BaseSettings
         return [
             FileUpload::make('website.logo')
                 ->label('Website Logo')
-                ->directory('logos')
+                ->directory('uploads/logos')
+                ->storeFileNamesIn('image_path')
+                ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file): string {
+                    return (string) str($file->hashName());
+                })
                 ->image(),
             FileUpload::make('website.favicon')
                 ->label('Website Favicon')
-                ->directory('favicons')
+                ->directory('uploads/favicons')
+                ->storeFileNamesIn('image_path')
+                ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file): string {
+                    return (string) str($file->hashName());
+                })
                 ->image(),
+            RichEditor::make('website.our_services')
+                ->label('Our Services'),
+            RichEditor::make('website.about_us')
+                ->label('About Us'),
+            RichEditor::make('website.who_are_we')
+                ->label('Who Are We'),
             Toggle::make('website.maintenance_mode')
                 ->label('Maintenance Mode')
                 ->onIcon('heroicon-m-bolt')
                 ->offIcon('heroicon-m-user'),
-
 
         ];
     }

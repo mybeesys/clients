@@ -19,6 +19,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        \Config::set('app.name', setting('general.website_name') ?? env('APP_NAME'));;
     }
 }
