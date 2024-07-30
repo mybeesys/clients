@@ -37,8 +37,8 @@ class CouponResource extends Resource
                 Forms\Components\Select::make('descount_type')
                     ->label('Descount Type')
                     ->options([
-                        'Percentage' => 'Percentage',
-                        'Fixed' => 'Fixed',
+                        config('administration.coupons.types.percentage') => config('administration.coupons.types.percentage'),
+                        config('administration.coupons.types.fixed') =>  config('administration.coupons.types.fixed'),
                     ])->required(),
                 Forms\Components\TextInput::make('amount')->required()->numeric(),
                 Forms\Components\TextInput::make('max_use')->numeric(),

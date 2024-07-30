@@ -46,8 +46,8 @@ class PaymentSubscriptionResource extends Resource
                 Forms\Components\TextInput::make('payment_date'),
                 Forms\Components\Select::make('status')
                     ->options([
-                        'paid' => 'Paid',
-                        'not_paid' => 'Not Paid',
+                        config('administration.subscription_payments.status.paid') =>  config('administration.subscription_payments.status.paid'),
+                        config('administration.subscription_payments.status.not_paid') =>  config('administration.subscription_payments.status.not_paid'),
                     ]),
             ]);
     }

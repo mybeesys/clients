@@ -79,9 +79,10 @@ class AdministrationServiceProvider extends ServiceProvider
      */
     protected function registerConfig(): void
     {
-        $this->publishes([module_path($this->moduleName, 'config/config.php') => config_path($this->moduleNameLower . '.php')], 'config');
+        $this->publishes([module_path($this->moduleName, 'config/config.php') => config_path($this->moduleNameLower . '.php')], 'constants');
         $this->mergeConfigFrom(module_path($this->moduleName, 'config/config.php'), $this->moduleNameLower);
-       
+        $this->mergeConfigFrom(module_path($this->moduleName, 'config/constants.php'), $this->moduleNameLower);
+
     }
 
     /**

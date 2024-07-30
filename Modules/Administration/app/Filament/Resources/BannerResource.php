@@ -12,7 +12,6 @@ use Filament\Tables\Columns\ImageColumn;
 
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -48,15 +47,15 @@ class BannerResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('name')
+                Tables\Columns\TextColumn::make('name')
                     ->label('Name')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('description')
+                Tables\Columns\TextColumn::make('description')
                     ->label('Description')
                     ->searchable()
                     ->sortable(),
-                ImageColumn::make('image')
+                Tables\Columns\ImageColumn::make('image')
                     ->label('Image')
                     ->circular(),
                 Tables\Columns\ToggleColumn::make('active')

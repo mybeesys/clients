@@ -76,8 +76,8 @@ class CompanyResource extends Resource
                         Forms\Components\Select::make('type')
                             ->label('Type')
                             ->options([
-                                'email' => 'Email',
-                                'phone' => 'Phone',
+                                config('administration.contacts.types.email') => config('administration.contacts.types.email'),
+                                config('administration.contacts.types.phone') => config('administration.contacts.types.phone'),
                             ])
                             ->required(),
                         Forms\Components\TextInput::make('contact')
