@@ -7,6 +7,7 @@ use Modules\Administration\Filament\Resources\SubscriptionResource\Pages;
 use Modules\Administration\Filament\Resources\SubscriptionResource\RelationManagers;
 use Filament\Forms;
 use Filament\Forms\Form;
+use PDF;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -16,7 +17,10 @@ use Modules\Administration\Models\Subscription;
 use App\Models\Company;
 use Filament\Tables\Actions\ExportAction;
 use Filament\Tables\Actions\Action;
+use Filament\Tables\Filters\Filter;
+use Illuminate\Http\Response;
 use Modules\Administration\Filament\Exports\SubscriptionExporter;
+use Modules\Administration\Filament\Resources\SubscriptionResource\Pages\ListSubscriptions;
 
 class SubscriptionResource extends Resource
 {
@@ -90,14 +94,36 @@ class SubscriptionResource extends Resource
 
             ])
             ->filters([
-                //
+                Filter::make('created_at')
+                    ->form([
+                        Forms\Components\DatePicker::make('created_from')->label('From'),
+                        Forms\Components\DatePicker::make('created_until')->label('Until'),
+                    ])
+                    ->query(function (Builder $query, array $data) {
+                        $query
+                            ->when($data['created_from'], fn (Builder $query, $date) => $query->whereDate('created_at', '>=', $date))
+                            ->when($data['created_until'], fn (Builder $query, $date) => $query->whereDate('created_at', '<=', $date));
+                    }),
             ])
             ->headerActions([
-                ExportAction::make()
-                    ->exporter(SubscriptionExporter::class),
-                Action::make('Download pdf')
-                    ->icon('heroicon-o-squares-2x2')
-                    ->url(route('subscriptions.pdf.download'))->openUrlInNewTab(),
+                Tables\Actions\Action::make('download')
+                    ->icon('heroicon-o-inbox-arrow-down')
+                    ->label('Download PDF')
+                    ->action(function (array $data, $livewire, $table) {
+                        $records = $livewire->table($table)->getRecords();
+
+                        $subscriptions = collect($records->items())->map(function ($item) {
+                            $subscription = new Subscription();
+                            $subscription->setRawAttributes($item->getAttributes(), true);
+                            $subscription->exists = true;
+                            return $subscription;
+                        });
+
+                        $pdf = PDF::loadView('administration::reports.subscription-report', ['subscriptions' => $subscriptions]);
+                        return response()->streamDownload(function () use ($pdf) {
+                            echo $pdf->stream();
+                        }, 'subscription-report.pdf');
+                    })
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),

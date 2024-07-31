@@ -79,8 +79,13 @@
 
     </table>
     <div class="summary">
-        <p><strong>Number of Companies:</strong> {{ $numberOfCompanies }}</p>
-        <p><strong>Number of Subscription Payments:</strong> {{ $numberOfSubscriptionPayments }}</p>
+        <p><strong>Number of Companies:</strong> {{ $subscriptions->unique('company_id')->count() }}</p>
+        <p><strong>Number of Subscription Payments:</strong>
+            {{ $subscriptions->sum(function ($subscription) {
+                return $subscription->payments ? $subscription->payments->count() : 0;
+            }) }}
+        </p>
+
     </div>
 
 </body>
