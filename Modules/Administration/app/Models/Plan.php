@@ -14,6 +14,8 @@ class Plan extends ModelsPlan
     /**
      * The attributes that are mass assignable.
      */
+    protected $table = 'plans';
+
     protected $fillable = ['name', 'description', 'price', 'duration', 'active'];
 
     public function features()
@@ -22,6 +24,7 @@ class Plan extends ModelsPlan
             ->using(config('soulbscription.models.feature_plan'))
             ->withPivot(['charges', 'value']);
     }
+
     public function payments()
     {
         return $this->hasMany(PaymentSubscription::class);
@@ -35,5 +38,10 @@ class Plan extends ModelsPlan
     public function scopeActive($q)
     {
         return $q->where('is_active', 1);
+    }
+
+    public function feature_plans()
+    {
+        return $this->hasMany(FeaturePlan::class);
     }
 }

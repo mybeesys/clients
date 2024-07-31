@@ -5,6 +5,8 @@ namespace Modules\Administration\Filament\Resources;
 use Modules\Administration\Filament\Resources\PlanResource\Pages;
 use Modules\Administration\Filament\Resources\PlanResource\RelationManagers;
 use Filament\Forms;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Select;
 use LucasDotVin\Soulbscription\Enums\PeriodicityType;
 
 use Filament\Forms\Form;
@@ -14,6 +16,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use LucasDotVin\Soulbscription\Models\Feature;
+use Modules\Administration\Filament\Resources\PlanResource\RelationManagers\FeaturesRelationManager;
 use Modules\Administration\Models\Plan;
 
 class PlanResource extends Resource
@@ -29,7 +32,7 @@ class PlanResource extends Resource
         return  $form
             ->schema([
                 Forms\Components\TextInput::make('name')->required(),
-                Forms\Components\RichEditor::make('description')->required(),
+                Forms\Components\RichEditor::make('description')->required()->columnSpan('full'),
                 Forms\Components\TextInput::make('price')
                     ->label('Price')
                     ->numeric()
@@ -51,15 +54,19 @@ class PlanResource extends Resource
                         PeriodicityType::Week => PeriodicityType::Week,
                         PeriodicityType::Day => PeriodicityType::Day,
                     ]),
-                Forms\Components\Select::make('Featuers')
-                    ->relationship(name: 'features', titleAttribute: 'name')
-                    ->multiple()
-                ->pivotData([
-                    'value' => '3',
-                ]),
+                Repeater::make('feature_plans')
+                    ->relationship()
+                    ->schema([
+                        Select::make('feature_id')
+                            ->searchable()
+                            ->relationship('feature', 'name')->required(),
 
-
-            ])->columns(1);
+                        Forms\Components\TextInput::make('charges')
+                            ->numeric()
+                            ->required(),
+                    ])->minItems(1)
+                    ->required(),
+            ]);
     }
 
 
@@ -97,9 +104,7 @@ class PlanResource extends Resource
 
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array

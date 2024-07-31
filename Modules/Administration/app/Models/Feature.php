@@ -14,6 +14,8 @@ class Feature extends ModelsFeature
     /**
      * The attributes that are mass assignable.
      */
+    protected $table = 'features';
+
     protected $fillable = [
         'consumable',
         'name',
@@ -27,6 +29,12 @@ class Feature extends ModelsFeature
     {
         return $this->belongsToMany(config('soulbscription.models.plan'))
             ->using(config('soulbscription.models.feature_plan'))
-            ->withPivot(['value','charges']);
+            ->withPivot(['value', 'charges']);
     }
+
+    public function feature_plans()
+    {
+        return $this->hasMany(FeaturePlan::class);
+    }
+
 }
