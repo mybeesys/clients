@@ -35,7 +35,7 @@ return [
     'nav.role.label' => 'الأدوار',
     'nav.role.icon' => 'heroicon-o-shield-check',
     'resource.label.role' => 'دور',
-    'resource.label.roles' => 'الأدوار',
+    'resource.label.roles' => 'الأدوار',    
 
     /*
     |--------------------------------------------------------------------------

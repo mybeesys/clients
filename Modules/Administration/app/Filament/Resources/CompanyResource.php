@@ -2,10 +2,15 @@
 
 namespace Modules\Administration\Filament\Resources;
 
+use App\Models\City;
 use Modules\Administration\Filament\Resources\CompanyResource\Pages;
 use Modules\Administration\Filament\Resources\CompanyResource\RelationManagers;
 use App\Models\Company;
+use App\Models\Country;
+use App\Models\State;
 use Filament\Forms;
+use Filament\Forms\Components\Select;
+use Livewire\Component as Livewire;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -65,10 +70,43 @@ class CompanyResource extends Resource
                 Forms\Components\TextInput::make('national_address')->required(),
                 Forms\Components\TextInput::make('website')->label('Website')
                     ->url()->maxLength(255),
-                Forms\Components\Select::make('country_id')
+
+                Select::make('country_id')
                     ->label('Country')
-                    ->relationship('country', 'name'),
-                Forms\Components\TextInput::make('city'),
+                    ->dehydrated(false)
+                    ->searchable()
+                    ->options(Country::pluck('name', 'id'))
+                    ->reactive()
+                    ->afterStateUpdated(fn ($state, callable $set) => $set('state_id', null)),
+
+
+                Select::make('state_id')
+                    ->label('State')
+                    ->placeholder(fn (Forms\Get $get): string => empty($get('country_id')) ? 'First select country' : 'Select an option')
+                    ->options(function (?Company $record, Forms\Get $get, Forms\Set $set) {
+                        if (!empty($record) && empty($get('country_id'))) {
+                            $set('country_id', $record->state->country_id);
+                            $set('state_id', $record->state_id);
+                        }
+                        return State::where('country_id', $get('country_id'))->pluck('name', 'id');
+                    })
+                    ->reactive()
+                    ->afterStateUpdated(fn ($state, callable $set) => $set('city_id', null)),
+                Select::make('city_id')
+                    ->label('City')
+                    ->placeholder(fn (Forms\Get $get): string => empty($get('state_id')) ? 'First select state' : 'Select an option')
+                    ->options(function (?Company $record, Forms\Get $get, Forms\Set $set) {
+                        if (!empty($record) && empty($get('country_id'))) {
+                            $set('state_id', $record->city->state_id);
+                            $set('city_id', $record->city_id);
+                        }
+
+                        return City::where('state_id', $get('state_id'))->pluck('name', 'id');
+                    })
+                    ->searchable()
+                    ->preload(),
+
+
                 Forms\Components\TextInput::make('phone')->numeric()->minLength(8)->maxLength(11),
                 Forms\Components\Repeater::make('contacts')
                     ->relationship()

@@ -26,6 +26,7 @@ class TenantServiceProvider extends ServiceProvider
     public function boot(): void
     {
         if (Schema::hasTable('domains')) {
+
             $domain = Domain::where('domain', request()->getHost())->first();
             if ($domain) {
                 DB::purge('mysql');
@@ -38,6 +39,7 @@ class TenantServiceProvider extends ServiceProvider
 
 
                 DB::reconnect('mysql');
+                dd(DB::connection()->getDatabaseName());
             }
         }
     }

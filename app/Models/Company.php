@@ -25,7 +25,7 @@ class Company extends Model
         'description', 'name',
         'user_id', 'name', 'zipcode',
         'national_address',
-        'country_id', 'website'
+        'country_id', 'website', 'state_id', 'city_id'
     ];
 
     public function user()
@@ -47,5 +47,15 @@ class Company extends Model
     public function country()
     {
         return $this->belongsTo(Country::class);
+    }
+
+    public function city()
+    {
+        return $this->belongsTo(City::class);
+    }
+
+    public function state()
+    {
+        return $this->belongsTo(State::class);
     }
 }

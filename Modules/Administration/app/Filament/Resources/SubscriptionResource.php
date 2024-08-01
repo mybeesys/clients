@@ -2,9 +2,7 @@
 
 namespace Modules\Administration\Filament\Resources;
 
-use Filament\Tables\Actions\ExportBulkAction;
 use Modules\Administration\Filament\Resources\SubscriptionResource\Pages;
-use Modules\Administration\Filament\Resources\SubscriptionResource\RelationManagers;
 use Filament\Forms;
 use Filament\Forms\Form;
 use PDF;
@@ -12,15 +10,10 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Modules\Administration\Models\Subscription;
 use App\Models\Company;
-use Filament\Tables\Actions\ExportAction;
-use Filament\Tables\Actions\Action;
 use Filament\Tables\Filters\Filter;
-use Illuminate\Http\Response;
-use Modules\Administration\Filament\Exports\SubscriptionExporter;
-use Modules\Administration\Filament\Resources\SubscriptionResource\Pages\ListSubscriptions;
+
 
 class SubscriptionResource extends Resource
 {
@@ -55,7 +48,6 @@ class SubscriptionResource extends Resource
                             ->pluck('subscriber_id');
                         return Company::whereIn('id', $companyIds)->pluck('name', 'id');
                     })
-
                     ->searchable()
                     ->preload(),
                 Forms\Components\TextInput::make('expired_at')->label('Expires Date'),
@@ -91,7 +83,6 @@ class SubscriptionResource extends Resource
                     ->url(fn ($record) => 'https://' . $record->subdomain)
                     ->openUrlInNewTab()
                     ->html(),
-
             ])
             ->filters([
                 Filter::make('created_at')
@@ -111,7 +102,6 @@ class SubscriptionResource extends Resource
                     ->label('Download PDF')
                     ->action(function (array $data, $livewire, $table) {
                         $records = $livewire->table($table)->getRecords();
-
                         $subscriptions = collect($records->items())->map(function ($item) {
                             $subscription = new Subscription();
                             $subscription->setRawAttributes($item->getAttributes(), true);
@@ -127,7 +117,6 @@ class SubscriptionResource extends Resource
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
-
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

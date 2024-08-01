@@ -31,7 +31,7 @@ return [
     |--------------------------------------------------------------------------
     */
 
-    'nav.group' => 'Filament Shield',
+    'nav.group' => 'User Management',
     'nav.role.label' => 'តួនាទី',
     'nav.role.icon' => 'heroicon-o-shield-check',
     'resource.label.role' => 'តួនាទី',

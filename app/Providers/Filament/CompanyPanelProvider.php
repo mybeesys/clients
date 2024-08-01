@@ -1,8 +1,7 @@
 <?php
 
-namespace Modules\Company\Providers\Filament;
+namespace App\Providers\Filament;
 
-use App\Filament\Pages\Auth\Login;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -29,7 +28,7 @@ class CompanyPanelProvider extends PanelProvider
         return $panel
             ->id('company')
             ->path('company')
-            ->login(Login::class)
+            ->login()//Login::class
             ->colors([
                 'primary' => Color::Rose,
             ])

@@ -61,13 +61,6 @@
       'FilamentModules' => 'FilamentModules',
     ),
   ),
-  'devaslanphp/filament-avatar' => 
-  array (
-    'providers' => 
-    array (
-      0 => 'Devaslanphp\\FilamentAvatar\\FilamentAvatarProvider',
-    ),
-  ),
   'filament/actions' => 
   array (
     'providers' => 

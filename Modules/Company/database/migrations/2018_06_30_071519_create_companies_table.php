@@ -21,7 +21,9 @@ return new class extends Migration
             $table->string('zipcode')->nullable();
             $table->string('national_address')->nullable();
             $table->string('website')->nullable();
-            $table->integer('country_id');
+            $table->integer('country_id')->nullable();
+            $table->integer('state_id')->nullable();
+            $table->integer('city_id')->nullable();
             $table->string('tax_name')->nullable();
             $table->string('logo')->nullable();
             $table->tinyInteger('subscribed')->default(0);
