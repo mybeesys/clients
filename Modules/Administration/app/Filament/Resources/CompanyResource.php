@@ -91,7 +91,9 @@ class CompanyResource extends Resource
                         return State::where('country_id', $get('country_id'))->pluck('name', 'id');
                     })
                     ->reactive()
+                    ->searchable()
                     ->afterStateUpdated(fn ($state, callable $set) => $set('city_id', null)),
+                    
                 Select::make('city_id')
                     ->label('City')
                     ->placeholder(fn (Forms\Get $get): string => empty($get('state_id')) ? 'First select state' : 'Select an option')
