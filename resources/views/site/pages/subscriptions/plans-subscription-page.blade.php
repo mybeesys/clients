@@ -17,11 +17,12 @@
                                 @endforeach
                             </ul>
 
-                            @if (auth()->guard('company')->user()->company->subscribed)
+                            @if (auth()->guard('company')->user()->company->first()->subscribed)
                                 <button class="btn btn-lg btn-block btn-secondary" disabled>Already Subscribed</button>
                             @else
                                 <form action="{{ route('site.company.subscribe') }}" method="POST">
                                     @csrf
+
                                     <input type="hidden" name="plan_id" value="{{ $plan->id }}">
                                     <button type="submit" class="btn btn-lg btn-block btn-primary">Subscribe</button>
                                 </form>

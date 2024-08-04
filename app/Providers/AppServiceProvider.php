@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,6 +20,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        \Config::set('app.name', setting('general.website_name') ?? env('APP_NAME'));;
+        if (Schema::hasTable('cache'))
+            \Config::set('app.name', setting('general.website_name') ?? env('APP_NAME'));;
     }
 }

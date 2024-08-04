@@ -1,5 +1,8 @@
 <?php
 
+use Illuminate\Support\Facades\Schema;
+use Stancl\Tenancy\Database\Models\Domain;
+
 if (!function_exists('getAllPaymentsHelper')) {
     function getAllPaymentsHelper()
     {
@@ -53,7 +56,7 @@ if (!function_exists('getAllSMSHelper')) {
                 'key' => 'Twilio',
                 'name' => 'Twilio',
                 'logo' => asset('assets/images/payment_methods/stripe.png'),
-                'fields' => ['TWILIO_AUTH_TOKEN', 'TWILIO_VALID_TWILLO_NUMBER','TWILIO_SID'],
+                'fields' => ['TWILIO_AUTH_TOKEN', 'TWILIO_VALID_TWILLO_NUMBER', 'TWILIO_SID'],
             ],
 
             [
@@ -66,7 +69,7 @@ if (!function_exists('getAllSMSHelper')) {
                 'key' => 'SSLWireless',
                 'name' => 'SSLWireless',
                 'logo' => asset('assets/images/payment_methods/paypal.png'),
-                'fields' => ['SSL_SMS_URL', 'SSL_SMS_SID','SSL_SMS_API_TOKEN'],
+                'fields' => ['SSL_SMS_URL', 'SSL_SMS_SID', 'SSL_SMS_API_TOKEN'],
             ],
 
         ];
@@ -75,3 +78,10 @@ if (!function_exists('getAllSMSHelper')) {
     }
 }
 
+if (!function_exists('getAllDomains')) {
+    function getAllDomains()
+    {
+        $domains = Domain::pluck('domain')->toArray();
+        return $domains;
+    }
+}

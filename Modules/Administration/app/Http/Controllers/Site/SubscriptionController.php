@@ -47,7 +47,7 @@ class SubscriptionController extends Controller
 
         $tenant = Tenant::create([
             'id' => $subdomain_name,
-            'company_id' => $user->company->id,
+            'company_id' => $user->company->first()->id,
             'tenancy_db_name' => $subdomain_name . '_db'
         ]);
 
@@ -59,7 +59,7 @@ class SubscriptionController extends Controller
         $tenant->domains()->save($domain);
 
         $plan = Plan::find($request->plan_id);
-        $company = Company::find($user->company->id);
+        $company = Company::find($user->company->first()->id);
 
         $subscription = $company->subscribeTo($plan);
         $subscription->update(['tenant_id' => $tenant->id, 'subdomain' => $domain->domain]);

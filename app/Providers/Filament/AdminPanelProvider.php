@@ -64,11 +64,7 @@ class AdminPanelProvider extends PanelProvider
             ->plugins([
                 AdministrationPlugin::make(),
                 \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
-                // \Outerweb\FilamentSettings\Filament\Plugins\FilamentSettingsPlugin::make()->pages([
-                //     // \Modules\Administration\Filament\Pages\Settings\Settings::class,
-                //     // \Modules\Administration\Filament\Pages\Settings\StaticPageSettings::class,
 
-                // ]),
             ]);
     }
 }

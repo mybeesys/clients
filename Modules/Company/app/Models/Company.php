@@ -17,7 +17,7 @@ class Company extends Model
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = ['logo', 'tax_name', 'ceo_name', 'country_id', 'description', 'name', 'user_id', 'name'];
+    protected $fillable = ['logo', 'tax_name', 'ceo_name', 'country_id', 'description', 'name', 'user_id', 'name','subscribed'];
 
     public function user()
     {

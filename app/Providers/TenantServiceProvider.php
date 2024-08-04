@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Support\TenantConnector;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
@@ -12,6 +13,8 @@ use Stancl\Tenancy\Events\TenancyInitialized;
 
 class TenantServiceProvider extends ServiceProvider
 {
+    use TenantConnector;
+
     /**
      * Register services.
      */
@@ -26,20 +29,11 @@ class TenantServiceProvider extends ServiceProvider
     public function boot(): void
     {
         if (Schema::hasTable('domains')) {
+            $host = request()->getHost();
+            $domain = Domain::where('domain', $host)->first();
 
-            $domain = Domain::where('domain', request()->getHost())->first();
             if ($domain) {
-                DB::purge('mysql');
-
-                config([
-                    'database.connections.mysql.database' => $domain->tenant_id . '_db',
-                    'database.connections.mysql.username' => 'root',
-                    'database.connections.mysql.password' => '',
-                ]);
-
-
-                DB::reconnect('mysql');
-                dd(DB::connection()->getDatabaseName());
+                $this->reconnect($domain->tenant_id . '_db');
             }
         }
     }

@@ -2,11 +2,11 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Auth\Login;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages;
-use Illuminate\Support\Facades\Auth;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
@@ -18,17 +18,15 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use Stancl\Tenancy\Database\Models\Domain;
 
 class CompanyPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
-        $domains = Domain::pluck('domain')->toArray();
         return $panel
             ->id('company')
             ->path('company')
-            ->login()//Login::class
+            ->login(Login::class)
             ->colors([
                 'primary' => Color::Rose,
             ])
@@ -53,14 +51,14 @@ class CompanyPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                // DatabaseConfigMiddleware::class,
             ])
-            ->domains($domains)
+            ->domains(getAllDomains())
             ->authMiddleware([
                 Authenticate::class,
             ])
             ->plugins([
                 \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make()
             ]);
-            ;
     }
 }
