@@ -15,6 +15,6 @@ class MyPlan extends Page
 
     public function mount()
     {
-        $this->subscription = tenant()->subscriptions()->first();
+        $this->subscription = tenant()->subscriptions()->latest()->first();
     }
 }
