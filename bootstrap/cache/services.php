@@ -54,9 +54,8 @@
     50 => 'App\\Providers\\Filament\\AdminPanelProvider',
     51 => 'App\\Providers\\Filament\\CompanyPanelProvider',
     52 => 'Modules\\Company\\Providers\\TenancyServiceProvider',
-    53 => 'App\\Providers\\TenantServiceProvider',
-    54 => 'Filament\\FilamentServiceProvider',
-    55 => 'Nwidart\\Modules\\LaravelModulesServiceProvider',
+    53 => 'Filament\\FilamentServiceProvider',
+    54 => 'Nwidart\\Modules\\LaravelModulesServiceProvider',
   ),
   'eager' => 
   array (
@@ -99,9 +98,8 @@
     36 => 'App\\Providers\\Filament\\AdminPanelProvider',
     37 => 'App\\Providers\\Filament\\CompanyPanelProvider',
     38 => 'Modules\\Company\\Providers\\TenancyServiceProvider',
-    39 => 'App\\Providers\\TenantServiceProvider',
-    40 => 'Filament\\FilamentServiceProvider',
-    41 => 'Nwidart\\Modules\\LaravelModulesServiceProvider',
+    39 => 'Filament\\FilamentServiceProvider',
+    40 => 'Nwidart\\Modules\\LaravelModulesServiceProvider',
   ),
   'deferred' => 
   array (
