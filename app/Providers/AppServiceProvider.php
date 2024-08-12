@@ -20,7 +20,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        if (Schema::hasTable('cache'))
+        if (Schema::hasTable('cache') && Schema::hasTable('settings'))
             \Config::set('app.name', setting('general.website_name') ?? env('APP_NAME'));;
     }
 }
