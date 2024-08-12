@@ -20,6 +20,7 @@ use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Modules\Administration\Filament\AdministrationPlugin;
+use Modules\Administration\Filament\Resources\UserResource;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -32,6 +33,9 @@ class AdminPanelProvider extends PanelProvider
             ->login(Login::class)
             ->colors([
                 'primary' => Color::Purple,
+            ])
+            ->resources([
+                UserResource::class,
             ])
             ->navigationGroups([
                 'Dashboard', 'Users Management', 'Subscriptions', 'Settings'
