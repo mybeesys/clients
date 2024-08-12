@@ -12,13 +12,13 @@ trait TenantConnector
     public function reconnect($databaseName = null)
     {
 
-        DB::purge('tenant');
-        Config::set('database.connections.tenant.host', '127.0.0.1');
-        Config::set('database.connections.tenant.port', '3306');
-        Config::set('database.connections.tenant.database', $databaseName);
-        Config::set('database.connections.tenant.username', 'root');
-        Config::set('database.connections.tenant.password', '');
-        DB::setDefaultConnection('tenant');
+        DB::purge('tenant_template');
+        Config::set('database.connections.tenant_template.host', '127.0.0.1');
+        Config::set('database.connections.tenant_template.port', '3306');
+        Config::set('database.connections.tenant_template.database', $databaseName);
+        Config::set('database.connections.tenant_template.username', 'root');
+        Config::set('database.connections.tenant_template.password', '');
+        DB::setDefaultConnection('tenant_template');
         session(['tenant' => $databaseName]);
     }
 }

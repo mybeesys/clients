@@ -10,7 +10,7 @@
                         </div>
                         <div class="card-body">
                             <h1 class="card-title pricing-card-title">${{ $plan->price }} <small class="text-muted">/
-                                    mo</small></h1>
+                                    {{ $plan->periodicity_type }} </small></h1>
                             <ul class="list-unstyled mt-3 mb-4">
                                 @foreach ($plan->features as $feature)
                                     <li>{{ $feature->name }}: {{ $feature->pivot->value }}</li>

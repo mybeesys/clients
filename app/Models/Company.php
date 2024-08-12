@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Company\Database\Factories\CompanyFactory;
 use LucasDotVin\Soulbscription\Models\Concerns\HasSubscriptions;
 use Modules\Administration\Models\PaymentSubscription;
+use Modules\Administration\Models\Subscription;
 use Modules\Company\Models\Contact;
 
 class Company extends Model
@@ -57,5 +58,10 @@ class Company extends Model
     public function state()
     {
         return $this->belongsTo(State::class);
+    }
+
+    public function subscriptios()
+    {
+        return $this->hasMany(Subscription::class);
     }
 }

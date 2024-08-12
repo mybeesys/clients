@@ -19,6 +19,7 @@ use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Modules\Company\Filament\Pages\MyPlan;
+use Modules\Company\Filament\Resources\UserResource;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
 use Stancl\Tenancy\Middleware\ScopeSessions;
@@ -33,6 +34,10 @@ class CompanyPanelProvider extends PanelProvider
             ->login(Login::class)
             ->colors([
                 'primary' => Color::Rose,
+                'secondary' => Color::Green
+            ])
+            ->resources([
+                UserResource::class,
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
@@ -56,10 +61,6 @@ class CompanyPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
-                'web',
-                InitializeTenancyByDomain::class,
-                PreventAccessFromCentralDomains::class,
-                ScopeSessions::class,
 
             ])
             ->domains(getAllDomains())

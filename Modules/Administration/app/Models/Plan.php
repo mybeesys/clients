@@ -37,7 +37,7 @@ class Plan extends ModelsPlan
 
     public function scopeActive($q)
     {
-        return $q->where('is_active', 1);
+        return $q->where('active', 1);
     }
 
     public function feature_plans()

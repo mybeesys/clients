@@ -1,5 +1,6 @@
 <?php
 
+
 return [
 
     App\Providers\AppServiceProvider::class,
@@ -8,7 +9,8 @@ return [
     Modules\Company\Providers\TenancyServiceProvider::class,
     Filament\FilamentServiceProvider::class,
     Nwidart\Modules\LaravelModulesServiceProvider::class,
-    // App\Providers\TenantServiceProvider::class,
+    App\Providers\TenantServiceProvider::class,
+
 
 
 ];

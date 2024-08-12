@@ -56,6 +56,7 @@
     52 => 'Modules\\Company\\Providers\\TenancyServiceProvider',
     53 => 'Filament\\FilamentServiceProvider',
     54 => 'Nwidart\\Modules\\LaravelModulesServiceProvider',
+    55 => 'App\\Providers\\TenantServiceProvider',
   ),
   'eager' => 
   array (
@@ -100,6 +101,7 @@
     38 => 'Modules\\Company\\Providers\\TenancyServiceProvider',
     39 => 'Filament\\FilamentServiceProvider',
     40 => 'Nwidart\\Modules\\LaravelModulesServiceProvider',
+    41 => 'App\\Providers\\TenantServiceProvider',
   ),
   'deferred' => 
   array (

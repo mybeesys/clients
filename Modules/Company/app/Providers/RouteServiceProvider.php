@@ -2,6 +2,7 @@
 
 namespace Modules\Company\Providers;
 
+use Filament\Http\Middleware\Authenticate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
 
@@ -25,6 +26,8 @@ class RouteServiceProvider extends ServiceProvider
         $this->mapApiRoutes();
 
         $this->mapWebRoutes();
+
+        $this->mapAdminRoutes();
     }
 
     /**
@@ -45,5 +48,10 @@ class RouteServiceProvider extends ServiceProvider
     protected function mapApiRoutes(): void
     {
         Route::middleware('api')->prefix('api')->name('api.')->group(module_path('Company', '/routes/api.php'));
+    }
+
+    protected function mapAdminRoutes(): void
+    {
+        Route::prefix('company')->middleware(['web', Authenticate::class])->group(base_path('Modules\Company\routes\admin.php'));
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Modules\Administration\Models;
 
+use App\Models\Company;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use LucasDotVin\Soulbscription\Models\Subscription as ModelsSubscription;
@@ -34,5 +35,10 @@ class Subscription extends ModelsSubscription
     public function tenant()
     {
         return $this->belongsTo(Tenant::class);
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
     }
 }
