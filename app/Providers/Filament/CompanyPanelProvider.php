@@ -63,7 +63,7 @@ class CompanyPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
 
             ])
-            ->domains(getAllDomains())
+            // ->domains(getAllDomains())
             ->authMiddleware([
                 Authenticate::class,
             ])
