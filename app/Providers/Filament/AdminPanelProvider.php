@@ -34,9 +34,6 @@ class AdminPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Purple,
             ])
-            ->resources([
-                UserResource::class,
-            ])
             ->navigationGroups([
                 'Dashboard', 'Users Management', 'Subscriptions', 'Settings'
             ])
