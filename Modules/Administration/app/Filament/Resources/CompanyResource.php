@@ -77,14 +77,14 @@ class CompanyResource extends Resource
                     ->searchable()
                     ->options(Country::pluck('name', 'id'))
                     ->reactive()
-                    ->afterStateUpdated(fn ($state, callable $set) => $set('state_id', null)),
+                    ->afterStateUpdated(fn($state, callable $set) => $set('state_id', null)),
 
 
                 Select::make('state_id')
                     ->label('State')
-                    ->placeholder(fn (Forms\Get $get): string => empty($get('country_id')) ? 'First select country' : 'Select an option')
+                    ->placeholder(fn(Forms\Get $get): string => empty($get('country_id')) ? 'First select country' : 'Select an option')
                     ->options(function (?Company $record, Forms\Get $get, Forms\Set $set) {
-                        if (!empty($record) && empty($get('country_id'))) {
+                        if (!empty($record) && !empty($get('country_id'))) {
                             $set('country_id', $record->state->country_id);
                             $set('state_id', $record->state_id);
                         }
@@ -92,13 +92,13 @@ class CompanyResource extends Resource
                     })
                     ->reactive()
                     ->searchable()
-                    ->afterStateUpdated(fn ($state, callable $set) => $set('city_id', null)),
-                    
+                    ->afterStateUpdated(fn($state, callable $set) => $set('city_id', null)),
+
                 Select::make('city_id')
                     ->label('City')
-                    ->placeholder(fn (Forms\Get $get): string => empty($get('state_id')) ? 'First select state' : 'Select an option')
+                    ->placeholder(fn(Forms\Get $get): string => empty($get('state_id')) ? 'First select state' : 'Select an option')
                     ->options(function (?Company $record, Forms\Get $get, Forms\Set $set) {
-                        if (!empty($record) && empty($get('country_id'))) {
+                        if (!empty($record) && !empty($get('country_id'))) {
                             $set('state_id', $record->city->state_id);
                             $set('city_id', $record->city_id);
                         }
