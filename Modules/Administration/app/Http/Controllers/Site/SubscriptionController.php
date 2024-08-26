@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Modules\Administration\Models\Plan;
 use App\Models\Company;
 use Modules\Administration\Models\Coupon;
+use Modules\Administration\Models\PaymentSubscription;
 use Modules\Company\Models\Tenant;
 use Stancl\Tenancy\Database\Models\Domain;
 use Stripe\Charge;
@@ -127,13 +128,30 @@ class SubscriptionController extends Controller
         $stripe = new \Stripe\StripeClient(env('STRIPE_SECRET'));
 
         $session = $stripe->checkout->sessions->retrieve($request->session_id);
-
         if ($session->status == 'complete') {
             $user = auth()->guard('company')->user();
             $plan = Plan::find($session->metadata->plan_id);
             $company = Company::find($user->company->first()->id);
 
-            $this->handleSubscription($request, $user, $plan, $company);
+            $payment_Intent = $stripe->paymentIntents->retrieve($session->payment_intent);
+            $payment_method_id = $payment_Intent->payment_method;
+            $payment_method = $stripe->paymentMethods->retrieve($payment_method_id);
+
+            $payment_type = $payment_method->type;
+            $card_details = $payment_method->card;
+
+            //dd("Payment Type: " . $paymentType, "Card Brand: " . $cardDetails->brand, "Last 4 Digits: " . $cardDetails->last4);
+            $payment_subscription = PaymentSubscription::create([
+                'plan_id' => $plan->id,
+                'company_id ' => $company->id,
+                'paid_amount' => $session->amount_total / 100,
+                'status' => $session->payment_status,
+                'transaction_id' => $session->id,
+                'payment_method' => $card_details->brand,
+                'payment_date' =>  date('Y-m-d H:i:s', $session->created)
+            ]);
+
+            $this->handleSubscription($request, $user, $plan, $company, $payment_subscription);
 
             return redirect()->back()->with('success', 'Subscribed successfully wait until the admin activate your account.');
         } else {
@@ -143,7 +161,7 @@ class SubscriptionController extends Controller
 
 
 
-    protected function handleSubscription($request, $user, $plan, $company)
+    protected function handleSubscription($request, $user, $plan, $company, $payment_subscription)
     {
         $currentDate = Carbon::now()->format('Ymd') . Carbon::now()->timestamp;
         $subdomain_name = strtolower($user->name) . '-' . $currentDate;
@@ -162,6 +180,8 @@ class SubscriptionController extends Controller
 
         $subscription = $company->subscribeTo($plan);
         $subscription->update(['tenant_id' => $tenant->id, 'subdomain' => $domain->domain]);
+        $payment_subscription->subscription_id = $subscription->id;
+        $payment_subscription->save();
         $company->subscribed = 1;
         $company->save();
 
