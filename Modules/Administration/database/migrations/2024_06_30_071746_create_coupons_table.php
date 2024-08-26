@@ -20,6 +20,7 @@ return new class extends Migration
             $table->integer('amount')->nullable();
             $table->string('status')->nullable();
             $table->integer('max_use')->nullable(); //max number of use.
+            $table->integer('times_used')->default(0);
             $table->tinyInteger('active')->nullable();
             $table->timestamp('expired_at')->nullable();
             $table->timestamps();
