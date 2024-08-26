@@ -135,7 +135,7 @@ class SubscriptionController extends Controller
 
             $this->handleSubscription($request, $user, $plan, $company);
 
-            return redirect()->back()->with('error', 'Subscribed successfully.');
+            return redirect()->back()->with('success', 'Subscribed successfully wait until the admin activate your account.');
         } else {
             return redirect()->route('site.company.subscribe')->with('error', 'Payment failed or was canceled.');
         }
