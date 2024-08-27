@@ -33,7 +33,7 @@ class TenantServiceProvider extends ServiceProvider
             $domain = Domain::where('domain', $host)->first();
 
             if ($domain) {
-                $this->reconnect($domain->tenant_id . '_db');
+                $this->reconnect($domain->tenant->tenancy_db_name);
             }
         }
     }

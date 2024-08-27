@@ -16,8 +16,8 @@ trait TenantConnector
         Config::set('database.connections.tenant_template.host', '127.0.0.1');
         Config::set('database.connections.tenant_template.port', '3306');
         Config::set('database.connections.tenant_template.database', $databaseName);
-        Config::set('database.connections.tenant_template.username', 'root');
-        Config::set('database.connections.tenant_template.password', '');
+        Config::set('database.connections.tenant_template.username', env('DB_USERNAME'));
+        Config::set('database.connections.tenant_template.password', env('DB_PASSWORD'));
         DB::setDefaultConnection('tenant_template');
         session(['tenant' => $databaseName]);
     }

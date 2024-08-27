@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('description')->nullable();
             $table->boolean('active')->nullable();
             $table->integer('duration')->nullable();
-            $table->decimal('price', 9, 3)->nullable();
+            $table->decimal('price', 10, 2)->nullable();
             $table->integer('periodicity')->unsigned()->nullable();
             $table->string('periodicity_type')->nullable();
             $table->softDeletes();
