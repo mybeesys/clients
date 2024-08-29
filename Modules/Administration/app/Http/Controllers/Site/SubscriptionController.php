@@ -4,14 +4,14 @@ namespace Modules\Administration\Http\Controllers\Site;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Modules\Administration\Events\TenantCreated;
-use Stripe\Stripe;
-use Stripe\PaymentIntent;
+
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Modules\Administration\Models\Plan;
 use App\Models\Company;
+
+use Modules\Administration\Events\SubscriptionHandled;
 use Modules\Administration\Models\Coupon;
 use Modules\Administration\Models\PaymentSubscription;
 use Modules\Company\Models\Tenant;
@@ -185,6 +185,9 @@ class SubscriptionController extends Controller
         $company->subscribed = 1;
         $company->save();
 
+        //send email to the admin to create a subdomain
+        //and a database for the subscribed company.
+        event(new SubscriptionHandled($company, $domain->domain, $subdomain_name . '_db'));
 
         // Config::set('database.connections.mysql.database', $domain->tenant_id . '_db');
         // DB::purge('mysql');
