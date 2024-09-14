@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Company\Database\Factories\CompanyFactory;
 use LucasDotVin\Soulbscription\Models\Concerns\HasSubscriptions;
+use Modules\Administration\Models\PaymentSubscription;
 
 class Company extends Model
 {
@@ -16,9 +17,15 @@ class Company extends Model
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = ['logo', 'tax_name', 'ceo_name', 'country_id', 'description', 'name', 'user_id', 'name'];
+    protected $fillable = ['logo', 'tax_name', 'ceo_name', 'country_id', 'description', 'name', 'user_id', 'name','subscribed'];
+
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(PaymentSubscription::class);
     }
 }

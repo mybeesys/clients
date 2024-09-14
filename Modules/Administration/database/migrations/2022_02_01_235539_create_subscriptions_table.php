@@ -5,7 +5,8 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-return new class() extends Migration {
+return new class() extends Migration
+{
     /**
      * Run the migrations.
      *
@@ -22,7 +23,6 @@ return new class() extends Migration {
             $table->date('started_at')->nullable();
             $table->date('end_at')->nullable();
             $table->string('status')->nullable();
-
             $table->timestamp('suppressed_at')->nullable();
             $table->boolean('was_switched')->default(false);
             $table->softDeletes();
@@ -30,6 +30,12 @@ return new class() extends Migration {
             $table->unsignedBigInteger('comapny_id')->nullable();
             $table->foreign('comapny_id')->references('id')->on('companies')->onUpdate('cascade')
                 ->onDelete('cascade');
+            $table->string('tenant_id')->nullable();
+            $table->foreign('tenant_id')
+                ->references('id')->on('tenants')
+                ->onUpdate('cascade')
+                ->onDelete('cascade');
+            $table->string('subdomain')->nullable();
             if (config('soulbscription.models.subscriber.uses_uuid')) {
                 $table->uuidMorphs('subscriber');
             } else {

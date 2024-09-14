@@ -17,9 +17,9 @@ class CreateTenantsTable extends Migration
     {
         Schema::create('tenants', function (Blueprint $table) {
             $table->string('id')->primary();
-
-            // your custom columns may go here
-
+            $table->unsignedBigInteger('company_id')->nullable();
+            $table->foreign('company_id')->references('id')->on('companies')->onUpdate('cascade')
+                ->onDelete('cascade');
             $table->timestamps();
             $table->json('data')->nullable();
         });

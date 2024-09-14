@@ -50,12 +50,12 @@ class PlanFeatureSeeder extends Seeder
 
 
         $silver->features()->attach([
-            $feature1->id => ['value' => '3', 'charges' => 15],
+            $feature1->id => ['value' => 3, 'charges' => 15],
         ]);
 
 
         $gold->features()->attach([
-            $feature1->id => ['value' => '5', 'charges' => 25],
+            $feature1->id => ['value' => 5, 'charges' => 25],
         ]);
     }
 }

@@ -17,9 +17,11 @@ return [
      * Only relevant if you're using the domain or subdomain identification middleware.
      */
     'central_domains' => [
-        '127.0.0.1',
-        'localhost',
+        // '127.0.0.1',
+        // 'localhost',
+        env('APP_URL')
     ],
+
 
     /**
      * Tenancy bootstrappers are executed when tenancy is initialized.
@@ -45,14 +47,14 @@ return [
          * Connection used as a "template" for the dynamically created tenant database connection.
          * Note: don't name your template connection tenant. That name is reserved by package.
          */
-        'template_tenant_connection' => null,
+        'template_tenant_connection' => 'tenant_template',
 
         /**
          * Tenant database names are created like this:
          * prefix + tenant_id + suffix.
          */
-        'prefix' => 'tenant',
-        'suffix' => '',
+        'prefix' => '',
+        'suffix' => '_db',
 
         /**
          * TenantDatabaseManagers are classes that handle the creation & deletion of tenant databases.
@@ -135,7 +137,7 @@ return [
          * disable asset() helper tenancy and explicitly use tenant_asset() calls in places
          * where you want to use tenant-specific assets (product images, avatars, etc).
          */
-        'asset_helper_tenancy' => true,
+        'asset_helper_tenancy' => false,
     ],
 
     /**
@@ -184,10 +186,12 @@ return [
      * Parameters used by the tenants:migrate command.
      */
     'migration_parameters' => [
-        '--force' => true, 
+        '--force' => true,
         '--path' => [
             database_path('migrations/tenant'),
             base_path('Modules/Company/database/migrations/tenant'),
+            base_path('Modules/Administration/database/migrations/tenant'),
+
         ],
         '--realpath' => true,
     ],
@@ -196,7 +200,6 @@ return [
      * Parameters used by the tenants:seed command.
      */
     'seeder_parameters' => [
-        '--class' => 'DatabaseSeeder', // root seeder class
-        // '--force' => true,
+        '--class' => 'Modules\\Administration\\Database\\Seeders\\Tenant\\DatabaseSeeder',
     ],
 ];

@@ -13,6 +13,7 @@ class AdministrationDatabaseSeeder extends Seeder
     {
         $this->call([
             PlanFeatureSeeder::class,
+            PaymentChannelSeeder::class
 
         ]);
     }

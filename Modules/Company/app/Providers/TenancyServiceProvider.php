@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Modules\Company\Providers;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 use Stancl\JobPipeline\JobPipeline;
+use Stancl\Tenancy\Database\Models\Domain;
 use Stancl\Tenancy\Events;
 use Stancl\Tenancy\Jobs;
 use Stancl\Tenancy\Listeners;
@@ -101,7 +104,6 @@ class TenancyServiceProvider extends ServiceProvider
     {
         $this->bootEvents();
         $this->mapRoutes();
-
         $this->makeTenancyMiddlewareHighestPriority();
     }
 
@@ -128,6 +130,7 @@ class TenancyServiceProvider extends ServiceProvider
         });
     }
 
+    
     protected function makeTenancyMiddlewareHighestPriority()
     {
         $tenancyMiddleware = [

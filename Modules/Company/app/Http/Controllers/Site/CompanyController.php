@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Modules\Company\Models\Company;
+use App\Models\Company;
 
 class CompanyController extends Controller
 {
@@ -32,7 +32,7 @@ class CompanyController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request)
     {
         //
     }
@@ -56,7 +56,7 @@ class CompanyController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id): RedirectResponse
+    public function update(Request $request, $id)
     {
         //
     }
@@ -90,14 +90,15 @@ class CompanyController extends Controller
 
             if (Auth::guard('company')->attempt($request->only('email', 'password'))) {
                 $user = Auth::guard('company')->user();
+                DB::commit();
                 return redirect()->intended('plans');
+            } else {
+                DB::rollBack();
+                return redirect()->back()->withErrors(['email' => 'The provided credentials do not match our records.']);
             }
-
-
-            DB::commit();
         } catch (\Throwable $th) {
             DB::rollBack();
-            return redirect()->back();
+            return redirect()->back()->withErrors(['error' => 'An unexpected error occurred. Please try again.']);
         }
     }
 
@@ -115,7 +116,9 @@ class CompanyController extends Controller
 
             $user = User::create([
                 'name' => $request->name,
+                'username' => $request->name,
                 'email' => $request->email,
+                'is_company' => 1,
                 'password' => Hash::make($request->password)
             ]);
 

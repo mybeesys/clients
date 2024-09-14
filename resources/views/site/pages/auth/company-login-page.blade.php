@@ -31,7 +31,7 @@
                     </fieldset>
 
                     <div class="mt-4 mb-4">
-                        <input type="submit" value="sign up" class="btn btn-primary button" />
+                        <input type="submit" value="sign in" class="btn btn-primary button" />
                     </div>
 
                 </form>

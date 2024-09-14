@@ -6,12 +6,20 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "aymanalhattami/filament-page-with-sidebar": "^2.5",
+        "barryvdh/laravel-dompdf": "^2.2",
+        "bezhansalleh/filament-shield": "^3.2",
+        "coolsam/modules": "4",
+        "filament/filament": "^3.2",
         "laravel/framework": "^11.9",
         "laravel/tinker": "^2.9",
         "lucasdotvin/laravel-soulbscription": "^4.2",
         "nwidart/laravel-modules": "^11.0",
-        "stancl/tenancy": "^3.8"
+        "outerweb/filament-settings": "^1.2",
+        "stancl/tenancy": "^3.8",
+        "stripe/stripe-php": "^15.7"
     },
+
     "require-dev": {
         "fakerphp/faker": "^1.23",
         "laravel/pint": "^1.13",
@@ -21,6 +29,10 @@
         "phpunit/phpunit": "^11.0.1"
     },
     "autoload": {
+
+        "files": [
+            "app/Helpers/helpers.php"
+        ],
         "psr-4": {
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
@@ -35,7 +47,8 @@
     "scripts": {
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
-            "@php artisan package:discover --ansi"
+            "@php artisan package:discover --ansi",
+            "@php artisan filament:upgrade"
         ],
         "post-update-cmd": [
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
@@ -51,7 +64,9 @@
     },
     "extra": {
         "laravel": {
-            "dont-discover": []
+            "dont-discover": [
+                "filament/filament"
+            ]
         },
         "merge-plugin": {
             "include": [

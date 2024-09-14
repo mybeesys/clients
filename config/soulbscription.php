@@ -1,5 +1,10 @@
 <?php
 
+use Modules\Administration\Models\Feature;
+use Modules\Administration\Models\FeaturePlan;
+use Modules\Administration\Models\Plan;
+use Modules\Administration\Models\Subscription;
+
 return [
     'database' => [
         'cancel_migrations_autoloading' => false,
@@ -9,21 +14,21 @@ return [
 
     'models' => [
 
-        'feature' => \LucasDotVin\Soulbscription\Models\Feature::class,
+        'feature' => Feature::class,
 
         'feature_consumption' => \LucasDotVin\Soulbscription\Models\FeatureConsumption::class,
 
         'feature_ticket' => \LucasDotVin\Soulbscription\Models\FeatureTicket::class,
 
-        'feature_plan' => \LucasDotVin\Soulbscription\Models\FeaturePlan::class,
+        'feature_plan' => FeaturePlan::class,
 
-        'plan' => \LucasDotVin\Soulbscription\Models\Plan::class,
+        'plan' => Plan::class,
 
         'subscriber' => [
             'uses_uuid' => env('SOULBSCRIPTION_SUBSCRIBER_USES_UUID', false),
         ],
 
-        'subscription' => \LucasDotVin\Soulbscription\Models\Subscription::class,
+        'subscription' => Subscription::class,
 
         'subscription_renewal' => \LucasDotVin\Soulbscription\Models\SubscriptionRenewal::class,
     ],

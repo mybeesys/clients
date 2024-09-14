@@ -15,13 +15,14 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('description')->nullable();
+            $table->string('code')->unique()->nullable();
             $table->string('descount_type')->nullable();
             $table->integer('amount')->nullable();
-            $table->unsignedBigInteger('plan_id')->nullable();
-            $table->foreign('plan_id')->references('id')->on('plans')->onUpdate('cascade')
-                ->onDelete('cascade');
             $table->string('status')->nullable();
+            $table->integer('max_use')->nullable(); //max number of use.
+            $table->integer('times_used')->default(0);
             $table->tinyInteger('active')->nullable();
+            $table->timestamp('expired_at')->nullable();
             $table->timestamps();
         });
     }

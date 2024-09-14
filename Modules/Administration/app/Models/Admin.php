@@ -2,6 +2,7 @@
 
 namespace Modules\Administration\Models;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Administration\Database\Factories\AdminFactory;
@@ -9,14 +10,14 @@ use Modules\Administration\Database\Factories\AdminFactory;
 class Admin extends Model
 {
     use HasFactory;
+    protected $table = "admins";
 
-    /**
-     * The attributes that are mass assignable.
-     */
-    protected $fillable = [];
+    protected $fillable = [
+        'user_id',
+    ];
 
-    protected static function newFactory(): AdminFactory
+    public function user()
     {
-        //return AdminFactory::new();
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

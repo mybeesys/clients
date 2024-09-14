@@ -27,12 +27,11 @@ foreach (config('tenancy.central_domains') as $domain) {
 
             Route::get('/company-login', [Modules\Company\Http\Controllers\Site\CompanyController::class, 'show_login_form'])->name('login');
             Route::post('/company-login', [Modules\Company\Http\Controllers\Site\CompanyController::class, 'login'])->name('login');
-
-            // Route::get('/company-subscribe', [Modules\Administration\Http\Controllers\Site\SubscriptionController::class, 'index'])->name('site.company.subscribe');
+            Route::get('/subscribe-confirmation', [Modules\Administration\Http\Controllers\Site\SubscriptionController::class, 'confirmation'])->name('site.company.subscribe.confirmation');
             Route::post('/company-subscribe', [Modules\Administration\Http\Controllers\Site\SubscriptionController::class, 'store'])->name('site.company.subscribe');
-            Route::resource('/category', Modules\Company\Http\Controllers\Site\CategoryController::class)->only(['index']);
+            Route::get('/subscribe-confirmation', [Modules\Administration\Http\Controllers\Site\SubscriptionController::class, 'confirmation'])->name('site.company.subscribe.confirmation');
 
-            Route::resource('company', Modules\Company\Http\Controllers\Site\CompanyController::class)->names('company');
+            Route::resource('/category', Modules\Company\Http\Controllers\Site\CategoryController::class)->only(['index']);
 
             Route::middleware(['auth:company'])->group(function () {
                 Route::get('/plans', [Modules\Company\Http\Controllers\Site\PlanController::class, 'index'])->name('site.company.plans_subscription_page');

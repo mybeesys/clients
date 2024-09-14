@@ -13,10 +13,10 @@ class Contact extends Model
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = [];
+    protected $fillable = ['type', 'contact'];
 
-    protected static function newFactory(): ContactFactory
+    public function company()
     {
-        //return ContactFactory::new();
+        return $this->belongsTo(Company::class, 'company_id');
     }
 }

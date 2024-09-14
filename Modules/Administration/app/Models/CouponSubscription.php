@@ -10,13 +10,15 @@ class CouponSubscription extends Model
 {
     use HasFactory;
 
+    protected $table = 'coupon_subscription';
+
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = [];
+    protected $fillable = ['subscription_id', 'coupon_id'];
 
-    protected static function newFactory(): CouponSubscriptionFactory
+    public function coupon()
     {
-        //return CouponSubscriptionFactory::new();
+        return $this->belongsTo(Coupon::class);
     }
 }
