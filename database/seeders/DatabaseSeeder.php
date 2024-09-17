@@ -3,8 +3,9 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Hash;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -13,11 +14,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call([
-            UserSeeder::class,
-            CountriesTableSeeder::class,
-            StatesTableSeeder::class,
-            CitiesTableSeeder::class
+        // User::factory(10)->create();
+        $this->call(CountryStateCityTableSeeder::class);
+        $user =    User::factory()->create([
+            'name' => 'Admin',
+            'email' => 'admin@admin.com',
+            'password' => Hash::make('admin123456')
         ]);
     }
 }

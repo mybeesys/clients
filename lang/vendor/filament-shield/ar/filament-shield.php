@@ -31,11 +31,11 @@ return [
     |--------------------------------------------------------------------------
     */
 
-    'nav.group' => 'إدارة الوصول',
+    'nav.group' => 'إدارة المستخدمين',
     'nav.role.label' => 'الأدوار',
-    'nav.role.icon' => 'heroicon-o-shield-check',
+    'nav.role.icon' => '',
     'resource.label.role' => 'دور',
-    'resource.label.roles' => 'الأدوار',    
+    'resource.label.roles' => 'الأدوار',
 
     /*
     |--------------------------------------------------------------------------
@@ -45,7 +45,7 @@ return [
 
     'section' => 'الأقسام',
     'resources' => 'المصادر',
-    'widgets' => 'الأجزاء',
+    'widgets' => 'الرسوم',
     'pages' => 'الصفحات',
     'custom' => 'صلاحيات مخصصة',
 

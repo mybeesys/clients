@@ -2,22 +2,19 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class City extends Model
 {
-    use HasFactory;
-    protected $table = "cities";
-    /**
-     * The attributes that are mass assignable.
-     */
+    use SoftDeletes;
+
     protected $fillable = [
-        'name',
-        'state_id'
+        'id', 'state_id', 'name', 'status'
     ];
 
-    public function state()
+    public function state(): BelongsTo
     {
         return $this->belongsTo(State::class);
     }

@@ -25,6 +25,13 @@
       'PDF' => 'Barryvdh\\DomPDF\\Facade\\Pdf',
     ),
   ),
+  'bezhansalleh/filament-language-switch' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'BezhanSalleh\\FilamentLanguageSwitch\\FilamentLanguageSwitchServiceProvider',
+    ),
+  ),
   'bezhansalleh/filament-shield' => 
   array (
     'providers' => 
@@ -50,22 +57,18 @@
       0 => 'BladeUI\\Icons\\BladeIconsServiceProvider',
     ),
   ),
-  'coolsam/modules' => 
-  array (
-    'providers' => 
-    array (
-      0 => 'Coolsam\\Modules\\ModulesServiceProvider',
-    ),
-    'aliases' => 
-    array (
-      'FilamentModules' => 'FilamentModules',
-    ),
-  ),
   'filament/actions' => 
   array (
     'providers' => 
     array (
       0 => 'Filament\\Actions\\ActionsServiceProvider',
+    ),
+  ),
+  'filament/filament' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'Filament\\FilamentServiceProvider',
     ),
   ),
   'filament/forms' => 
@@ -173,17 +176,6 @@
       0 => 'Termwind\\Laravel\\TermwindServiceProvider',
     ),
   ),
-  'nwidart/laravel-modules' => 
-  array (
-    'providers' => 
-    array (
-      0 => 'Nwidart\\Modules\\LaravelModulesServiceProvider',
-    ),
-    'aliases' => 
-    array (
-      'Module' => 'Nwidart\\Modules\\Facades\\Module',
-    ),
-  ),
   'outerweb/filament-settings' => 
   array (
     'providers' => 
@@ -196,6 +188,13 @@
     'providers' => 
     array (
       0 => 'Outerweb\\Settings\\SettingsServiceProvider',
+    ),
+  ),
+  'pestphp/pest-plugin-laravel' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'Pest\\Laravel\\PestServiceProvider',
     ),
   ),
   'ryangjchandler/blade-capture-directive' => 
@@ -214,18 +213,6 @@
     'providers' => 
     array (
       0 => 'Spatie\\Permission\\PermissionServiceProvider',
-    ),
-  ),
-  'stancl/tenancy' => 
-  array (
-    'providers' => 
-    array (
-      0 => 'Stancl\\Tenancy\\TenancyServiceProvider',
-    ),
-    'aliases' => 
-    array (
-      'Tenancy' => 'Stancl\\Tenancy\\Facades\\Tenancy',
-      'GlobalCache' => 'Stancl\\Tenancy\\Facades\\GlobalCache',
     ),
   ),
 );
