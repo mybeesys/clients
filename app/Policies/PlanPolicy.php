@@ -3,7 +3,7 @@
 namespace App\Policies;
 
 use App\Models\User;
-use LucasDotVin\Soulbscription\Models\Plan;
+use App\Models\Plan;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class PlanPolicy

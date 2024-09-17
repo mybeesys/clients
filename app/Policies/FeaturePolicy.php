@@ -3,7 +3,7 @@
 namespace App\Policies;
 
 use App\Models\User;
-use LucasDotVin\Soulbscription\Models\Feature;
+use App\Models\Feature;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class FeaturePolicy

@@ -13,6 +13,12 @@ return new class extends Migration
     {
         Schema::create('coupon_plans', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('plan_id')->nullable();
+            $table->foreign('plan_id')->references('id')->on('plans')->onUpdate('cascade')
+                ->onDelete('cascade');
+            $table->unsignedBigInteger('coupon_id')->nullable();
+            $table->foreign('coupon_id')->references('id')->on('coupons')->onUpdate('cascade')
+                ->onDelete('cascade');
             $table->timestamps();
         });
     }

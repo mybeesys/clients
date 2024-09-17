@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\PlanResource\Pages;
+use App\Models\Plan;
 use Filament\Forms;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -15,7 +16,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use LucasDotVin\Soulbscription\Models\Feature;
-use LucasDotVin\Soulbscription\Models\Plan;
+
 use  Resources\PlanResource\RelationManagers\FeaturesRelationManager;
 
 class PlanResource extends Resource

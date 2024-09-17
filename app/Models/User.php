@@ -45,4 +45,14 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function is_company()
+    {
+        return $this->is_company;
+    }
+
+    public function scopeIsNotCompany($query)
+    {
+        return $query->where('is_company', 0);
+    }
 }
