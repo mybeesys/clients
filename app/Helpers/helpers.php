@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Facades\Schema;
 use Stancl\Tenancy\Database\Models\Domain;
-
 if (!function_exists('getAllPaymentsHelper')) {
     function getAllPaymentsHelper()
     {
@@ -78,10 +77,10 @@ if (!function_exists('getAllSMSHelper')) {
     }
 }
 
-if (!function_exists('getAllDomains')) {
+/* if (!function_exists('getAllDomains')) {
     function getAllDomains()
     {
         $domains = Domain::pluck('domain')->toArray();
         return $domains;
     }
-}
+} */

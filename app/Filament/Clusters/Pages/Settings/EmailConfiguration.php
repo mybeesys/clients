@@ -1,25 +1,25 @@
 <?php
 
-namespace App\Filament\Pages\Settings;
+namespace App\Filament\Clusters\Pages\Settings;
 
-use App\SideBar;
-use AymanAlhattami\FilamentPageWithSidebar\Traits\HasPageSidebar;
-use Filament\Actions\Action;
-use Filament\Pages\Page;
+use App\Filament\Clusters\Settings;
 use Closure;
-use Filament\Forms\Components\Tabs;
+use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;
 use Outerweb\FilamentSettings\Filament\Pages\Settings as BaseSettings;
 
 class EmailConfiguration extends BaseSettings
 {
-    use HasPageSidebar, SideBar;
-
-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
-    protected static bool $shouldRegisterNavigation = false;
-
+    protected static ?string $cluster = Settings::class;
+    protected static ?string $navigationIcon = 'heroicon-o-envelope';
+    protected static ?int $navigationSort = 5;
 
     public function getTitle(): string
+    {
+        return __('main.email_settings');
+    }
+
+    public static function getNavigationLabel(): string
     {
         return __('main.email_settings');
     }
@@ -67,10 +67,5 @@ class EmailConfiguration extends BaseSettings
                 ->submit('data')
                 ->keyBindings(['mod+s'])
         ];
-    }
-
-    public function sidebar()
-    {
-        $this->getSidebarItems();
-    }
+    }   
 }

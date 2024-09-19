@@ -1,0 +1,8 @@
+@import '/vendor/filament/filament/resources/css/theme.css';
+
+@config 'tailwind.config.js';
+
+
+.fi-sidebar-nav-groups {
+    @apply gap-y-4;
+}

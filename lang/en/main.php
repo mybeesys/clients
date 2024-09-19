@@ -28,6 +28,9 @@ return [
     'Payment_subscription' => 'Subscription payment',
     'plans' => 'Plans',
     'plan' => 'plan',
+    'countries' => 'Countries',
+    'country' => 'Country',
+
 
     'notifications_settings' => 'Notifications settings',
     'system_settings' => 'System settings',
@@ -38,6 +41,6 @@ return [
     'email_settings' => 'Email settings',
     'companies_management' => 'Companies management',
     'users_management' => 'Users management',
-    'subscribtions_management' => 'Subscriptions management',
+    'subscriptions_management' => 'Subscriptions management',
     'coupons_management' => 'Coupons management',
 ];

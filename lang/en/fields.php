@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 return [
     'created_at' => 'Created at',
@@ -35,4 +35,16 @@ return [
     'date_of_birth' => 'Date of birth',
     'current_password' => 'Current password',
     'new_password' => 'New password',
+    'main_info' => 'Main info',
+    'ceo_name' => 'Ceo name',
+    'tax_name' => 'Tax name',
+    'logo' => 'Logo',
+    'zip_code' => 'Zip code',
+    'national_address' => 'National address',
+    'country' => 'Country',
+    'state' => 'State',
+    'city' => 'City',
+    'website' => 'Website',
+    'has_subscription' => 'Has subscription',
+    'user' => 'User',                
 ];

@@ -13,19 +13,20 @@ return new class extends Migration {
         Schema::create('companies', function (Blueprint $table) {
             $table->id();
             $table->string('name')->nullable();
+            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->boolean('subscribed')->default(0);
             $table->string('description')->nullable();
-            $table->integer('user_id')->nullable();
             $table->string('ceo_name')->nullable();
             $table->integer('phone')->nullable();
             $table->string('zipcode')->nullable();
             $table->string('national_address')->nullable();
             $table->string('website')->nullable();
-            $table->integer('country_id')->nullable();
-            $table->integer('state_id')->nullable();
-            $table->integer('city_id')->nullable();
+            $table->foreignId('country_id')->nullable()->constrained('countries')->nullOnDelete();
+            $table->foreignId('state_id')->nullable()->constrained('states')->nullOnDelete();
+            $table->foreignId('city_id')->nullable()->constrained('cities')->nullOnDelete();
             $table->string('tax_name')->nullable();
             $table->string('logo')->nullable();
-            $table->tinyInteger('subscribed')->default(0);
+            $table->softDeletes();
             $table->timestamps();
         });
     }

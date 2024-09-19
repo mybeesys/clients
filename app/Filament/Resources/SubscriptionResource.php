@@ -40,13 +40,10 @@ class SubscriptionResource extends Resource
     }
 
 
-    public static function canCreate(): bool
+/*     public static function canCreate(): bool
     {
         return false;
-    }
-
-
-
+    } */
 
     public static function form(Form $form): Form
     {
@@ -125,10 +122,10 @@ class SubscriptionResource extends Resource
                             return $subscription;
                         });
 
-                        $pdf = PDF::loadView('administration::reports.subscription-report', ['subscriptions' => $subscriptions]);
+                  /*       $pdf = PDF::loadView('reports.subscription-report', ['subscriptions' => $subscriptions]);
                         return response()->streamDownload(function () use ($pdf) {
                             echo $pdf->stream();
-                        }, 'subscription-report.pdf');
+                        }, 'subscription-report.pdf'); */
                     })
             ])
             ->actions([

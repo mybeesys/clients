@@ -33,4 +33,11 @@ return [
     'subscription_start_date' => 'Subscription start date',
     'subscription_end_date' => 'Subscription end date',
     'view' => 'View',
+    'website_name' => 'Website name',
+    'website_description' => 'Website description',
+    'brand_name' => 'Brand name',
+    'website_logo' => 'Website logo',
+    'website_favicon' => 'Website favicon',
+    'maintenance_mode' => 'Maintenance mode',
+    'others' => 'Others'
 ];

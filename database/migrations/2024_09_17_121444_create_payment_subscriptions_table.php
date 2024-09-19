@@ -23,6 +23,7 @@ return new class extends Migration
             $table->string('transaction_id')->nullable();
             $table->decimal('remaining_amount', 10, 2)->nullable();
             $table->decimal('paid_amount', 10, 2)->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

@@ -3,15 +3,23 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\CouponResource\Pages;
+use App\Filament\Resources\CouponResource\RelationManagers;
 use App\Models\Coupon;
 use Filament\Forms;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\ToggleButtons;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-
 
 class CouponResource extends Resource
 {
@@ -37,37 +45,62 @@ class CouponResource extends Resource
         return __('main.coupons');
     }
 
-
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('name')->required(),
-                Forms\Components\RichEditor::make('description')->columnSpan('full'),
-                Forms\Components\TextInput::make('code')
-                    ->required()
-                    ->unique(Coupon::class, 'code')
-                    ->rule('regex:/^[a-zA-Z0-9._]+$/')
-                    ->rule('regex:/^[a-zA-Z0-9]/')
-                    ->maxLength(30),
-                Forms\Components\Select::make('descount_type')
-                    ->label('Descount Type')
-                    ->options([
-                        config('administration.coupons.types.percentage') => config('administration.coupons.types.percentage'),
-                        config('administration.coupons.types.fixed') =>  config('administration.coupons.types.fixed'),
-                    ])->required(),
-                Forms\Components\TextInput::make('amount')->required()->numeric(),
-                Forms\Components\TextInput::make('max_use')->numeric(),
-                Forms\Components\DatePicker::make('expired_at')->required(),
-                Forms\Components\Select::make('plans')
-                    ->label('Plans')
-                    ->multiple()
-                    ->relationship('plans', 'name')
-                    ->required(),
-                Forms\Components\Toggle::make('active')->label('Active')
-                    ->onIcon('heroicon-m-bolt')
-                    ->offIcon('heroicon-m-user'),
-
+                Section::make()
+                    ->columns(2)
+                    ->schema([
+                        TextInput::make('code')
+                            ->label(__('fields.code'))
+                            ->required()
+                            ->maxLength(255),
+                        TextInput::make('name')
+                            ->label(__('fields.name'))
+                            ->maxLength(255)
+                            ->default(null),
+                        DatePicker::make('start')
+                            ->label(__('fields.start_date'))
+                            ->required(),
+                        DatePicker::make('end')
+                            ->label(__('fields.end_date'))
+                            ->required(),
+                        TextInput::make('uses_limit')
+                            ->label(__('fields.uses_limit'))
+                            ->required()
+                            ->numeric(),
+                        TextInput::make('uses_count')
+                            ->label(__('fields.uses_count'))
+                            ->required()
+                            ->numeric()
+                            ->default(0),
+                        TextInput::make('value')
+                            ->label(__('fields.value'))
+                            ->required()
+                            ->numeric(),
+                        ToggleButtons::make('type')
+                            ->label(__('fields.type'))
+                            ->options([
+                                'percentage' => __('fields.percentage'),
+                                'amount' => __('fields.amount')
+                            ])
+                            ->inline()
+                            ->icons(
+                                ['percentage' => 'heroicon-m-percent-badge', 'amount' => 'heroicon-m-currency-dollar']
+                            )
+                            ->colors([
+                                'percentage' => 'info',
+                                'amount' => 'warning',
+                            ])
+                            ->required(),
+                        Toggle::make('active')
+                            ->label(__('fields.active'))
+                            ->offColor('danger')
+                            ->onIcon('heroicon-m-check')
+                            ->offIcon('heroicon-m-x-mark')
+                            ->required(),
+                    ])
             ]);
     }
 
@@ -75,24 +108,68 @@ class CouponResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name'),
-                Tables\Columns\TextColumn::make('descount_type')
-                    ->label('Descount Type'),
-                Tables\Columns\TextColumn::make('code'),
-                Tables\Columns\TextColumn::make('amount'),
-                Tables\Columns\TextColumn::make('max_use'),
-                Tables\Columns\ToggleColumn::make('active')->label('Active')->onIcon('heroicon-m-bolt')
-                    ->offIcon('heroicon-m-user'),
-
-                Tables\Columns\TextColumn::make('usage_count')
-                    ->label('Usage Count')
-                    ->getStateUsing(fn (Coupon $record): int => $record->coupon_subscriptions()->count()),
+                TextColumn::make('code')
+                    ->label(__('fields.code'))
+                    ->searchable(),
+                TextColumn::make('start')
+                    ->label(__('fields.start_date'))
+                    ->badge()
+                    ->date('Y/m/d')
+                    ->sortable(),
+                TextColumn::make('end')
+                    ->label(__('fields.end_date'))
+                    ->badge()
+                    ->color('danger')
+                    ->date('Y/m/d')
+                    ->sortable(),
+                TextColumn::make('name')
+                    ->label(__('fields.name'))
+                    ->searchable(),
+                IconColumn::make('active')
+                    ->label(__('fields.active'))
+                    ->boolean(),
+                TextColumn::make('uses_limit')
+                    ->label(__('fields.uses_limit'))
+                    ->badge()
+                    ->numeric()
+                    ->sortable(),
+                TextColumn::make('uses_count')
+                    ->label(__('fields.uses_count'))
+                    ->badge()
+                    ->numeric()
+                    ->sortable(),
+                TextColumn::make('type')
+                    ->label(__('fields.type'))
+                    ->badge()
+                    ->color(
+                        fn(string $state): string => match ($state) {
+                            'percentage' => 'info',
+                            'amount' => 'warning',
+                        }
+                    )
+                    ->formatStateUsing(fn($record) => __("fields.{$record->type}")),
+                TextColumn::make('value')
+                    ->label(__('fields.value'))
+                    ->badge()
+                    ->numeric()
+                    ->sortable(),
+                TextColumn::make('updated_at')
+                    ->label(__('fields.updated_at'))
+                    ->dateTime('Y/m/d H:i:s')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('created_at')
+                    ->label(__('fields.created_at'))
+                    ->dateTime('Y/m/d H:i:s')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 //
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

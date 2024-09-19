@@ -28,6 +28,9 @@ return [
     'Payment_subscription' => 'دفعة اشتراك',
     'plans' => 'الخطط',
     'plan' => 'خطة',
+    'countries' => 'البلدان',
+    'country' => 'بلد',
+
 
     'notifications_settings' => 'إعدادات الإشعارات',
     'system_settings' => 'إعدادات النظام',

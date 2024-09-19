@@ -6,7 +6,6 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
-        "aymanalhattami/filament-page-with-sidebar": "^2.5",
         "barryvdh/laravel-dompdf": "^3.0",
         "bezhansalleh/filament-language-switch": "^3.1",
         "bezhansalleh/filament-shield": "^3.2",
@@ -28,6 +27,9 @@
         "pestphp/pest-plugin-laravel": "^3.0"
     },
     "autoload": {
+        "files": [
+            "app/Helpers/helpers.php"
+        ],
         "psr-4": {
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",

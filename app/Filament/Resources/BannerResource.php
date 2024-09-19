@@ -5,9 +5,16 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\BannerResource\Pages;
 use App\Models\Banner;
 use Filament\Forms;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Table;
 
 
@@ -39,18 +46,25 @@ class BannerResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('name')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('description')
-                    ->maxLength(255),
-                Forms\Components\FileUpload::make('image')
-                    ->label('Image')
-                    ->directory('banners')
-                    ->image()
-                    ->required(),
-                Forms\Components\Toggle::make('active')->label('Active')
-                    ->onIcon('heroicon-m-bolt')
-                    ->offIcon('heroicon-m-user'),
+                Section::make()
+                    ->columns(2)
+                    ->schema([
+                        TextInput::make('name')
+                            ->label(__('fields.name'))
+                            ->maxLength(255),
+                        TextInput::make('description')
+                            ->label(__('fields.description'))
+                            ->maxLength(255),
+                        FileUpload::make('image')
+                            ->label(__('fields.image'))
+                            ->directory('banners')
+                            ->image()
+                            ->required(),
+                        Toggle::make('active')
+                            ->label(__('fields.active'))
+                            ->onIcon('heroicon-m-bolt')
+                            ->offIcon('heroicon-m-user'),
+                    ])
             ]);
     }
 
@@ -58,19 +72,17 @@ class BannerResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')
-                    ->label('Name')
+                TextColumn::make('name')
+                    ->label(__('fields.name'))
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('description')
-                    ->label('Description')
-                    ->searchable()
-                    ->sortable(),
-                Tables\Columns\ImageColumn::make('image')
-                    ->label('Image')
+                TextColumn::make('description')
+                    ->label(__('fields.description')),
+                ImageColumn::make('image')
+                    ->label(__('fields.image'))
                     ->circular(),
-                Tables\Columns\ToggleColumn::make('active')
-                    ->label('Active')->onIcon('heroicon-m-bolt')
+                ToggleColumn::make('active')
+                    ->label(__('fields.active'))->onIcon('heroicon-m-bolt')
                     ->offIcon('heroicon-m-user'),
             ])
             ->filters([

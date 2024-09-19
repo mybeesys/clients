@@ -6,13 +6,6 @@
       'EloquentSerialize' => 'AnourValar\\EloquentSerialize\\Facades\\EloquentSerializeFacade',
     ),
   ),
-  'aymanalhattami/filament-page-with-sidebar' => 
-  array (
-    'providers' => 
-    array (
-      0 => 'AymanAlhattami\\FilamentPageWithSidebar\\FilamentPageWithSidebarServiceProvider',
-    ),
-  ),
   'barryvdh/laravel-dompdf' => 
   array (
     'providers' => 
