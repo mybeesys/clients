@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 return [
     'for' => 'مخصص لـ',
@@ -39,6 +39,11 @@ return [
     'website_logo' => 'شعار الموقع',
     'website_favicon' => 'أيقونة الموقع',
     'maintenance_mode' => 'وضع الصيانة',
-    'others' => 'أخرى'
-
+    'others' => 'أخرى',
+    'choose_duration' => 'اختر المدة',
+    'add_feature' => 'إضافة ميزة',
+    'paid' => 'تم التسديد',
+    'not_paid' => 'غير مسدد',
+    'from' => 'من',
+    'to' => 'إلى'
 ];

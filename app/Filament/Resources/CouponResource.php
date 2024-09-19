@@ -85,6 +85,7 @@ class CouponResource extends Resource
                                 'percentage' => __('fields.percentage'),
                                 'amount' => __('fields.amount')
                             ])
+                            ->in(['percentage', 'amount'])
                             ->inline()
                             ->icons(
                                 ['percentage' => 'heroicon-m-percent-badge', 'amount' => 'heroicon-m-currency-dollar']
@@ -94,6 +95,13 @@ class CouponResource extends Resource
                                 'amount' => 'warning',
                             ])
                             ->required(),
+                        Select::make('plans')
+                            ->label(__('main.plans'))
+                            ->relationship('plans', 'name')
+                            ->exists('plans', 'id')
+                            ->multiple()
+                            ->preload()
+                            ->searchable(),
                         Toggle::make('active')
                             ->label(__('fields.active'))
                             ->offColor('danger')

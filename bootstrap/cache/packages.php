@@ -106,6 +106,13 @@
       0 => 'Filament\\Widgets\\WidgetsServiceProvider',
     ),
   ),
+  'guava/filament-clusters' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'Guava\\FilamentClusters\\FilamentClustersServiceProvider',
+    ),
+  ),
   'kirschbaum-development/eloquent-power-joins' => 
   array (
     'providers' => 
@@ -206,6 +213,18 @@
     'providers' => 
     array (
       0 => 'Spatie\\Permission\\PermissionServiceProvider',
+    ),
+  ),
+  'stancl/tenancy' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'Stancl\\Tenancy\\TenancyServiceProvider',
+    ),
+    'aliases' => 
+    array (
+      'Tenancy' => 'Stancl\\Tenancy\\Facades\\Tenancy',
+      'GlobalCache' => 'Stancl\\Tenancy\\Facades\\GlobalCache',
     ),
   ),
 );

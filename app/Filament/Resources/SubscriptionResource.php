@@ -4,7 +4,16 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\SubscriptionResource\Pages;
 use Filament\Forms;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\MorphToSelect;
+use Filament\Forms\Components\MorphToSelect\Type;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
+use Filament\Tables\Columns\TextColumn;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 use LucasDotVin\Soulbscription\Models\Subscription;
 use PDF;
 use Filament\Resources\Resource;
@@ -40,33 +49,33 @@ class SubscriptionResource extends Resource
     }
 
 
-/*     public static function canCreate(): bool
-    {
-        return false;
-    } */
+    /*     public static function canCreate(): bool
+        {
+            return false;
+        } */
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\Select::make('plan_id')
-                    ->label('Plan Name')
-                    ->relationship('Plan', 'name')
-                    ->searchable()
-                    ->preload(),
-                Forms\Components\Select::make('subscriber_id')
-                    ->label('Company')
-                    ->options(function () {
-                        $companyIds = Subscription::where('subscriber_type', 'App\Models\Company')
-                            ->pluck('subscriber_id');
-                        return Company::whereIn('id', $companyIds)->pluck('name', 'id');
-                    })
-                    ->searchable()
-                    ->preload(),
-                Forms\Components\TextInput::make('expired_at')->label('Expires Date'),
-                Forms\Components\TextInput::make('created_at')->label('Subscribe Date'),
-                Forms\Components\TextInput::make('subdomain')
-                    ->label('Company Subdomain'),
+                Section::make()
+                    ->columns(2)
+                    ->schema([
+                        Select::make('plan_id')
+                            ->label(__('fields.plan'))
+                            ->relationship('plan', 'name')
+                            ->searchable()
+                            ->preload(),
+                        DateTimePicker::make('expired_at')->label(__('fields.end_date')),
+                        DateTimePicker::make('started_at')->label(__('fields.start_date'))->required(),
+                        DateTimePicker::make('grace_days_ended_at')->label(__('fields.grace_days_ended_at')),
+                        MorphToSelect::make('subscriber')
+                            ->label(__('fields.subscriber'))
+                            ->types([
+                                Type::make(Company::class)->titleAttribute('name')->label(__('fields.company')),
+                            ])->preload()->searchable()->required(),
+                        DateTimePicker::make('suppressed_at')->label(__('fields.suppressed_at')),
+                    ])
 
             ]);
     }
@@ -75,12 +84,12 @@ class SubscriptionResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('id'),
-                Tables\Columns\TextColumn::make('plan.name'),
-                Tables\Columns\TextColumn::make('subscriber.name')->label('Company'),
-                Tables\Columns\TextColumn::make('expired_at')->label('Expire at'),
-                Tables\Columns\TextColumn::make('created_at')->label('Subscribed at'),
-                Tables\Columns\TextColumn::make('plan.features')
+                TextColumn::make('id'),
+                TextColumn::make('plan.name'),
+                TextColumn::make('subscriber.name')->label('Company'),
+                TextColumn::make('expired_at')->label('Expire at'),
+                TextColumn::make('created_at')->label('Subscribed at'),
+                TextColumn::make('plan.features')
                     ->label('Plan Features')
                     ->formatStateUsing(function ($state, $record) {
                         $features = $record->plan->features;
@@ -91,22 +100,23 @@ class SubscriptionResource extends Resource
                     })
                     ->html(),
 
-                Tables\Columns\TextColumn::make('subdomain')
+                TextColumn::make('subdomain')
                     ->label('Subdomain')
-                    ->url(fn ($record) => 'https://' . $record->subdomain)
+                    ->url(fn($record) => 'https://' . $record->subdomain)
                     ->openUrlInNewTab()
                     ->html(),
             ])
             ->filters([
+                Tables\Filters\TrashedFilter::make(),
                 Filter::make('created_at')
                     ->form([
-                        Forms\Components\DatePicker::make('created_from')->label('From'),
-                        Forms\Components\DatePicker::make('created_until')->label('Until'),
+                        Forms\Components\DatePicker::make('created_from')->label(__('general.from')),
+                        Forms\Components\DatePicker::make('created_to')->label(__('general.to')),
                     ])
                     ->query(function (Builder $query, array $data) {
                         $query
-                            ->when($data['created_from'], fn (Builder $query, $date) => $query->whereDate('created_at', '>=', $date))
-                            ->when($data['created_until'], fn (Builder $query, $date) => $query->whereDate('created_at', '<=', $date));
+                            ->when($data['created_from'], fn(Builder $query, $date) => $query->whereDate('created_at', '>=', $date))
+                            ->when($data['created_to'], fn(Builder $query, $date) => $query->whereDate('created_at', '<=', $date));
                     }),
             ])
             ->headerActions([
@@ -122,19 +132,32 @@ class SubscriptionResource extends Resource
                             return $subscription;
                         });
 
-                  /*       $pdf = PDF::loadView('reports.subscription-report', ['subscriptions' => $subscriptions]);
-                        return response()->streamDownload(function () use ($pdf) {
-                            echo $pdf->stream();
-                        }, 'subscription-report.pdf'); */
+                        /*       $pdf = PDF::loadView('reports.subscription-report', ['subscriptions' => $subscriptions]);
+                              return response()->streamDownload(function () use ($pdf) {
+                                  echo $pdf->stream();
+                              }, 'subscription-report.pdf'); */
                     })
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
+                Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\ForceDeleteAction::make(),
+                Tables\Actions\RestoreAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\ForceDeleteBulkAction::make(),
+                    Tables\Actions\RestoreBulkAction::make(),
                 ]),
+            ]);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->withoutGlobalScopes([
+                SoftDeletingScope::class,
             ]);
     }
 

@@ -5,17 +5,26 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\FeatureResource\Pages;
 use App\Models\Feature;
 use Filament\Forms;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Guava\FilamentClusters\Forms\Cluster;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use LucasDotVin\Soulbscription\Enums\PeriodicityType;
 
 
 class FeatureResource extends Resource
 {
     protected static ?string $model = Feature::class;
+
     public static function getNavigationGroup(): ?string
     {
         return __('main.subscriptions_management');
@@ -39,13 +48,35 @@ class FeatureResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('name')->required(),
-                Forms\Components\RichEditor::make('description')->required(),
-                Forms\Components\Toggle::make('consumable')->label('Active')
-                    ->onIcon('heroicon-m-bolt')
-                    ->offIcon('heroicon-m-user'),
-
-            ])->columns(1);
+                Section::make()
+                    ->columns(1)
+                    ->columnSpan(1)
+                    ->schema([
+                        TextInput::make('name')->required()
+                            ->label(__('fields.name')),
+                        Textarea::make('description')
+                            ->label(__('fields.description')),
+                        Cluster::make([
+                            TextInput::make('periodicity')
+                                ->placeholder(__('fields.count'))
+                                ->requiredWith('periodicity_type')
+                                ->disabled(fn(Get $get) => $get('periodicity_type') ? false : true)
+                                ->numeric(),
+                            Select::make('periodicity_type')
+                                ->placeholder(__('general.choose_duration'))
+                                ->requiredWith('periodicity')
+                                ->live()
+                                ->options([
+                                    PeriodicityType::Year => __('fields.year'),
+                                    PeriodicityType::Month => __('fields.month'),
+                                    PeriodicityType::Week => __('fields.weak'),
+                                    PeriodicityType::Day => __('fields.day'),
+                                ]),
+                        ])->label(__('fields.duration') . ' (' . __('general.optional') . ')'),
+                        Toggle::make('consumable')
+                            ->label(__('fields.active')),
+                    ])
+            ]);
     }
 
     public static function table(Table $table): Table
@@ -58,14 +89,19 @@ class FeatureResource extends Resource
                     ->offIcon('heroicon-m-user'),
             ])
             ->filters([
-                //
+                Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\ForceDeleteAction::make(),
+                Tables\Actions\RestoreAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\ForceDeleteBulkAction::make(),
+                    Tables\Actions\RestoreBulkAction::make(),
                 ]),
             ]);
     }

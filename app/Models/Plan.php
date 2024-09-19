@@ -17,13 +17,13 @@ class Plan extends ModelsPlan
      */
     protected $table = 'plans';
 
-    protected $fillable = ['name', 'description', 'price', 'duration', 'active'];
+    protected $guarded = ['id', 'created_at','updated_at', 'deleted_at'];
 
     public function features()
     {
         return $this->belongsToMany(config('soulbscription.models.feature'))
             ->using(config('soulbscription.models.feature_plan'))
-            ->withPivot(['charges', 'value']);
+            ->withPivot(['amount', 'charges'])->withTimestamps();
     }
 
     public function payments()
@@ -33,7 +33,7 @@ class Plan extends ModelsPlan
 
     public function coupons()
     {
-        return $this->belongsToMany(Coupon::class, 'coupon_plan');
+        return $this->belongsToMany(Coupon::class, 'coupons_plans');
     }
 
     public function scopeActive($q)

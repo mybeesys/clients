@@ -3,12 +3,15 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\PaymentSubscriptionResource\Pages;
-
 use App\Models\PaymentSubscription;
-use Filament\Forms;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -37,34 +40,58 @@ class PaymentSubscriptionResource extends Resource
         return __('main.Payments_subscriptions');
     }
 
-    public static function canCreate(): bool
-    {
-        return false;
-    }
-
+    /*     public static function canCreate(): bool
+        {
+            return false;
+        } */
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('id')->label('Payment Id'),
-                Forms\Components\Select::make('Plan')
-                    ->relationship(name: 'plan', titleAttribute: 'name'),
-                Forms\Components\Select::make('Subscription')
-                    ->relationship(name: 'subscription', titleAttribute: 'id')
-                    ->label('Subscription Id'),
-                Forms\Components\Select::make('company_id')
-                    ->label('Company')
-                    ->relationship('company.user', 'name'),
-                Forms\Components\TextInput::make('paid_amount'),
-                Forms\Components\TextInput::make('remaining_amount'),
-                Forms\Components\TextInput::make('payment_method'),
-                Forms\Components\TextInput::make('payment_date'),
-                Forms\Components\Select::make('status')
-                    ->options([
-                        config('administration.subscription_payments.status.paid') =>  config('administration.subscription_payments.status.paid'),
-                        config('administration.subscription_payments.status.not_paid') =>  config('administration.subscription_payments.status.not_paid'),
-                    ]),
+                Section::make()
+                    ->columns(2)
+                    ->schema([
+                        Select::make('subscription_id')
+                            ->label(__('fields.subscription'))
+                            ->relationship('subscription', 'id')
+                            ->exists('subscriptions', 'id')
+                            ->required(),
+                        Select::make('company_id')
+                            ->label(__('fields.company'))
+                            ->relationship('company', 'name')
+                            ->exists('companies', 'id'),
+                        Select::make('plan_id')
+                            ->label(__('fields.plan'))
+                            ->relationship('plan', 'name')
+                            ->exists('plans', 'id')
+                            ->required(),
+                        TextInput::make('amount')
+                            ->label(__('fields.money_amount'))
+                            ->numeric(),
+                        DatePicker::make('payment_date')
+                            ->label(__('fields.payment_date'))
+                            ->date(),
+                        TextInput::make('payment_method')
+                            ->label(__('fields.payment_method'))
+                            ->maxLength(255),
+                        Select::make('status')
+                            ->label(__('fields.status'))
+                            ->options([
+                                'paid' => __('general.paid'),
+                                'not_paid' => __('general.not_paid'),
+                            ])
+                            ->in(['paid, not_paid']),
+                        TextInput::make('transaction_id')
+                            ->label(__('fields.trasaction_id'))
+                            ->maxLength(255),
+                        TextInput::make('remaining_amount')
+                            ->label(__('fields.remaining_amount'))
+                            ->numeric(),
+                        TextInput::make('paid_amount')
+                            ->label(__('fields.paid_amount'))
+                            ->numeric(),
+                    ])
             ]);
     }
 
@@ -72,24 +99,73 @@ class PaymentSubscriptionResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('id'),
-                Tables\Columns\TextColumn::make('company.name')->label('Company Name'),
-                Tables\Columns\TextColumn::make('plan.name')->label('Plan Name'),
-                Tables\Columns\TextColumn::make('subscription.id')->label('Subscription Id'),
-                Tables\Columns\TextColumn::make('amount'),
-
-
-
+                TextColumn::make('subscription_id')
+                    ->label(__('fields.subscription'))
+                    ->numeric()
+                    ->sortable(),
+                TextColumn::make('company_id')
+                    ->label(__('fields.company')),
+                TextColumn::make('plan_id')
+                    ->label(__('fields.plan')),
+                TextColumn::make('amount')
+                    ->label(__('fields.money_amount'))
+                    ->numeric()
+                    ->sortable(),
+                TextColumn::make('payment_date')
+                    ->label(__('fields.payment_date'))
+                    ->date()
+                    ->sortable(),
+                TextColumn::make('payment_method')
+                    ->label(__('fields.payment_method'))
+                    ->searchable(),
+                TextColumn::make('status')
+                    ->label(__('fields.status'))
+                    ->badge()
+                    ->colors([
+                        'not_paid' => 'danger',
+                        'paid' => 'success',
+                    ]),
+                TextColumn::make('transaction_id')
+                    ->label(__('fields.trasaction_id'))
+                    ->searchable(),
+                TextColumn::make('remaining_amount')
+                    ->label(__('fields.remaining_amount'))
+                    ->numeric()
+                    ->sortable(),
+                TextColumn::make('paid_amount')
+                    ->label(__('fields.paid_amount'))
+                    ->numeric()
+                    ->sortable(),
+                TextColumn::make('deleted_at')
+                    ->label(__('fields.deleted_at'))
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('created_at')
+                    ->label(__('fields.created_at'))
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('updated_at')
+                    ->label(__('fields.updated_at'))
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
+                Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\ForceDeleteAction::make(),
+                Tables\Actions\RestoreAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\ForceDeleteBulkAction::make(),
+                    Tables\Actions\RestoreBulkAction::make(),
                 ]),
             ]);
     }
@@ -108,5 +184,13 @@ class PaymentSubscriptionResource extends Resource
             'create' => Pages\CreatePaymentSubscription::route('/create'),
             'edit' => Pages\EditPaymentSubscription::route('/{record}/edit'),
         ];
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->withoutGlobalScopes([
+                SoftDeletingScope::class,
+            ]);
     }
 }

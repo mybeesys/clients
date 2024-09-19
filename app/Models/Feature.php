@@ -22,14 +22,16 @@ class Feature extends ModelsFeature
         'periodicity_type',
         'periodicity',
         'quota',
-        'postpaid', 'description', 'active'
+        'postpaid',
+        'description',
+        'active'
     ];
 
     public function plans()
     {
         return $this->belongsToMany(config('soulbscription.models.plan'))
             ->using(config('soulbscription.models.feature_plan'))
-            ->withPivot(['value', 'charges']);
+            ->withPivot(['amount', 'charges'])->withTimestamps();
     }
 
     public function feature_plans()

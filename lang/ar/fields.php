@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 return [
     'created_at' => 'تاريخ الانشاء',
@@ -13,7 +13,10 @@ return [
     'both' => 'كلاهما',
     'user_name' => 'اسم المستخدم',
     'auto_renew' => 'تجديد تلقائي',
-    'year' => 'السنة',
+    'year' => 'سنة',
+    'month' => 'شهر',
+    'weak' => 'أسبوع',
+    'day' => 'يوم',
     'status' => 'الحالة',
     'start_date' => 'تاريخ البداية',
     'end_date' => 'تاريخ الانتهاء',
@@ -31,7 +34,7 @@ return [
     'uses_count' => 'عدد الاستخدامات',
     'value' => 'القيمة',
     'percentage' => 'نسبة مئوبة',
-    'amount' => 'كمية ثابتة',
+    'amount' => 'كمية',
     'date_of_birth' => 'تاريخ الميلاد',
     'current_password' => 'كلمة المرور الحالية',
     'new_password' => 'كلمة المرور الجديدة',
@@ -46,5 +49,21 @@ return [
     'city' => 'المدينة',
     'website' => 'الموقع الإلكتروني',
     'has_subscription' => 'يملك اشتراك',
-    'user' => 'المستخدم',        
+    'user' => 'المستخدم',
+    'plan' => 'الخطة',
+    'company' => 'الشركة',
+    'subscriber' => 'المشترك',
+    'grace_days_ended_at' => 'تنتهي فترة السماح بتاريخ',
+    'suppressed_at' => 'ايقاف في تاريخ',
+    'company_subdomain' => 'دومين الشركة الفرعي',
+    'duration' => 'المدة',
+    'count' => 'العدد',
+    'subscription' => 'الإشتراك',
+    'payment_date' => 'تاريخ التسدديد',
+    'payment_method' => 'طريقة الدفع',
+    'trasaction_id' => 'رقم العملية',
+    'remaining_amount' => 'المبلغ المتبقي',
+    'paid_amount' => 'المبلغ المسدد',
+    'money_amount' => 'المبلغ',
+
 ];

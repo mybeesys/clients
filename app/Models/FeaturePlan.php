@@ -17,14 +17,6 @@ class FeaturePlan extends ModelsFeaturePlan
      */
     protected $table = 'feature_plan';
 
-    protected $fillable = ['plan_id', 'feature_id', 'value','charges'];
-    public function plan()
-    {
-        return $this->belongsTo(Plan::class);
-    }
+    protected $fillable = ['plan_id', 'feature_id', 'amount', 'charges'];
 
-    public function feature()
-    {
-        return $this->belongsTo(Feature::class);
-    }
 }

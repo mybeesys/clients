@@ -10,11 +10,13 @@
         "bezhansalleh/filament-language-switch": "^3.1",
         "bezhansalleh/filament-shield": "^3.2",
         "filament/filament": "3.2.57",
+        "guava/filament-clusters": "^1.4",
         "laravel/framework": "^11.9",
         "laravel/tinker": "^2.9",
         "lucasdotvin/laravel-soulbscription": "^4.2",
         "outerweb/filament-settings": "^1.2",
         "spatie/laravel-permission": "^6.9",
+        "stancl/tenancy": "^3.8",
         "zalanihir/country-state-city": "^1.0"
     },
     "require-dev": {

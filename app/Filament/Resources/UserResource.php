@@ -43,55 +43,7 @@ class UserResource extends Resource
     {
         return __('main.users');
     }
-    /*     public static function form(Form $form): Form
-        {
-            return $form
-                ->schema([
-                    Forms\Components\TextInput::make('name')
-                        ->required()
-                        ->maxLength(255),
-                    Forms\Components\TextInput::make('email')
-                        ->email()
-                        ->required()
-                        ->maxLength(255),
-                    Forms\Components\TextInput::make('password')
-                        ->password()
-                        ->required()
-                        ->maxLength(255),
-                    Forms\Components\Select::make('roles')
-                        ->label('Roles')
-                        ->multiple()
-                        ->relationship('roles', 'name')
-                        ->preload(),
-                ]);
-        } */
-
-    /*     public static function table(Table $table): Table
-        {
-            return $table
-                ->query(User::isNotCompany())
-                ->columns([
-                    Tables\Columns\TextColumn::make('name')
-                        ->searchable(),
-                    Tables\Columns\TextColumn::make('email')
-                        ->searchable(),
-                    Tables\Columns\TextColumn::make('roles.name')
-                        ->label('Role')
-                        ->searchable(),
-                ])
-                ->filters([
-                    //
-                ])
-                ->actions([
-                    Tables\Actions\EditAction::make(),
-                ])
-                ->bulkActions([
-                    Tables\Actions\BulkActionGroup::make([
-                        Tables\Actions\DeleteBulkAction::make(),
-                    ]),
-                ]);
-        } */
-
+    
     public static function form(Form $form): Form
     {
         return $form
@@ -138,47 +90,27 @@ class UserResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('id')
-                    ->label(__('dashboard.id'))
+                    ->label(__('fields.id'))
                     ->sortable(),
-                ImageColumn::make('image')
-                    ->disk('public')
-                    ->label(__('dashboard.image'))
-                    ->circular(),
-                TextColumn::make('type')
-                    ->label(__('dashboard.type'))
-                    ->badge()
-                    ->color(function ($record) {
-                        return $record->type == 'personal' ? 'info' : ($record->type == 'parent' ? 'danger' : ($record->type == 'specialist' ?? 'success'));
-                    })
-                    ->formatStateUsing(fn($record) =>
-                        $record->type == 'personal' ? __('dashboard.personal') : ($record->type == 'parent' ? __('dashboard.parent') : ($record->type == 'specialist' ?? __('dashboard.specialist')))),
                 TextColumn::make('name')
-                    ->label(__('dashboard.name'))
+                    ->label(__('fields.name'))
                     ->searchable(),
                 TextColumn::make('email')
-                    ->label(__('dashboard.email'))
-                    ->searchable(),
-                TextColumn::make('phone_num')
-                    ->label(__('dashboard.phone_number'))
+                    ->label(__('fields.email'))
                     ->searchable(),
                 TextColumn::make('roles.name')
                     ->label(__('filament-shield::filament-shield.resource.label.roles'))
                     ->badge()
-                    ->color(function ($record) {
-                        return $record->roles == 'owner' ? 'danger' : 'warning';
-                    })
+                    ->color(
+                        fn($record) =>
+                        $record->roles->contains(function ($role) {
+                            return $role->name === 'super_admin';
+                        }) ? 'danger' : 'warning'
+                    )
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('subscription.start_date')
-                    ->label(__('dashboard.subscription_start_date'))
-                    ->badge()
-                    ->dateTime('Y/m/d'),
-                TextColumn::make('subscription.end_date')
-                    ->label(__('dashboard.subscription_end_date'))
-                    ->badge()
-                    ->dateTime('Y/m/d'),
                 TextColumn::make('created_at')
-                    ->label(__('dashboard.created_at'))
+                    ->label(__('fields.created_at'))
                     ->dateTime('Y/m/d H:i:s')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
