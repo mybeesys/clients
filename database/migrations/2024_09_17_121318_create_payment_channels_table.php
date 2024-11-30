@@ -13,6 +13,13 @@ return new class extends Migration
     {
         Schema::create('payment_channels', function (Blueprint $table) {
             $table->id();
+            $table->string('title');
+            $table->enum('status', ['active', 'inactive']);
+            $table->string('class_name');
+            $table->text('currencies')->nullable();
+            $table->string('image')->nullable();
+            $table->text('settings')->nullable();
+            $table->string('disabled_at')->nullable();
             $table->timestamps();
         });
     }

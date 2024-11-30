@@ -1,7 +1,9 @@
 <?php
 
-namespace App\Filament\Pages\Settings;
+namespace App\Filament\Clusters\Pages\Settings;
 
+
+use App\Filament\Clusters\Settings;
 use App\SideBar;
 use AymanAlhattami\FilamentPageWithSidebar\FilamentPageSidebar;
 use AymanAlhattami\FilamentPageWithSidebar\PageNavigationItem;
@@ -15,12 +17,16 @@ use Outerweb\FilamentSettings\Filament\Pages\Settings as BaseSettings;
 
 class PaymentConfiguration extends BaseSettings
 {
-    use HasPageSidebar, SideBar;
-
-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
-    protected static bool $shouldRegisterNavigation = false;
+    protected static ?string $cluster = Settings::class;
+    protected static ?string $navigationIcon = 'heroicon-o-currency-dollar';
+    protected static ?int $navigationSort = 4;
 
     public function getTitle(): string
+    {
+        return __('main.payment_settings');
+    }
+
+    public static function getNavigationLabel(): string
     {
         return __('main.payment_settings');
     }
@@ -53,9 +59,5 @@ class PaymentConfiguration extends BaseSettings
                 ->submit('data')
                 ->keyBindings(['mod+s'])
         ];
-    }
-    public function sidebar()
-    {
-        return $this->getSidebarItems();
     }
 }

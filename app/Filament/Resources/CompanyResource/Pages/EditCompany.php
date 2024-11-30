@@ -19,10 +19,10 @@ class EditCompany extends EditRecord
         ];
     }
 
-    protected function afterSave(): void
+/*     protected function afterSave(): void
     {
         $this->record->update([
             'name' => $this->record->user->name,
         ]);
-    }
+    } */
 }

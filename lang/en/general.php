@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 return [
     'for' => 'For',
@@ -20,7 +20,7 @@ return [
     'instagram' => 'Instagram',
     'linkedin' => 'Linkedin',
     'threads' => 'Threads',
-    'save' => 'Save', 
+    'save' => 'Save',
     'attachments' => 'Attachments',
     'attachments_view' => 'View attachments',
     'notes' => 'Notes',
@@ -33,4 +33,17 @@ return [
     'subscription_start_date' => 'Subscription start date',
     'subscription_end_date' => 'Subscription end date',
     'view' => 'View',
+    'website_name' => 'Website name',
+    'website_description' => 'Website description',
+    'brand_name' => 'Brand name',
+    'website_logo' => 'Website logo',
+    'website_favicon' => 'Website favicon',
+    'maintenance_mode' => 'Maintenance mode',
+    'others' => 'Others',
+    'choose_duration' => 'Choose duration',
+    'add_feature' => 'Add feature',
+    'paid' => 'paid',
+    'not_paid' => 'Not paid',
+
+
 ];

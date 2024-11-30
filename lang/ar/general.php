@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 return [
     'for' => 'مخصص لـ',
@@ -33,4 +33,17 @@ return [
     'subscription_start_date' => 'تاريخ بداية الإشتراك',
     'subscription_end_date' => 'تاريخ نهاية الإشتراك',
     'view' => 'عرض',
+    'website_name' => 'اسم الموقع',
+    'website_description' => 'وصف الموقع',
+    'brand_name' => 'اسم الماركة',
+    'website_logo' => 'شعار الموقع',
+    'website_favicon' => 'أيقونة الموقع',
+    'maintenance_mode' => 'وضع الصيانة',
+    'others' => 'أخرى',
+    'choose_duration' => 'اختر المدة',
+    'add_feature' => 'إضافة ميزة',
+    'paid' => 'تم التسديد',
+    'not_paid' => 'غير مسدد',
+    'from' => 'من',
+    'to' => 'إلى'
 ];

@@ -8,7 +8,17 @@ use App\Models\Company;
 use App\Models\Country;
 use App\Models\State;
 use Filament\Forms;
+use Filament\Forms\Components\Fieldset;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\RichEditor;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Get;
+use Filament\Forms\Set;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\TextColumn;
 use Livewire\Component as Livewire;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -44,107 +54,111 @@ class CompanyResource extends Resource
         return __('main.companies');
     }
 
-    public static function getEloquentQuery(): Builder
-    {
-        return parent::getEloquentQuery()->with('user');
-    }
+    /*    public static function getEloquentQuery(): Builder
+       {
+           return parent::getEloquentQuery()->with('user');
+       } */
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\Fieldset::make('Main Info')
-                    ->relationship('user')
+                Section::make()
+                    ->columnSpan(1)
                     ->schema([
-                        Forms\Components\TextInput::make('email')
-                            ->label('Email')
-                            ->email()
+                        TextInput::make('name')
+                            ->label(__('fields.name'))
+                            ->string()
                             ->required()
                             ->maxLength(255),
-                        Forms\Components\TextInput::make('password')
-                            ->label('Password')
-                            ->password()
-                            ->required()
+                        TextInput::make('phone')
+                            ->label(__('fields.phone'))
+                            ->tel()->minLength(8)->maxLength(11),
+                        TextInput::make('website')
+                            ->label(__('fields.website'))
+                            ->url()
                             ->maxLength(255),
-                        Forms\Components\TextInput::make('name')
-                            ->required()
+                        TextInput::make('ceo_name')
+                            ->label(__('fields.ceo_name'))
                             ->maxLength(255),
+                        TextInput::make('tax_name')
+                            ->label(__('fields.tax_name'))
+                            ->maxLength(255),
+                        Select::make('user_id')
+                            ->label(__('fields.user'))
+                            ->relationship('user', 'email')
+                            ->exists('users', 'id')
+                            ->searchable()
+                            ->preload()
+                            ->required()
 
                     ]),
-                Forms\Components\RichEditor::make('description')->columnSpan('full'),
-                Forms\Components\TextInput::make('ceo_name')->maxLength(255),
-                Forms\Components\TextInput::make('tax_name')->required(),
-                Forms\Components\FileUpload::make('logo')
-                    ->label('logo')
-                    ->directory('companies/logo')
-                    ->storeFileNamesIn('image_path')
-                    ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file): string {
-                        return (string) str($file->hashName());
-                    })
-                    ->image(),
-                Forms\Components\TextInput::make('zipcode')->required(),
-                Forms\Components\TextInput::make('national_address')->required(),
-                Forms\Components\TextInput::make('website')->label('Website')
-                    ->url()->maxLength(255),
-
-                Select::make('country_id')
-                    ->label('Country')
-                    ->dehydrated(false)
-                    ->searchable()
-                    ->options(Country::pluck('name', 'id'))
-                    ->reactive()
-                    ->afterStateUpdated(fn($state, callable $set) => $set('state_id', null)),
-
-
-                Select::make('state_id')
-                    ->label('State')
-                    ->placeholder(fn(Forms\Get $get): string => empty($get('country_id')) ? 'First select country' : 'Select an option')
-                    ->options(function (?Company $record, Forms\Get $get, Forms\Set $set) {
-                        if (!empty($record) && !empty($get('country_id'))) {
-                            $set('country_id', $record->state->country_id);
-                            $set('state_id', $record->state_id);
-                        }
-                        return State::where('country_id', $get('country_id'))->pluck('name', 'id');
-                    })
-                    ->reactive()
-                    ->searchable()
-                    ->afterStateUpdated(fn($state, callable $set) => $set('city_id', null)),
-
-                Select::make('city_id')
-                    ->label('City')
-                    ->placeholder(fn(Forms\Get $get): string => empty($get('state_id')) ? 'First select state' : 'Select an option')
-                    ->options(function (?Company $record, Forms\Get $get, Forms\Set $set) {
-                        if (!empty($record) && !empty($get('country_id'))) {
-                            $set('state_id', $record->city->state_id);
-                            $set('city_id', $record->city_id);
-                        }
-
-                        return City::where('state_id', $get('state_id'))->pluck('name', 'id');
-                    })
-                    ->searchable()
-                    ->preload(),
-
-
-                Forms\Components\TextInput::make('phone')->numeric()->minLength(8)->maxLength(11),
-                Forms\Components\Repeater::make('contacts')
-                    ->relationship()
+                Section::make()
+                    ->columnSpan(1)
                     ->schema([
-                        Forms\Components\Select::make('type')
-                            ->label('Type')
-                            ->options([
-                                config('administration.contacts.types.email') => config('administration.contacts.types.email'),
-                                config('administration.contacts.types.phone') => config('administration.contacts.types.phone'),
-                            ])
+                        Select::make('country_id')
+                            ->label(__('fields.country'))
+                            ->relationship('country', 'name')
+                            ->exists('countries', 'id')
+                            ->live()->preload()->searchable()->required()->reactive()
+                            ->afterStateUpdated(fn(callable $set, $state) => $set('state_id', null)),
+
+                        Select::make('state_id')
+                            ->label(__('fields.state'))
+                            ->exists('states', 'id')
+                            ->reactive()->required()->preload()->live()
+                            ->relationship('state', 'name', fn($query, Get $get) => $query->where('country_id', $get('country_id')))
+                            ->disabled(fn(Get $get) => $get('country_id') ? false : true)
+                            ->afterStateUpdated(fn(callable $set, $state) => $set('city_id', null))
+                            ->searchable(static fn(Select $component) => !$component->isDisabled()),
+
+                        Select::make('city_id')
+                            ->label(__('fields.city'))
+                            ->reactive()->live()->preload()
+                            ->exists('cities', 'id')
+                            ->relationship('city', 'name', fn($query, Get $get) => $query->where('state_id', $get('state_id')))
+                            ->disabled(fn(Get $get) => $get('country_id') && $get('state_id') ? false : true)
+                            ->searchable(static fn(Select $component) => !$component->isDisabled()),
+
+                        TextInput::make('national_address')
+                            ->string()
+                            ->label(__('fields.national_address')),
+                        TextInput::make('zipcode')
+                            ->numeric()
+                            ->label(__('fields.zip_code'))
                             ->required(),
-                        Forms\Components\TextInput::make('contact')
-                            ->label('Contact')
-                            ->required()
-                            ->maxLength(255)
-                            ->rule(function ($get) {
-                                return $get('type') === 'email' ? 'email' : 'regex:/^\+?[1-9]\d{1,14}$/';
-                            }),
+                    ]),
+                Section::make()
+                    ->columns(2)
+                    ->schema([
+                        Textarea::make('description')
+                            ->label(__('fields.description')),
+                        FileUpload::make('logo')
+                            ->label(__('fields.logo'))
+                            ->image()
+                            ->directory('companies/logos'),
+
+
                     ])
-                    ->minItems(1)
-                    ->maxItems(10),
+                /*                 Repeater::make('contacts')
+                                    ->relationship()
+                                    ->schema([
+                                        Select::make('type')
+                                            ->label('Type')
+                                            ->options([
+                                                config('administration.contacts.types.email') => config('administration.contacts.types.email'),
+                                                config('administration.contacts.types.phone') => config('administration.contacts.types.phone'),
+                                            ])
+                                            ->required(),
+                                        TextInput::make('contact')
+                                            ->label('Contact')
+                                            ->required()
+                                            ->maxLength(255)
+                                            ->rule(function ($get) {
+                                                return $get('type') === 'email' ? 'email' : 'regex:/^\+?[1-9]\d{1,14}$/';
+                                            }),
+                                    ])
+                                    ->minItems(1)
+                                    ->maxItems(10), */
             ]);
     }
 
@@ -153,22 +167,70 @@ class CompanyResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name'),
-                Tables\Columns\TextColumn::make('user.email')->label('Email'),
-                Tables\Columns\TextColumn::make('description')->html(),
-                ImageColumn::make('logo')
-                    ->label('Logo')
-                    ->circular(),
+                TextColumn::make('name')
+                    ->label(__('fields.name'))
+                    ->searchable(),
+                TextColumn::make('description')
+                    ->label(__('fields.description'))
+                    ->searchable(),
+                TextColumn::make('ceo_name')
+                    ->label(__('fields.ceo_name'))
+                    ->searchable(),
+                TextColumn::make('phone')
+                    ->label(__('fields.phone')),
+                TextColumn::make('zipcode')
+                    ->label(__('fields.zip_code'))
+                    ->searchable(),
+                TextColumn::make('national_address')
+                    ->label(__('fields.national_address'))
+                    ->searchable(),
+                TextColumn::make('website')
+                    ->label(__('fields.website'))
+                    ->searchable(),
+                TextColumn::make('country.name')
+                    ->label(__('fields.country'))
+                    ->sortable(),
+                TextColumn::make('state.name')
+                    ->label(__('fields.state'))
+                    ->sortable(),
+                TextColumn::make('city.name')
+                    ->label(__('fields.city'))
+                    ->sortable(),
+                TextColumn::make('tax_name')
+                    ->label(__('fields.tax_name'))
+                    ->searchable(),
+                TextColumn::make('logo')
+                    ->label(__('fields.logo'))
+                    ->searchable(),
+                IconColumn::make('subscribed')
+                    ->label(__('fields.has_subscription'))
+                    ->boolean()
+                    ->sortable(),
+                TextColumn::make('created_at')
+                    ->label(__('fields.created_at'))
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('updated_at')
+                    ->label(__('fields.updated_at'))
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\ForceDeleteAction::make(),
+                Tables\Actions\RestoreAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\ForceDeleteBulkAction::make(),
+                    Tables\Actions\RestoreBulkAction::make(),
                 ]),
             ]);
     }

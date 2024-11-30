@@ -1,7 +1,9 @@
 <?php
 
-namespace App\Filament\Pages\Settings;
+namespace App\Filament\Clusters\Pages\Settings;
 
+
+use App\Filament\Clusters\Settings;
 use App\SideBar;
 use AymanAlhattami\FilamentPageWithSidebar\Traits\HasPageSidebar;
 use Filament\Actions\Action;
@@ -9,14 +11,19 @@ use Outerweb\FilamentSettings\Filament\Pages\Settings as BaseSettings;
 use Closure;
 use Filament\Forms\Components\Tabs;
 use Filament\Forms\Components\TextInput;
+
 class NotificationConfiguration extends BaseSettings
 {
-    use HasPageSidebar, SideBar;
-
-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
-    protected static bool $shouldRegisterNavigation = false;
-
+    protected static ?string $cluster = Settings::class;
+    protected static ?string $navigationIcon = 'heroicon-o-globe-alt';
+    protected static ?int $navigationSort = 6;
+    
     public function getTitle(): string
+    {
+        return __('main.notifications_settings');
+    }
+
+    public static function getNavigationLabel(): string
     {
         return __('main.notifications_settings');
     }
@@ -26,36 +33,45 @@ class NotificationConfiguration extends BaseSettings
             Tabs::make('Settings')
                 ->schema([
                     Tabs\Tab::make('General')
+                        ->label(__('general.general'))
                         ->schema([
                             TextInput::make('general.brand_name')
+                                ->label(__('general.brand_name'))
                                 ->required(),
                         ]),
-                    Tabs\Tab::make('Seo')
+/*                     Tabs\Tab::make('Seo')
+                        ->label(__('general.seo'))
                         ->schema([
                             TextInput::make('seo.title')
+                                ->label(__('general.seo_title'))
                                 ->required(),
                             TextInput::make('seo.description')
+                                ->label(__('general.seo_description'))
                                 ->required(),
-                        ]),
+                        ]), */
 
                     Tabs\Tab::make('Contact us')
+                        ->label(__('general.contact_us'))
                         ->schema([
                             TextInput::make('contacts.phone')
+                                ->label(__('fields.phone'))
                                 ->required(),
                             TextInput::make('contacts.email')
+                                ->label(__('fields.email'))
                                 ->required(),
                         ]),
 
                     Tabs\Tab::make('Social Media')
+                        ->label(__('general.social_media'))
                         ->schema([
                             TextInput::make('media.facebook')
-                                ->required(),
+                                ->label(__('general.facebook')),
                             TextInput::make('media.instagram')
-                                ->required(),
+                                ->label(__('general.instagram')),
                             TextInput::make('media.linkedin')
-                                ->required(),
+                                ->label(__('general.linkedin')),
                             TextInput::make('media.threads')
-                                ->required(),
+                                ->label(__('general.threads')),
                         ]),
                 ]),
         ];
@@ -69,9 +85,5 @@ class NotificationConfiguration extends BaseSettings
                 ->submit('data')
                 ->keyBindings(['mod+s'])
         ];
-    }
-    public function sidebar()
-    {
-        return $this->getSidebarItems();
     }
 }
