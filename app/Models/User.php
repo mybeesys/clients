@@ -56,6 +56,4 @@ class User extends Authenticatable
     {
         return $query->where('is_company', 0);
     }
-
-    
 }

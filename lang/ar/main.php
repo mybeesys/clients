@@ -30,6 +30,7 @@ return [
     'plan' => 'خطة',
     'countries' => 'البلدان',
     'country' => 'بلد',
+    'account' => 'حساب',
 
 
     'notifications_settings' => 'إعدادات الإشعارات',
