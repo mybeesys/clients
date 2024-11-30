@@ -18,12 +18,14 @@ class PlanSeeder extends Seeder
             'name'             => 'silver',
             'periodicity_type' => PeriodicityType::Month,
             'periodicity'      => 1,
+            'price' => 1000,
         ]);
 
         $gold = Plan::create([
             'name'             => 'gold',
             'periodicity_type' => PeriodicityType::Month,
             'periodicity'      => 1,
+            'price' => 1000,
         ]);
     }
 }

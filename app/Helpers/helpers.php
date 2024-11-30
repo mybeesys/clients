@@ -7,13 +7,6 @@ if (!function_exists('getAllPaymentsHelper')) {
     {
         $payments = [
             [
-                'key' => 'Stripe',
-                'name' => 'Stripe',
-                'logo' => asset('assets/images/payment_methods/stripe.png'),
-                'fields' => ['PAYMENT_STRIPE_PK', 'PAYMENT_STRIPE_SK'],
-            ],
-
-            [
                 'key' => 'Myfatoorah',
                 'name' => 'Myfatoorah',
                 'logo' => asset('assets/images/payment_methods/myfatoorah.png'),

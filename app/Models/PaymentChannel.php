@@ -18,9 +18,9 @@ class PaymentChannel extends Model
     protected $fillable = ['title', 'status', 'class_name', 'currencies', 'image', 'settings', 'created_at'];
 
     public static $classes = [
-        'Stripe',
         'Paypal',
         'MyFatoorah',
-        'Pay360', 'Fatora'
+        'Pay360',
+        'Fatora'
     ];
 }

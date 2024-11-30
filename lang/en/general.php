@@ -44,6 +44,9 @@ return [
     'add_feature' => 'Add feature',
     'paid' => 'paid',
     'not_paid' => 'Not paid',
+    'from' => 'from',
+    'to' => 'to',
+    'register' => 'Register',
 
 
 ];

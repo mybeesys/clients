@@ -35,7 +35,7 @@ return [
     'view' => 'عرض',
     'website_name' => 'اسم الموقع',
     'website_description' => 'وصف الموقع',
-    'brand_name' => 'اسم الماركة',
+    'brand_name' => 'اسم الشركة',
     'website_logo' => 'شعار الموقع',
     'website_favicon' => 'أيقونة الموقع',
     'maintenance_mode' => 'وضع الصيانة',
@@ -45,5 +45,6 @@ return [
     'paid' => 'تم التسديد',
     'not_paid' => 'غير مسدد',
     'from' => 'من',
-    'to' => 'إلى'
+    'to' => 'إلى',
+    'register' => 'سجّل',
 ];

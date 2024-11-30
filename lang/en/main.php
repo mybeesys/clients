@@ -30,6 +30,7 @@ return [
     'plan' => 'plan',
     'countries' => 'Countries',
     'country' => 'Country',
+    'account' => 'Acount',
 
 
     'notifications_settings' => 'Notifications settings',

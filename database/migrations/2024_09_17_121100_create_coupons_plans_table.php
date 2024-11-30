@@ -11,8 +11,8 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('coupons_plans', function (Blueprint $table) {
-            $table->foreignId('plan_id')->nullable()->constrained('plans')->cascadeOnDelete();
-            $table->foreignId('coupon_id')->nullable()->constrained('plans')->cascadeOnDelete();
+            $table->foreignId('plan_id')->constrained('plans')->cascadeOnDelete();
+            $table->foreignId('coupon_id')->constrained('plans')->cascadeOnDelete();
             $table->primary(['plan_id', 'coupon_id']);
             $table->timestamps();
         });
