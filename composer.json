@@ -12,6 +12,7 @@
         "filament/filament": "3.2.57",
         "guava/filament-clusters": "^1.4",
         "laravel/framework": "^11.9",
+        "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
         "lucasdotvin/laravel-soulbscription": "^4.2",
         "outerweb/filament-settings": "^1.2",
