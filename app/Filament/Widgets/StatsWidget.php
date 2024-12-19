@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Company;
+use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 use Filament\Support\Enums\IconPosition;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -12,7 +13,8 @@ use LucasDotVin\Soulbscription\Models\Subscription;
 
 class StatsWidget extends BaseWidget
 {
-
+    use HasWidgetShield;
+    
     public function getHeading(): string
     {
         return __('general.states');

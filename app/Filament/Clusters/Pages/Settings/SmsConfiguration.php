@@ -8,6 +8,7 @@ use App\SideBar;
 use AymanAlhattami\FilamentPageWithSidebar\FilamentPageSidebar;
 use AymanAlhattami\FilamentPageWithSidebar\PageNavigationItem;
 use AymanAlhattami\FilamentPageWithSidebar\Traits\HasPageSidebar;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Filament\Actions\Action;
 use Filament\Pages\Page;
 use Outerweb\FilamentSettings\Filament\Pages\Settings as BaseSettings;
@@ -18,6 +19,7 @@ use Filament\Forms\Components\TextInput;
 
 class SmsConfiguration extends BaseSettings
 {
+    use HasPageShield;
 
     protected static ?string $cluster = Settings::class;
     protected static ?string $navigationIcon = 'heroicon-o-chat-bubble-bottom-center-text';

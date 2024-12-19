@@ -11,17 +11,18 @@ use Stancl\Tenancy\Database\Concerns\HasDomains;
 class Tenant extends BaseTenant implements TenantWithDatabase
 {
     use HasDatabase, HasDomains;
-
+    
     protected function casts(): array
     {
         return [
             'id' => 'string',
         ];
     }
-    
+
     public static function getCustomColumns(): array
     {
         return [
+            'id',
             'user_id',
             'company_id',
         ];

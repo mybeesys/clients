@@ -7,8 +7,8 @@ use Stancl\Tenancy\Database\Models\Domain;
 
 return [
     'tenant_model' => Tenant::class,
-    // 'id_generator' => Stancl\Tenancy\UUIDGenerator::class,
-    'id_generator' => null,
+    'id_generator' => Stancl\Tenancy\UUIDGenerator::class,
+    // 'id_generator' => null,
 
     'domain_model' => Domain::class,
 
@@ -52,8 +52,8 @@ return [
          * Tenant database names are created like this:
          * prefix + tenant_id + suffix.
          */
-        'prefix' => '',
-        'suffix' => '_DB',
+        'prefix' => 'tenant',
+        'suffix' => '',
 
         /**
          * TenantDatabaseManagers are classes that handle the creation & deletion of tenant databases.
@@ -63,16 +63,16 @@ return [
             'mysql' => Stancl\Tenancy\TenantDatabaseManagers\MySQLDatabaseManager::class,
             'pgsql' => Stancl\Tenancy\TenantDatabaseManagers\PostgreSQLDatabaseManager::class,
 
-        /**
-         * Use this database manager for MySQL to have a DB user created for each tenant database.
-         * You can customize the grants given to these users by changing the $grants property.
-         */
+            /**
+             * Use this database manager for MySQL to have a DB user created for each tenant database.
+             * You can customize the grants given to these users by changing the $grants property.
+             */
             // 'mysql' => Stancl\Tenancy\TenantDatabaseManagers\PermissionControlledMySQLDatabaseManager::class,
 
-        /**
-         * Disable the pgsql manager above, and enable the one below if you
-         * want to separate tenant DBs by schemas rather than databases.
-         */
+            /**
+             * Disable the pgsql manager above, and enable the one below if you
+             * want to separate tenant DBs by schemas rather than databases.
+             */
             // 'pgsql' => Stancl\Tenancy\TenantDatabaseManagers\PostgreSQLSchemaManager::class, // Separate by schema instead of database
         ],
     ],
@@ -186,7 +186,17 @@ return [
      */
     'migration_parameters' => [
         '--force' => true, // This needs to be true to run migrations in production.
-        '--path' => [database_path('migrations/tenant')],
+        '--path' => [
+            '../mybeeCompany/Modules/Employee/database/migrations/tenant',
+            '../mybeeCompany/Modules/Establishment/database/migrations/tenant',
+            '../mybeeCompany/Modules/Product/database/migrations/tenant',
+            '../mybeeCompany/Modules/Accounting/database/migrations/tenant',
+            '../mybeeCompany/Modules/Inventory/database/migrations/tenant',
+            '../mybeeCompany/Modules/ClientsAndSuppliers/database/migrations/tenant',
+            '../mybeeCompany/Modules/Sales/database/migrations/tenant',
+            '../mybeeCompany/Modules/General/database/migrations/tenant',
+            '../mybeeCompany/Modules/purchases/database/migrations/tenant',
+        ],
         '--realpath' => true,
     ],
 

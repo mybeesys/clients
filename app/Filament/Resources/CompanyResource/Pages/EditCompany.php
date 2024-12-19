@@ -19,10 +19,8 @@ class EditCompany extends EditRecord
         ];
     }
 
-/*     protected function afterSave(): void
+    protected function getRedirectUrl(): string
     {
-        $this->record->update([
-            'name' => $this->record->user->name,
-        ]);
-    } */
+        return $this->getResource()::getUrl('index');
+    }
 }

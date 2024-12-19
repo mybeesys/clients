@@ -3,6 +3,7 @@
 namespace App\Filament\Clusters\Pages\Settings;
 
 use App\Filament\Clusters\Settings;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Closure;
 use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;
@@ -10,6 +11,8 @@ use Outerweb\FilamentSettings\Filament\Pages\Settings as BaseSettings;
 
 class EmailConfiguration extends BaseSettings
 {
+    use HasPageShield;
+
     protected static ?string $cluster = Settings::class;
     protected static ?string $navigationIcon = 'heroicon-o-envelope';
     protected static ?int $navigationSort = 5;

@@ -3,6 +3,8 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\SubscriptionResource\Pages;
+use App\Models\Subscription;
+use App\Policies\SubscriptionPolicy;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
@@ -14,7 +16,6 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use LucasDotVin\Soulbscription\Models\Subscription;
 use PDF;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -48,11 +49,6 @@ class SubscriptionResource extends Resource
         return __('main.subscriptions');
     }
 
-
-    /*     public static function canCreate(): bool
-        {
-            return false;
-        } */
 
     public static function form(Form $form): Form
     {
