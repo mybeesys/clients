@@ -18,7 +18,6 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Guava\FilamentClusters\Forms\Cluster;
 use LucasDotVin\Soulbscription\Enums\PeriodicityType;
-
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;

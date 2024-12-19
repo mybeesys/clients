@@ -2,11 +2,10 @@
 namespace App\Filament\Pages;
 
 use App\Models\City;
-use App\Models\Company;
 use App\Models\Country;
 use App\Models\State;
 use App\Models\User;
-use DB;
+use App\Services\CompanyAction;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Form;
@@ -48,6 +47,7 @@ class Registration extends Register
                             TextInput::make('companyName')
                                 ->label(__('fields.name'))
                                 ->string()
+                                ->unique('companies', 'name')
                                 ->required()
                                 ->maxLength(255),
                             TextInput::make('companyPhone')
@@ -56,6 +56,8 @@ class Registration extends Register
                             TextInput::make('website')
                                 ->label(__('fields.website'))
                                 ->url()
+                                ->prefix('https://')
+                                ->suffixIcon('heroicon-m-globe-alt')
                                 ->maxLength(255),
                             TextInput::make('ceo_name')
                                 ->label(__('fields.ceo_name'))
@@ -139,39 +141,22 @@ class Registration extends Register
 
             return null;
         }
-        DB::beginTransaction();
+            $data = $this->form->getState();
 
-        $data = $this->form->getState();
+            $user = User::create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'password' => Hash::make($data['password']),
+                'phone_number' => $data['phone_number'],
+                'isCompany' => true
+            ]);
+            $company = new CompanyAction($user);
 
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
-            'phone_number' => $data['phone_number'],
-            'isCompany' => true
-        ]);
+            $company->storeCompany($data);
 
-        Company::create([
-            'name' => $data['companyName'],
-            'phone' => $data['companyPhone'],
-            'website' => $data['website'],
-            'ceo_name' => $data['ceo_name'],
-            'tax_name' => $data['tax_name'],
-            'country_id' => $data['country_id'],
-            'state_id' => $data['state_id'],
-            'city_id' => $data['city_id'],
-            'national_address' => $data['national_address'],
-            'zip_code' => $data['zipcode'],
-        ]);
-
-        DB::commit();
-
-        event(new Registered($user));
-
-        $this->sendEmailVerificationNotification($user);
-
-        return redirect()->to('/')->with('success', __(''));
-
+            event(new Registered($user));
+            $this->sendEmailVerificationNotification($user);
+            return app(RegistrationResponse::class);
     }
     public function getFormActions(): array
     {

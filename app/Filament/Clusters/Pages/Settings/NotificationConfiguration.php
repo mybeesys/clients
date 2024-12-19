@@ -6,6 +6,7 @@ namespace App\Filament\Clusters\Pages\Settings;
 use App\Filament\Clusters\Settings;
 use App\SideBar;
 use AymanAlhattami\FilamentPageWithSidebar\Traits\HasPageSidebar;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Filament\Actions\Action;
 use Outerweb\FilamentSettings\Filament\Pages\Settings as BaseSettings;
 use Closure;
@@ -14,6 +15,8 @@ use Filament\Forms\Components\TextInput;
 
 class NotificationConfiguration extends BaseSettings
 {
+    use HasPageShield;
+
     protected static ?string $cluster = Settings::class;
     protected static ?string $navigationIcon = 'heroicon-o-globe-alt';
     protected static ?int $navigationSort = 6;

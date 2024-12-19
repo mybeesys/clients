@@ -5,6 +5,7 @@ namespace App\Filament\Clusters\Pages\Settings;
 
 use App\Filament\Clusters\Settings;
 use App\SideBar;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Closure;
 use AymanAlhattami\FilamentPageWithSidebar\Traits\HasPageSidebar;
 use Filament\Actions\Action;
@@ -14,6 +15,8 @@ use Filament\Forms\Components\TextInput;
 
 class GeneralSettings extends BaseSettings
 {
+    use HasPageShield;
+
     protected static ?string $cluster = Settings::class;
     protected static ?string $navigationIcon = 'heroicon-o-cog-6-tooth';
     protected static ?int $navigationSort = 1;

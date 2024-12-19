@@ -9,4 +9,9 @@ use Filament\Resources\Pages\CreateRecord;
 class CreatePaymentSubscription extends CreateRecord
 {
     protected static string $resource = PaymentSubscriptionResource::class;
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
 }

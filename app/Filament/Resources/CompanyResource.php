@@ -2,34 +2,20 @@
 
 namespace App\Filament\Resources;
 
-use App\Models\City;
 use App\Filament\Resources\CompanyResource\Pages;
 use App\Models\Company;
-use App\Models\Country;
-use App\Models\State;
-use Filament\Forms;
-use Filament\Forms\Components\Fieldset;
 use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Get;
-use Filament\Forms\Set;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
-use Livewire\Component as Livewire;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Illuminate\Support\HtmlString;
-use Illuminate\Validation\ValidationException;
-use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 class CompanyResource extends Resource
 {
@@ -65,12 +51,13 @@ class CompanyResource extends Resource
                 Section::make()
                     ->columnSpan(1)
                     ->schema([
-                        TextInput::make('name')
+                        TextInput::make('companyName')
                             ->label(__('fields.name'))
                             ->string()
+                            ->unique('companies', 'name')
                             ->required()
                             ->maxLength(255),
-                        TextInput::make('phone')
+                        TextInput::make('companyPhone')
                             ->label(__('fields.phone'))
                             ->tel()->minLength(8)->maxLength(11),
                         TextInput::make('website')

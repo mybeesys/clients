@@ -3,10 +3,7 @@
 namespace App\Filament\Clusters\Pages\Settings;
 
 use App\Filament\Clusters\Settings;
-use App\SideBar;
-use AymanAlhattami\FilamentPageWithSidebar\FilamentPageSidebar;
-use AymanAlhattami\FilamentPageWithSidebar\PageNavigationItem;
-use AymanAlhattami\FilamentPageWithSidebar\Traits\HasPageSidebar;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Closure;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
@@ -19,6 +16,8 @@ use Outerweb\FilamentSettings\Filament\Pages\Settings as BaseSettings;
 
 class WebsiteSettings extends BaseSettings
 {
+    use HasPageShield;
+    
     protected static ?string $cluster = Settings::class;
     protected static ?string $navigationIcon = 'heroicon-o-globe-alt';
     protected static ?int $navigationSort = 2;
