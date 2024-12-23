@@ -11,21 +11,19 @@ class Company extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'name',
+        'name_ar',
+        'name_en',
         'logo',
         'tax_name',
         'ceo_name',
-        'country_id',
         'description',
-        'name',
         'user_id',
-        'name',
         'zipcode',
         'national_address',
         'country_id',
         'website',
-        'state_id',
-        'city_id'
+        'state',
+        'city'
     ];
 
     public function user()
@@ -40,20 +38,10 @@ class Company extends Model
 
     public function country()
     {
-        return $this->belongsTo(Country::class);
+        return $this->belongsTo(Country::class, 'country_id');
     }
 
-    public function city()
-    {
-        return $this->belongsTo(City::class);
-    }
-
-    public function state()
-    {
-        return $this->belongsTo(State::class);
-    }
-
-    public function subscriptios()
+    public function subscriptions()
     {
         return $this->hasMany(Subscription::class);
     }

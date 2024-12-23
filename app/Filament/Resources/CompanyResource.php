@@ -84,27 +84,19 @@ class CompanyResource extends Resource
                     ->schema([
                         Select::make('country_id')
                             ->label(__('fields.country'))
-                            ->relationship('country', 'name')
+                            ->relationship('country', 'name_en')
                             ->exists('countries', 'id')
-                            ->live()->preload()->searchable()->required()->reactive()
-                            ->afterStateUpdated(fn(callable $set, $state) => $set('state_id', null)),
-
-                        Select::make('state_id')
+                            ->live()->preload()->searchable()->required(),
+                        TextInput::make('state')
                             ->label(__('fields.state'))
-                            ->exists('states', 'id')
-                            ->reactive()->required()->preload()->live()
-                            ->relationship('state', 'name', fn($query, Get $get) => $query->where('country_id', $get('country_id')))
-                            ->disabled(fn(Get $get) => $get('country_id') ? false : true)
-                            ->afterStateUpdated(fn(callable $set, $state) => $set('city_id', null))
-                            ->searchable(static fn(Select $component) => !$component->isDisabled()),
-
-                        Select::make('city_id')
+                            ->string()
+                            ->required()
+                            ->maxLength(255),
+                        TextInput::make('city')
                             ->label(__('fields.city'))
-                            ->reactive()->live()->preload()
-                            ->exists('cities', 'id')
-                            ->relationship('city', 'name', fn($query, Get $get) => $query->where('state_id', $get('state_id')))
-                            ->disabled(fn(Get $get) => $get('country_id') && $get('state_id') ? false : true)
-                            ->searchable(static fn(Select $component) => !$component->isDisabled()),
+                            ->string()
+                            ->required()
+                            ->maxLength(255),
 
                         TextInput::make('national_address')
                             ->string()
@@ -123,29 +115,7 @@ class CompanyResource extends Resource
                             ->label(__('fields.logo'))
                             ->image()
                             ->directory('companies/logos'),
-
-
                     ])
-                /*                 Repeater::make('contacts')
-                                    ->relationship()
-                                    ->schema([
-                                        Select::make('type')
-                                            ->label('Type')
-                                            ->options([
-                                                config('administration.contacts.types.email') => config('administration.contacts.types.email'),
-                                                config('administration.contacts.types.phone') => config('administration.contacts.types.phone'),
-                                            ])
-                                            ->required(),
-                                        TextInput::make('contact')
-                                            ->label('Contact')
-                                            ->required()
-                                            ->maxLength(255)
-                                            ->rule(function ($get) {
-                                                return $get('type') === 'email' ? 'email' : 'regex:/^\+?[1-9]\d{1,14}$/';
-                                            }),
-                                    ])
-                                    ->minItems(1)
-                                    ->maxItems(10), */
             ]);
     }
 
@@ -174,7 +144,7 @@ class CompanyResource extends Resource
                 TextColumn::make('website')
                     ->label(__('fields.website'))
                     ->searchable(),
-                TextColumn::make('country.name')
+                TextColumn::make('country.name_ar')
                     ->label(__('fields.country'))
                     ->sortable(),
                 TextColumn::make('state.name')

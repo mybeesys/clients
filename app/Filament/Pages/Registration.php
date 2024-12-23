@@ -56,7 +56,6 @@ class Registration extends Register
                             TextInput::make('website')
                                 ->label(__('fields.website'))
                                 ->url()
-                                ->prefix('https://')
                                 ->suffixIcon('heroicon-m-globe-alt')
                                 ->maxLength(255),
                             TextInput::make('ceo_name')
@@ -65,37 +64,20 @@ class Registration extends Register
                             TextInput::make('tax_name')
                                 ->label(__('fields.tax_name'))
                                 ->maxLength(255),
-
                             Select::make('country_id')
                                 ->label(__('fields.country'))
-                                ->options(Country::all()->pluck('name', 'id'))
-                                ->exists('countries', 'id')
-                                ->live()->preload()->searchable()->required()->reactive()
-                                ->afterStateUpdated(fn(callable $set, $state) => $set('state_id', null)),
-
-                            Select::make('state_id')
+                                ->options(Country::pluck('name_en', 'id'))->exists('countries', 'id')
+                                ->live()->preload()->searchable()->required(),
+                            TextInput::make('state')
                                 ->label(__('fields.state'))
-                                ->exists('states', 'id')
-                                ->reactive()->required()->preload()->live()
-                                ->options(
-                                    fn(Get $get) =>
-                                    State::where('country_id', $get('country_id'))->pluck('name', 'id')
-                                )
-                                ->disabled(fn(Get $get) => $get('country_id') ? false : true)
-                                ->afterStateUpdated(fn(callable $set, $state) => $set('city_id', null))
-                                ->searchable(static fn(Select $component) => !$component->isDisabled()),
-
-                            Select::make('city_id')
+                                ->string()
+                                ->required()
+                                ->maxLength(255),
+                            TextInput::make('city')
                                 ->label(__('fields.city'))
-                                ->reactive()->live()->preload()
-                                ->exists('cities', 'id')
-                                ->options(
-                                    fn(Get $get) =>
-                                    City::where('state_id', $get('state_id'))->pluck('name', 'id')
-                                )
-                                ->disabled(fn(Get $get) => $get('country_id') && $get('state_id') ? false : true)
-                                ->searchable(static fn(Select $component) => !$component->isDisabled()),
-
+                                ->string()
+                                ->required()
+                                ->maxLength(255),
                             TextInput::make('national_address')
                                 ->string()
                                 ->label(__('fields.national_address')),
@@ -104,12 +86,6 @@ class Registration extends Register
                                 ->label(__('fields.zip_code'))
                                 ->required(),
                         ]),
-                    /*                    Wizard\Step::make('subscription')
-                                           ->label(__('main.subscription'))
-                                           ->schema([
-                                               $this->getPasswordFormComponent(),
-                                               $this->getPasswordConfirmationFormComponent(),
-                                           ]), */
                 ])->submitAction(new HtmlString(Blade::render(<<<BLADE
                     <x-filament::button
                         type="submit"
@@ -141,22 +117,22 @@ class Registration extends Register
 
             return null;
         }
-            $data = $this->form->getState();
+        $data = $this->form->getState();
 
-            $user = User::create([
-                'name' => $data['name'],
-                'email' => $data['email'],
-                'password' => Hash::make($data['password']),
-                'phone_number' => $data['phone_number'],
-                'isCompany' => true
-            ]);
-            $company = new CompanyAction($user);
+        $user = User::create([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'password' => Hash::make($data['password']),
+            'phone_number' => $data['phone_number'],
+            'isCompany' => true
+        ]);
+        $company = new CompanyAction($user);
 
-            $company->storeCompany($data);
+        $company->storeCompany($data);
 
-            event(new Registered($user));
-            $this->sendEmailVerificationNotification($user);
-            return app(RegistrationResponse::class);
+        event(new Registered($user));
+        $this->sendEmailVerificationNotification($user);
+        return app(RegistrationResponse::class);
     }
     public function getFormActions(): array
     {
