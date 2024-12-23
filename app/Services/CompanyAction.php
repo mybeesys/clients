@@ -28,9 +28,9 @@ class CompanyAction
                 'website' => $data['website'],
                 'ceo_name' => $data['ceo_name'],
                 'tax_name' => $data['tax_name'],
-                'country_id' => $data['country_id'],
-                'state_id' => $data['state_id'],
-                'city_id' => $data['city_id'],
+                'country' => $data['country_id'],
+                'state' => $data['state'],
+                'city' => $data['city'],
                 'national_address' => $data['national_address'],
                 'zip_code' => $data['zipcode'],
                 'description' => $data['description'] ?? null,
@@ -55,21 +55,34 @@ class CompanyAction
 
             return $company;
         } catch (\Throwable $e) {
-            \Log::error('Company Creation Error: ' . $e->getMessage());
-
-            if ($tenant) {
-                try {
-                    $tenant->delete();
-                } catch (\Exception $deleteException) {
-                    \Log::error('Tenant Database Deletion Error: ' . $deleteException->getMessage());
-                }
-            }
-            if ($company) {
-                $company->forceDelete();
-            }
-
-            $this->user->forceDelete();
+            $this->cleanup($tenant, $company);
             throw $e;
+        }
+    }
+
+    private function cleanup(?Tenant $tenant, ?Company $company)
+    {
+        if ($tenant) {
+            try {
+                $tenant->domains()->delete();
+                $tenant->delete();
+            } catch (\Exception $e) {
+                \Log::error('Tenant cleanup error: ' . $e->getMessage());
+            }
+        }
+
+        if ($company) {
+            try {
+                $company->forceDelete();
+            } catch (\Exception $e) {
+                \Log::error('Company cleanup error: ' . $e->getMessage());
+            }
+        }
+
+        try {
+            $this->user->forceDelete();
+        } catch (\Exception $e) {
+            \Log::error('User cleanup error: ' . $e->getMessage());
         }
     }
 
