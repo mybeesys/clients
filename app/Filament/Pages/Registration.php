@@ -43,49 +43,7 @@ class Registration extends Register
                     Wizard\Step::make('company')
                         ->label(__('main.company'))
                         ->columns(2)
-                        ->schema([
-                            TextInput::make('companyName')
-                                ->label(__('fields.name'))
-                                ->string()
-                                ->unique('companies', 'name')
-                                ->required()
-                                ->maxLength(255),
-                            TextInput::make('companyPhone')
-                                ->label(__('fields.phone'))
-                                ->tel()->minLength(8)->maxLength(11),
-                            TextInput::make('website')
-                                ->label(__('fields.website'))
-                                ->url()
-                                ->suffixIcon('heroicon-m-globe-alt')
-                                ->maxLength(255),
-                            TextInput::make('ceo_name')
-                                ->label(__('fields.ceo_name'))
-                                ->maxLength(255),
-                            TextInput::make('tax_name')
-                                ->label(__('fields.tax_name'))
-                                ->maxLength(255),
-                            Select::make('country_id')
-                                ->label(__('fields.country'))
-                                ->options(Country::pluck('name_en', 'id'))->exists('countries', 'id')
-                                ->live()->preload()->searchable()->required(),
-                            TextInput::make('state')
-                                ->label(__('fields.state'))
-                                ->string()
-                                ->required()
-                                ->maxLength(255),
-                            TextInput::make('city')
-                                ->label(__('fields.city'))
-                                ->string()
-                                ->required()
-                                ->maxLength(255),
-                            TextInput::make('national_address')
-                                ->string()
-                                ->label(__('fields.national_address')),
-                            TextInput::make('zipcode')
-                                ->numeric()
-                                ->label(__('fields.zip_code'))
-                                ->required(),
-                        ]),
+                        ->schema(CompanyAction::getCompanyForm(true)),
                 ])->submitAction(new HtmlString(Blade::render(<<<BLADE
                     <x-filament::button
                         type="submit"

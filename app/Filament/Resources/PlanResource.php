@@ -5,7 +5,6 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\PlanResource\Pages;
 use App\Models\Feature;
 use App\Models\Plan;
-use Filament\Forms;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Section;
@@ -24,8 +23,6 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-
-use Resources\PlanResource\RelationManagers\FeaturesRelationManager;
 
 class PlanResource extends Resource
 {
@@ -65,7 +62,6 @@ class PlanResource extends Resource
                             ->label(__('fields.price'))
                             ->numeric()
                             ->required()
-                            ->numeric()
                             ->prefix('SAR')
                             ->mask(RawJs::make('$money($input)'))
                             ->stripCharacters(',')
@@ -90,6 +86,8 @@ class PlanResource extends Resource
                         Toggle::make('active')
                             ->label(__('fields.active')),
                         RichEditor::make('description')
+                            ->string()
+                            ->maxLength(255)
                             ->label(__('fields.description'))
                             ->columnSpanFull(),
                         Repeater::make('features')

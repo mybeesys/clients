@@ -9,6 +9,7 @@ use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -43,7 +44,7 @@ class UserResource extends Resource
     {
         return __('main.users');
     }
-    
+
     public static function form(Form $form): Form
     {
         return $form
@@ -80,6 +81,8 @@ class UserResource extends Resource
                             ->revealable()
                             ->hiddenOn('edit')
                             ->maxLength(255),
+                        Toggle::make('is_company')->default(true)
+                            ->label(__('fields.is_company')),
                         Hidden::make('email_verified_at')->default(now()),
                     ])
             ]);

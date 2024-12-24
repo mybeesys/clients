@@ -2,7 +2,9 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Auth\Login;
 use App\Filament\Pages\Registration;
+use App\Http\Middleware\EnsureSubscription;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -30,7 +32,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->registration(Registration::class)
-            ->login()
+            ->login(Login::class)
             ->colors([
                 'primary' => Color::hex('#f5e902'),
             ])
@@ -58,6 +60,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
+                EnsureSubscription::class
             ])
             ->navigationGroups([
                 NavigationGroup::make()

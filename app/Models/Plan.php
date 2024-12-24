@@ -17,8 +17,15 @@ class Plan extends ModelsPlan
      */
     protected $table = 'plans';
 
-    protected $guarded = ['id', 'created_at','updated_at', 'deleted_at'];
-
+    protected $fillable = [
+        'name',
+        'price',
+        'description',  // Make sure description is included
+        'periodicity',
+        'periodicity_type',
+        'active',
+        // Add any other fields that should be mass assignable
+    ];
     public function features()
     {
         return $this->belongsToMany(config('soulbscription.models.feature'))

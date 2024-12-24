@@ -47,6 +47,6 @@ return [
     'from' => 'from',
     'to' => 'to',
     'register' => 'Register',
-
-
+    'delete_company_details' => 'When the company is permanently deleted, its database and all related data will be deleted',
+    'deleted_successfully' => 'Deleted successfully',
 ];

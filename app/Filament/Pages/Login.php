@@ -6,11 +6,8 @@ use Filament\Facades\Filament;
 use Filament\Http\Responses\Auth\Contracts\LoginResponse;
 use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
 use Filament\Models\Contracts\FilamentUser;
-use Carbon\Carbon;
 
 use Illuminate\Validation\ValidationException;
-
-use LucasDotVin\Soulbscription\Models\Subscription;
 
 class Login extends \Filament\Pages\Auth\Login
 {
@@ -36,12 +33,20 @@ class Login extends \Filament\Pages\Auth\Login
             $this->throwFailureValidationException();
         }
 
+        session()->regenerate();
+
         if ($user->is_company()) {
-            Filament::auth()->logout();
-            $this->throwFailureAdminException();
+            if ($user->company->subscribed) {
+                $domain = $user->tenant->domains->first()->domain;
+                $protocol = request()->secure() ? 'https://' : 'http://';
+                $this->redirect($protocol . $domain);
+                return null;
+            } else {
+                $this->redirect(route('subscribe'));
+                return null;
+            }
         }
 
-        session()->regenerate();
 
         return app(LoginResponse::class);
     }
