@@ -65,5 +65,6 @@ return [
     'remaining_amount' => 'المبلغ المتبقي',
     'paid_amount' => 'المبلغ المسدد',
     'money_amount' => 'المبلغ',
-
+    'tax_number' => 'الرقم الضريبي',
+    'is_company' => 'هل المستخدم شركة',
 ];

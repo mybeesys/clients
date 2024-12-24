@@ -65,4 +65,6 @@ return [
     'remaining_amount' => 'Remaining amount',
     'paid_amount' => 'Paid amount',
     'money_amount' => 'Amount',
+    'tax_number' => 'Tax number',
+    'is_company' => 'Is this user a company'
 ];

@@ -32,6 +32,7 @@ class SeedTenantDatabase implements ShouldQueue
                 $this->insertEmployee();
                 $this->insertPermissions();
                 $this->insertCountries();
+                $this->insertDefaultEstablishment();
             });
         } catch (\Exception $e) {
             \Log::error('Seeding failed: ' . $e->getMessage());
@@ -44,8 +45,9 @@ class SeedTenantDatabase implements ShouldQueue
     private function insertEmployee()
     {
         try {
-            DB::table('emp_employees')->insert([
-                'email' => 'admin@admin.com',
+            DB::table('emp_employees')->updateOrInsert([
+                'email' => 'admin@admin.com'
+            ], [
                 'name' => 'آدمن',
                 'name_en' => 'admin',
                 'password' => Hash::make('12345678'),
@@ -67,8 +69,9 @@ class SeedTenantDatabase implements ShouldQueue
             $permissions = array_merge($pos_permissions, $dashboard_permissions);
 
             foreach ($permissions as $permission) {
-                DB::table('permissions')->insert([
-                    'name' => $permission['name'],
+                DB::table('permissions')->updateOrInsert([
+                    'name' => $permission['name']
+                ], [
                     'type' => $permission['type'],
                     'name_ar' => $permission['name_ar'],
                     'description' => $permission['description'],
@@ -79,6 +82,29 @@ class SeedTenantDatabase implements ShouldQueue
         } catch (\Exception $e) {
             \Log::error('Permissions insertion failed: ' . $e->getMessage());
             throw $e; // Or handle as needed
+        }
+    }
+
+    private function insertDefaultEstablishment()
+    {
+        DB::table('est_establishments')->updateOrInsert(
+            ['name_en' => 'main'],
+            [
+                'name' => 'رئيسي',
+                'is_main' => true,
+            ]
+        );
+        $id = DB::table('est_establishments')
+            ->where('name_en', 'main')->whereNull('parent_id')
+            ->value('id');
+        if ($id) {
+            DB::table('est_establishments')->updateOrInsert([
+                'parent_id' => $id
+            ], [
+                'name' => 'رئيسي',
+                'name_en' => 'main',
+                'is_main' => false,
+            ]);
         }
     }
 
