@@ -3,7 +3,7 @@
 namespace App\Policies;
 
 use App\Models\User;
-use LucasDotVin\Soulbscription\Models\Subscription;
+use App\Models\Subscription;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class SubscriptionPolicy
