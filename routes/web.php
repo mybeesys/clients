@@ -4,7 +4,7 @@ use App\Models\Plan;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return redirect('filament.admin.auth.login');
+    return to_route('filament.admin.auth.login');
 });
 
 Route::get('/subscribe', function () {
