@@ -9,6 +9,7 @@ use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Get;
@@ -58,6 +59,9 @@ class PlanResource extends Resource
                         TextInput::make('name')
                             ->label(__('fields.name'))
                             ->required(),
+                        TextInput::make('name_ar')
+                            ->label(__('fields.name_ar'))
+                            ->required(),
                         TextInput::make('price')
                             ->label(__('fields.price'))
                             ->numeric()
@@ -85,27 +89,34 @@ class PlanResource extends Resource
                         ])->label(__('fields.duration')),
                         Toggle::make('active')
                             ->label(__('fields.active')),
-                        RichEditor::make('description')
+                        Textarea::make('description')
                             ->string()
                             ->maxLength(255)
                             ->label(__('fields.description'))
+                            ->columnSpanFull(),
+                        Textarea::make('description_ar')
+                            ->string()
+                            ->maxLength(255)
+                            ->label(__('fields.description_ar'))
                             ->columnSpanFull(),
                         Repeater::make('features')
                             ->relationship('feature_plans')
                             ->schema([
                                 Select::make('feature_id')
                                     ->label(__('main.feature'))
-                                    ->options(Feature::all()->pluck('name', 'id')->toArray())
+                                    ->options(Feature::all()->pluck('translatedName', 'id')->toArray())
                                     ->distinct()
                                     ->disableOptionsWhenSelectedInSiblingRepeaterItems()
+                                    ->afterStateUpdated(fn(callable $set, $state) => $set('amount', null))
                                     ->exists('features', 'id')
                                     ->searchable()
                                     ->preload()
                                     ->required(),
                                 TextInput::make('amount')
                                     ->label(__('fields.amount'))
-                                    ->numeric()
-                                    ->required(),
+                                    ->disabled(fn(Get $get) => !(Feature::find($get('feature_id'))?->countable) ?? true)
+                                    ->live()
+                                    ->numeric(),
                             ])
                             ->columns(2)
                             ->label(__('main.features'))
@@ -121,8 +132,15 @@ class PlanResource extends Resource
             ->columns([
                 TextColumn::make('name')
                     ->label(__('fields.name')),
+                TextColumn::make('name_ar')
+                    ->label(__('fields.name_ar')),
                 TextColumn::make('description')
                     ->label(__('fields.description'))
+                    ->formatStateUsing(function ($state) {
+                        return \Illuminate\Support\Str::limit(strip_tags($state), 50);
+                    }),
+                TextColumn::make('description_ar')
+                    ->label(__('fields.description_ar'))
                     ->formatStateUsing(function ($state) {
                         return \Illuminate\Support\Str::limit(strip_tags($state), 50);
                     }),

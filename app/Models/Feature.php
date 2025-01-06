@@ -39,4 +39,10 @@ class Feature extends ModelsFeature
         return $this->hasMany(FeaturePlan::class);
     }
 
+    public function getTranslatedNameAttribute()
+    {
+        $name = app()->getLocale() == 'ar' ? 'name_ar' : 'name';
+        return ($this->{$name} ?? $this->name_ar) ?? $this->name;
+    }
+
 }

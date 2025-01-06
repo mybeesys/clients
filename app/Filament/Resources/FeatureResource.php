@@ -4,7 +4,6 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\FeatureResource\Pages;
 use App\Models\Feature;
-use Filament\Forms;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -16,8 +15,6 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Guava\FilamentClusters\Forms\Cluster;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use LucasDotVin\Soulbscription\Enums\PeriodicityType;
 
 
@@ -44,66 +41,68 @@ class FeatureResource extends Resource
     {
         return __('main.features');
     }
-    public static function form(Form $form): Form
-    {
-        return $form
-            ->schema([
-                Section::make()
-                    ->columns(1)
-                    ->columnSpan(1)
-                    ->schema([
-                        TextInput::make('name')->required()
-                            ->label(__('fields.name')),
-                        Textarea::make('description')
-                            ->label(__('fields.description')),
-                        Cluster::make([
-                            TextInput::make('periodicity')
-                                ->placeholder(__('fields.count'))
-                                ->requiredWith('periodicity_type')
-                                ->disabled(fn(Get $get) => $get('periodicity_type') ? false : true)
-                                ->numeric(),
-                            Select::make('periodicity_type')
-                                ->placeholder(__('general.choose_duration'))
-                                ->requiredWith('periodicity')
-                                ->live()
-                                ->options([
-                                    PeriodicityType::Year => __('fields.year'),
-                                    PeriodicityType::Month => __('fields.month'),
-                                    PeriodicityType::Week => __('fields.weak'),
-                                    PeriodicityType::Day => __('fields.day'),
-                                ]),
-                        ])->label(__('fields.duration') . ' (' . __('general.optional') . ')'),
-                        Toggle::make('consumable')
-                            ->label(__('fields.active')),
-                    ])
-            ]);
-    }
+    // public static function form(Form $form): Form
+    // {
+    //     return $form
+    //         ->schema([
+    //             Section::make()
+    //                 ->columns(1)
+    //                 ->columnSpan(1)
+    //                 ->schema([
+    //                     TextInput::make('name')->required()
+    //                         ->label(__('fields.name')),
+    //                     Textarea::make('description')
+    //                         ->label(__('fields.description')),
+    //                     Cluster::make([
+    //                         TextInput::make('periodicity')
+    //                             ->placeholder(__('fields.count'))
+    //                             ->requiredWith('periodicity_type')
+    //                             ->disabled(fn(Get $get) => $get('periodicity_type') ? false : true)
+    //                             ->numeric(),
+    //                         Select::make('periodicity_type')
+    //                             ->placeholder(__('general.choose_duration'))
+    //                             ->requiredWith('periodicity')
+    //                             ->live()
+    //                             ->options([
+    //                                 PeriodicityType::Year => __('fields.year'),
+    //                                 PeriodicityType::Month => __('fields.month'),
+    //                                 PeriodicityType::Week => __('fields.weak'),
+    //                                 PeriodicityType::Day => __('fields.day'),
+    //                             ]),
+    //                     ])->label(__('fields.duration') . ' (' . __('general.optional') . ')'),
+    //                     Toggle::make('consumable')
+    //                         ->label(__('fields.active')),
+    //                 ])
+    //         ]);
+    // }
 
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name'),
-                Tables\Columns\TextColumn::make('description')->html(),
-                Tables\Columns\ToggleColumn::make('consumable')->label('Active')->onIcon('heroicon-m-bolt')
-                    ->offIcon('heroicon-m-user'),
+                Tables\Columns\TextColumn::make('name')->label(__('fields.name')),
+                Tables\Columns\TextColumn::make('name_ar')->label(__('fields.name_ar')),
+                // Tables\Columns\TextColumn::make('description')->html(),
+                // Tables\Columns\TextColumn::make('description_ar')->html(),
+                // Tables\Columns\ToggleColumn::make('consumable')->label('Active')->onIcon('heroicon-m-bolt')
+                //     ->offIcon('heroicon-m-user'),
             ])
-            ->filters([
-                Tables\Filters\TrashedFilter::make(),
-            ])
+            // ->filters([
+            //     Tables\Filters\TrashedFilter::make(),
+            // ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
-                Tables\Actions\ForceDeleteAction::make(),
-                Tables\Actions\RestoreAction::make(),
-            ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                    Tables\Actions\ForceDeleteBulkAction::make(),
-                    Tables\Actions\RestoreBulkAction::make(),
-                ]),
+                // Tables\Actions\EditAction::make(),
+                // Tables\Actions\DeleteAction::make(),
+                // Tables\Actions\ForceDeleteAction::make(),
+                // Tables\Actions\RestoreAction::make(),
             ]);
+        // ->bulkActions([
+        //     Tables\Actions\BulkActionGroup::make([
+        //         Tables\Actions\DeleteBulkAction::make(),
+        //         Tables\Actions\ForceDeleteBulkAction::make(),
+        //         Tables\Actions\RestoreBulkAction::make(),
+        //     ]),
+        // ]);
     }
 
     public static function getRelations(): array
@@ -117,8 +116,6 @@ class FeatureResource extends Resource
     {
         return [
             'index' => Pages\ListFeatures::route('/'),
-            'create' => Pages\CreateFeature::route('/create'),
-            'edit' => Pages\EditFeature::route('/{record}/edit'),
         ];
     }
 }

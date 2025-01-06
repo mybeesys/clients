@@ -67,4 +67,6 @@ return [
     'money_amount' => 'المبلغ',
     'tax_number' => 'الرقم الضريبي',
     'is_company' => 'هل المستخدم شركة',
+    'name_ar' => 'الإسم بالعربي',
+    'description_ar' => 'الوصف بالعربي',
 ];

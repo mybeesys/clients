@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Company;
 use App\Models\Country;
+use App\Models\Feature;
 use App\Models\User;
 use Hash;
 use Illuminate\Database\Seeder;
@@ -70,5 +71,17 @@ class DatabaseSeeder extends Seeder
             'description' => 'admin',
             'ceo_name' => 'admin',
         ]);
+
+        $features = require base_path('app/DataProviders/FeaturesProvider.php');
+        foreach ($features as $feature) {
+            Feature::updateOrInsert(
+                ['unique_name' => $feature['unique_name']],
+                [
+                    'name' => $feature['name'],
+                    'name_ar' => $feature['name_ar'],
+                    'countable' => $feature['countable']
+                ]
+            );
+        }
     }
 }
