@@ -49,4 +49,8 @@ return [
     'register' => 'Register',
     'delete_company_details' => 'When the company is permanently deleted, its database and all related data will be deleted',
     'deleted_successfully' => 'Deleted successfully',
+    'choose_plan_description' => 'Choose an affordable plan that’s packed with the best features for engaging your audience, creating customer loyalty, and driving sales.',
+    'choose_right_plan' => 'Choose the right plan for you',
+    'pricing' => 'Pricing',
+    'subscribe_now' => 'Subscribe now',
 ];

@@ -66,5 +66,7 @@ return [
     'paid_amount' => 'Paid amount',
     'money_amount' => 'Amount',
     'tax_number' => 'Tax number',
-    'is_company' => 'Is this user a company'
+    'is_company' => 'Is this user a company',
+    'name_ar' => 'Name in arabic',
+    'description_ar' => 'Description in arabic',
 ];

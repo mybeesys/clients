@@ -153,6 +153,7 @@ class CompanyAction
         try {
             $company = Company::create([
                 'name' => $data['companyName'],
+                'user_id' => $this->user->id,
                 'phone' => $data['companyPhone'],
                 'website' => $data['website'],
                 'ceo_name' => $data['ceo_name'],
