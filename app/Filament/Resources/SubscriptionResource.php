@@ -4,19 +4,15 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\SubscriptionResource\Pages;
 use App\Models\Subscription;
-use App\Policies\SubscriptionPolicy;
 use Filament\Forms;
-use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\MorphToSelect;
 use Filament\Forms\Components\MorphToSelect\Type;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use PDF;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -66,6 +62,7 @@ class SubscriptionResource extends Resource
                         DateTimePicker::make('started_at')->label(__('fields.start_date'))->required(),
                         DateTimePicker::make('grace_days_ended_at')->label(__('fields.grace_days_ended_at')),
                         MorphToSelect::make('subscriber')
+
                             ->label(__('fields.subscriber'))
                             ->types([
                                 Type::make(Company::class)->titleAttribute('name')->label(__('fields.company')),
@@ -90,17 +87,18 @@ class SubscriptionResource extends Resource
                     ->formatStateUsing(function ($state, $record) {
                         $features = $record->plan->features;
                         $featureList = $features->map(function ($feature) {
-                            return "<li>&#128900; {$feature->name} - {$feature->pivot->charges}</li>";
+                            $name = app()->getLocale() === 'ar' ? 'name_ar' : 'name';
+                            return "<li>&#128900; {$feature->{$name} } - {$feature->pivot->charges}</li>";
                         })->implode('');
                         return "<ul>{$featureList}</ul>";
                     })
                     ->html(),
 
-                TextColumn::make('subdomain')
-                    ->label('Subdomain')
-                    ->url(fn($record) => 'https://' . $record->subdomain)
-                    ->openUrlInNewTab()
-                    ->html(),
+                // TextColumn::make('subdomain')
+                //     ->label('Subdomain')
+                //     ->url(fn($record) => 'https://' . $record->subdomain)
+                //     ->openUrlInNewTab()
+                //     ->html(),
             ])
             ->filters([
                 Tables\Filters\TrashedFilter::make(),
@@ -151,10 +149,7 @@ class SubscriptionResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
-            ->withoutGlobalScopes([
-                SoftDeletingScope::class,
-            ]);
+        return parent::getEloquentQuery()->withoutGlobalScopes();
     }
 
     public static function getRelations(): array
@@ -170,7 +165,6 @@ class SubscriptionResource extends Resource
             'index' => Pages\ListSubscriptions::route('/'),
             'create' => Pages\CreateSubscription::route('/create'),
             'edit' => Pages\EditSubscription::route('/{record}/edit'),
-
         ];
     }
 }

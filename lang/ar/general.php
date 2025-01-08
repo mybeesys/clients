@@ -53,4 +53,11 @@ return [
     'choose_right_plan' => 'اختر الخطة المناسبة لك',
     'pricing' => 'التسعير',
     'subscribe_now' => 'اشترك الآن',
+    'annual' => 'سنوية',
+    'monthly' => 'شهرية',
+    'specifications' => 'الخصائص',
+    'durations' => 'الفترات',
+    'add_duration' => 'إضافة مدة',
+    'sar' => 'ر/س',
+    'free' => 'مجاناً',
 ];

@@ -69,4 +69,7 @@ return [
     'is_company' => 'هل المستخدم شركة',
     'name_ar' => 'الإسم بالعربي',
     'description_ar' => 'الوصف بالعربي',
+    'discount' => 'حسم',
+    'price_before_dicount' => 'السعر قبل الحسم',
+    'price_after_dicount' => 'السعر بعد الحسم',
 ];

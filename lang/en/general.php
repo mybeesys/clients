@@ -53,4 +53,11 @@ return [
     'choose_right_plan' => 'Choose the right plan for you',
     'pricing' => 'Pricing',
     'subscribe_now' => 'Subscribe now',
+    'annual' => 'Annual',
+    'monthly' => 'Monthly',
+    'specifications' => 'Specifications',
+    'durations' => 'Durations',
+    'add_duration' => 'Add duration',
+    'sar' => 'SAR',
+    'free' => 'for free',
 ];

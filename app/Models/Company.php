@@ -14,6 +14,7 @@ class Company extends Model
         'name',
         'logo',
         'tax_name',
+        'subscribed',
         'ceo_name',
         'description',
         'user_id',
@@ -42,7 +43,7 @@ class Company extends Model
 
     public function subscriptions()
     {
-        return $this->hasMany(Subscription::class);
+        return $this->morphMany(Subscription::class, 'subscriber');
     }
 
     public function tenant()

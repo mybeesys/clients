@@ -69,4 +69,7 @@ return [
     'is_company' => 'Is this user a company',
     'name_ar' => 'Name in arabic',
     'description_ar' => 'Description in arabic',
+    'discount' => 'Discount',
+    'price_before_discount' => 'Price before discount',
+    'price_after_discount' => 'Price after discount',
 ];
