@@ -12,7 +12,6 @@ use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Form;
 use Filament\Tables\Columns\TextColumn;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -93,12 +92,6 @@ class SubscriptionResource extends Resource
                         return "<ul>{$featureList}</ul>";
                     })
                     ->html(),
-
-                // TextColumn::make('subdomain')
-                //     ->label('Subdomain')
-                //     ->url(fn($record) => 'https://' . $record->subdomain)
-                //     ->openUrlInNewTab()
-                //     ->html(),
             ])
             ->filters([
                 Tables\Filters\TrashedFilter::make(),
