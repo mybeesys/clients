@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\SubscriptionController;
 use App\Models\Plan;
 use Illuminate\Support\Facades\Route;
 
@@ -15,3 +16,5 @@ Route::get('/subscribe', function () {
     $plans= Plan::where('active', true)->get();
     return view('subscriptions.subscribe', compact('plans'));
 })->middleware('auth')->name('subscribe');
+
+Route::post('/plan/subscribe', [SubscriptionController::class, 'store'])->middleware('auth');

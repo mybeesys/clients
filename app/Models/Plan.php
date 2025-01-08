@@ -17,7 +17,15 @@ class Plan extends ModelsPlan
      */
     protected $table = 'plans';
 
-    protected $fillable = ['name', 'name_ar', 'description', 'description_ar', 'periodicity', 'periodicity_type', 'grace_days', 'active', 'price'];
+    protected $fillable = ['name', 'name_ar', 'description', 'description_ar', 'specifications', 'grace_days', 'active', 'price'];
+
+    protected function casts(): array
+    {
+        return [
+            'specifications' => 'array',
+        ];
+    }
+
 
     public function features()
     {

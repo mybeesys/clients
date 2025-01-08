@@ -48,6 +48,7 @@ class Registration extends Register
                     <x-filament::button
                         type="submit"
                         size="sm"
+                        wire:loading.attr="disabled"
                         wire:submit="register"
                     >
                         @lang(__('general.register'))
