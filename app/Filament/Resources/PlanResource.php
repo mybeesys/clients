@@ -62,32 +62,6 @@ class PlanResource extends Resource
                         TextInput::make('name_ar')
                             ->label(__('fields.name_ar'))
                             ->required(),
-                        // TextInput::make('price')
-                        //     ->label(__('fields.price'))
-                        //     ->numeric()
-                        //     ->required()
-                        //     ->prefix('SAR')
-                        //     ->mask(RawJs::make('$money($input)'))
-                        //     ->stripCharacters(',')
-                        //     ->maxValue(999999),
-
-                        // Cluster::make([
-                        //     TextInput::make('periodicity')
-                        //         ->placeholder(__('fields.count'))
-                        //         ->disabled(fn(Get $get) => $get('periodicity_type') ? false : true)
-                        //         ->numeric()
-                        //         ->required(),
-                        //     Select::make('periodicity_type')
-                        //         ->required()
-                        //         ->live()
-                        //         ->placeholder(__('general.choose_duration'))
-                        //         ->options([
-                        //             PeriodicityType::Year => __('fields.year'),
-                        //             PeriodicityType::Month => __('fields.month'),
-                        //             PeriodicityType::Week => __('fields.weak'),
-                        //             PeriodicityType::Day => __('fields.day'),
-                        //         ]),
-                        // ])->label(__('fields.duration')),
                         Textarea::make('description')
                             ->string()
                             ->maxLength(255)
@@ -96,77 +70,84 @@ class PlanResource extends Resource
                             ->string()
                             ->maxLength(255)
                             ->label(__('fields.description_ar')),
+                        TextInput::make('grace_days')
+                            ->numeric()
+                            ->default(0)
+                            ->label(__('fields.grace_days'))
+                            ->required(),
+                        Toggle::make('active')->default(true)
+                            ->label(__('fields.active')),
                         Section::make()->schema([
-                            repeater::make('specifications')
-                                ->schema([
-                                    Cluster::make([
-                                        Select::make('periodicity_type')
-                                            ->live()
-                                            ->distinct()
-                                            ->disableOptionsWhenSelectedInSiblingRepeaterItems()
-                                            ->requiredWith('periodicity')
-                                            ->placeholder(__('general.choose_duration'))
-                                            ->options([
-                                                PeriodicityType::Year => __('fields.year'),
-                                                PeriodicityType::Month => __('fields.month'),
-                                            ]),
-                                        TextInput::make('periodicity')
-                                            ->live(true)
-                                            ->requiredWith('periodicity_type')
-                                            ->placeholder(__('fields.count'))
-                                            ->numeric()->afterStateUpdated(function (callable $set, $state) {
-                                                self::calcDiscount($set, $state);
-                                            }),
-                                    ])->label(__('fields.duration'))->afterStateUpdated(function (callable $set, $state) {
+                            // repeater::make('specifications')
+                            //     ->schema([
+                            Cluster::make([
+                                Select::make('periodicity_type')
+                                    ->live()
+                                    ->distinct()
+                                    ->disableOptionsWhenSelectedInSiblingRepeaterItems()
+                                    ->requiredWith('periodicity')
+                                    ->placeholder(__('general.choose_duration'))
+                                    ->options([
+                                        PeriodicityType::Year => __('fields.year'),
+                                        PeriodicityType::Month => __('fields.month'),
+                                    ]),
+                                TextInput::make('periodicity')
+                                    ->live(true)
+                                    ->requiredWith('periodicity_type')
+                                    ->placeholder(__('fields.count'))
+                                    ->numeric()->afterStateUpdated(function (callable $set, $state) {
                                         self::calcDiscount($set, $state);
                                     }),
-                                    Cluster::make([
-                                        TextInput::make('price')
-                                            ->requiredWith('periodicity_type')
-                                            ->numeric()
-                                            ->suffix('SAR')
-                                            ->live(true)
-                                            ->mask(RawJs::make('$money($input)'))
-                                            ->stripCharacters(',')
-                                            ->maxValue(999999)
-                                    ])->label(__('fields.price_before_dicount'))
-                                        ->afterStateUpdated(function (callable $set, $state) {
-                                            self::calcDiscount($set, $state);
-                                        }),
-                                    Cluster::make([
-                                        TextInput::make('discount')
-                                            ->label(__('fields.discount'))
-                                            ->placeholder(__('fields.count'))
-                                            ->live(true)
-                                            ->numeric(),
-                                        Select::make('discount_period_type')
-                                            ->requiredWith('discount')
-                                            ->live()
-                                            ->placeholder(__('general.choose_duration'))
-                                            ->options([
-                                                PeriodicityType::Year => __('fields.year'),
-                                                PeriodicityType::Month => __('fields.month'),
-                                            ])
-                                    ])->label(__('fields.discount'))->afterStateUpdated(function (callable $set, $state) {
-                                        self::calcDiscount($set, $state);
-                                    }),
-                                    TextInput::make('price_after_discount')
-                                        ->requiredWith('periodicity_type')
-                                        ->label(__('fields.price_after_dicount'))
-                                        ->readOnly()
-                                        ->numeric()
-                                        ->suffix('SAR')
-                                        ->mask(RawJs::make('$money($input)'))
-                                        ->stripCharacters(',')
-                                        ->maxValue(999999),
-                                ])
-                                ->minItems(1)
-                                ->maxItems(2)
-                                ->defaultItems(2)
-                                ->orderable(false)
-                                ->label(__('general.durations'))
-                                ->createItemButtonLabel(__('general.add_duration'))
-                                ->required(),
+                            ])->label(__('fields.duration'))->afterStateUpdated(function (callable $set, $state) {
+                                self::calcDiscount($set, $state);
+                            }),
+                            Cluster::make([
+                                TextInput::make('price')
+                                    ->requiredWith('periodicity_type')
+                                    ->numeric()
+                                    ->suffix('SAR')
+                                    ->live(true)
+                                    ->mask(RawJs::make('$money($input)'))
+                                    ->stripCharacters(',')
+                                    ->maxValue(999999)
+                            ])->label(__('fields.price_before_dicount'))
+                                ->afterStateUpdated(function (callable $set, $state) {
+                                    self::calcDiscount($set, $state);
+                                }),
+                            Cluster::make([
+                                TextInput::make('discount')
+                                    ->label(__('fields.discount'))
+                                    ->placeholder(__('fields.count'))
+                                    ->live(true)
+                                    ->numeric(),
+                                Select::make('discount_period_type')
+                                    ->requiredWith('discount')
+                                    ->live()
+                                    ->placeholder(__('general.choose_duration'))
+                                    ->options([
+                                        PeriodicityType::Year => __('fields.year'),
+                                        PeriodicityType::Month => __('fields.month'),
+                                    ])
+                            ])->label(__('fields.discount'))->afterStateUpdated(function (callable $set, $state) {
+                                self::calcDiscount($set, $state);
+                            }),
+                            TextInput::make('price_after_discount')
+                                ->requiredWith('periodicity_type')
+                                ->label(__('fields.price_after_dicount'))
+                                ->readOnly()
+                                ->numeric()
+                                ->suffix('SAR')
+                                ->mask(RawJs::make('$money($input)'))
+                                ->stripCharacters(',')
+                                ->maxValue(999999),
+                            // ])
+                            // ->minItems(1)
+                            // ->maxItems(2)
+                            // ->defaultItems(2)
+                            // ->orderable(false)
+                            // ->label(__('general.durations'))
+                            // ->createItemButtonLabel(__('general.add_duration'))
+                            // ->required(),
                         ])->columnSpan(1),
                         Section::make()->schema([
                             Repeater::make('features')
@@ -182,9 +163,11 @@ class PlanResource extends Resource
                                         ->searchable()
                                         ->preload()
                                         ->required(),
-                                    TextInput::make('amount')
+                                    TextInput::make('charges')
                                         ->label(__('fields.amount'))
-                                        ->disabled(fn(Get $get) => !(Feature::find($get('feature_id'))?->countable) ?? true)
+                                        ->default(0)
+                                        ->hidden(fn(Get $get) => !(Feature::find($get('feature_id'))?->consumable) ?? true)
+                                        ->readOnly(fn(Get $get) => !(Feature::find($get('feature_id'))?->consumable) ?? true)
                                         ->live()
                                         ->numeric(),
                                 ])
@@ -193,9 +176,6 @@ class PlanResource extends Resource
                                 ->createItemButtonLabel(__('general.add_feature'))
                                 ->required(),
                         ])->columnSpan(1),
-
-                        Toggle::make('active')
-                            ->label(__('fields.active')),
 
                     ]),
             ]);

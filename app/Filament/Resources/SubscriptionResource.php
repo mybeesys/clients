@@ -66,7 +66,6 @@ class SubscriptionResource extends Resource
                             ->types([
                                 Type::make(Company::class)->titleAttribute('name')->label(__('fields.company')),
                             ])->preload()->searchable()->required(),
-                        DateTimePicker::make('suppressed_at')->label(__('fields.suppressed_at')),
                     ])
 
             ]);

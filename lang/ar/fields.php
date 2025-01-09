@@ -72,4 +72,5 @@ return [
     'discount' => 'حسم',
     'price_before_dicount' => 'السعر قبل الحسم',
     'price_after_dicount' => 'السعر بعد الحسم',
+    'grace_days' => 'عدد أيام السماح',
 ];

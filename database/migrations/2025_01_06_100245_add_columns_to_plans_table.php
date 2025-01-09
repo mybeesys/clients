@@ -14,10 +14,14 @@ return new class extends Migration
         Schema::table('plans', function (Blueprint $table) {
             $table->string('name_ar')->nullable()->after('name');
             $table->string('description_ar')->nullable()->after('description');
-            $table->json('specifications')->after('active')->nullable();
-            $table->dropColumn('periodicity');
-            $table->dropColumn('periodicity_type');
-            $table->dropColumn('price');
+            $table->integer('discount')->after('periodicity_type')->nullable();
+            $table->string('discount_period_type')->after('discount')->nullable();
+            $table->decimal('price_after_discount', 10, 2)->after('discount_period_type')->nullable();
+
+            // $table->json('specifications')->after('active')->nullable();
+            // $table->dropColumn('periodicity');
+            // $table->dropColumn('periodicity_type');
+            // $table->dropColumn('price');
         });
     }
 
@@ -29,10 +33,13 @@ return new class extends Migration
         Schema::table('plans', function (Blueprint $table) {
             $table->dropColumn('name_ar');
             $table->dropColumn('description_ar');
-            $table->dropColumn('specifications');
-            $table->decimal('price', 10, 2)->nullable();
-            $table->integer('periodicity')->unsigned()->nullable();
-            $table->string('periodicity_type')->nullable();
+            $table->dropColumn('discount');
+            $table->dropColumn('discount_period_type');
+            $table->dropColumn('price_after_discount');
+            // $table->dropColumn('specifications');
+            // $table->decimal('price', 10, 2)->after('active')->nullable();
+            // $table->integer('periodicity')->after('price')->unsigned()->nullable();
+            // $table->string('periodicity_type')->after('periodicity')->nullable();
         });
     }
 };

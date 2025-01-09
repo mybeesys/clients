@@ -80,29 +80,12 @@ class FeatureResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')->label(__('fields.name')),
+                Tables\Columns\TextColumn::make('name_en')->label(__('fields.name')),
                 Tables\Columns\TextColumn::make('name_ar')->label(__('fields.name_ar')),
-                // Tables\Columns\TextColumn::make('description')->html(),
-                // Tables\Columns\TextColumn::make('description_ar')->html(),
-                // Tables\Columns\ToggleColumn::make('consumable')->label('Active')->onIcon('heroicon-m-bolt')
-                //     ->offIcon('heroicon-m-user'),
             ])
-            // ->filters([
-            //     Tables\Filters\TrashedFilter::make(),
-            // ])
+
             ->actions([
-                // Tables\Actions\EditAction::make(),
-                // Tables\Actions\DeleteAction::make(),
-                // Tables\Actions\ForceDeleteAction::make(),
-                // Tables\Actions\RestoreAction::make(),
             ]);
-        // ->bulkActions([
-        //     Tables\Actions\BulkActionGroup::make([
-        //         Tables\Actions\DeleteBulkAction::make(),
-        //         Tables\Actions\ForceDeleteBulkAction::make(),
-        //         Tables\Actions\RestoreBulkAction::make(),
-        //     ]),
-        // ]);
     }
 
     public static function getRelations(): array

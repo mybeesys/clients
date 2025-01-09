@@ -41,8 +41,8 @@ class Feature extends ModelsFeature
 
     public function getTranslatedNameAttribute()
     {
-        $name = app()->getLocale() == 'ar' ? 'name_ar' : 'name';
-        return ($this->{$name} ?? $this->name_ar) ?? $this->name;
+        $name = app()->getLocale() == 'ar' ? 'name_ar' : 'name_en';
+        return ($this->{$name} ?? $this->name_ar) ?? $this->name_en;
     }
 
 }

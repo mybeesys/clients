@@ -75,9 +75,9 @@ class DatabaseSeeder extends Seeder
         $features = require base_path('app/DataProviders/FeaturesProvider.php');
         foreach ($features as $feature) {
             Feature::updateOrInsert(
-                ['unique_name' => $feature['unique_name']],
+                ['name' => $feature['name']],
                 [
-                    'name' => $feature['name'],
+                    'name_en' => $feature['name'],
                     'name_ar' => $feature['name_ar'],
                     'countable' => $feature['countable']
                 ]

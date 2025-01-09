@@ -46,22 +46,20 @@ class Login extends \Filament\Pages\Auth\Login
                 return null;
             }
         }
-
-
         return app(LoginResponse::class);
     }
 
-    protected function throwFailureSubscriptionException(): never
-    {
-        throw ValidationException::withMessages([
-            'data.email' => __('No active subscription found.'),
-        ]);
-    }
+    // protected function throwFailureSubscriptionException(): never
+    // {
+    //     throw ValidationException::withMessages([
+    //         'data.email' => __('No active subscription found.'),
+    //     ]);
+    // }
 
-    protected function throwFailureAdminException(): never
-    {
-        throw ValidationException::withMessages([
-            'data.email' => __('This account is not an admin.'),
-        ]);
-    }
+    // protected function throwFailureAdminException(): never
+    // {
+    //     throw ValidationException::withMessages([
+    //         'data.email' => __('This account is not an admin.'),
+    //     ]);
+    // }
 }
