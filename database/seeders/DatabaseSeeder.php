@@ -78,7 +78,7 @@ class DatabaseSeeder extends Seeder
                 [
                     'name_en' => $feature['name'],
                     'name_ar' => $feature['name_ar'],
-                    'countable' => $feature['countable']
+                    'consumable' => $feature['consumable']
                 ]
             );
         }
