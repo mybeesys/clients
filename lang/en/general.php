@@ -2,7 +2,6 @@
 
 return [
     'for' => 'For',
-
     'general' => 'General',
     'contact_us' => 'Contact us',
     'about_us' => 'About us',
@@ -60,4 +59,6 @@ return [
     'add_duration' => 'Add duration',
     'sar' => 'SAR',
     'free' => 'for free',
+    'switch_plan'=> 'Switch plan',
+    'current_plan' => 'Current plan',
 ];

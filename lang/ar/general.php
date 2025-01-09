@@ -2,7 +2,6 @@
 
 return [
     'for' => 'مخصص لـ',
-
     'general' => 'عام',
     'contact_us' => 'تواصل معنا',
     'about_us' => 'معلومات حولنا',
@@ -60,4 +59,6 @@ return [
     'add_duration' => 'إضافة مدة',
     'sar' => 'ر/س',
     'free' => 'مجاناً',
+    'switch_plan'=> 'استبدال الخطة',
+    'current_plan' => 'الخطة الحالية',
 ];

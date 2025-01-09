@@ -105,10 +105,20 @@
                                     @endif
                                 </li>
                             @endforeach
-
                         </ul>
                         <button type="submit" aria-describedby="tier-enterprise" data-id="{{ $plan->id }}"
-                            class="subscribe-btn w-full mt-8 block rounded-lg bg-indigo-500 px-3.5 py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 sm:mt-10">@lang('general.subscribe_now')</button>
+                            @disabled(auth()->user()->company?->subscription?->plan_id == $plan->id)
+                            class="subscribe-btn w-full mt-8 block rounded-lg disabled:bg-gray-700 disabled:text-gray-200  bg-indigo-500 px-3.5 py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 sm:mt-10">
+                            @if (auth()->user()->company->subscription)
+                                @if (auth()->user()->company?->subscription?->plan_id == $plan->id)
+                                    @lang('general.current_plan')
+                                @else
+                                    @lang('general.switch_plan')
+                                @endif
+                            @else
+                                @lang('general.subscribe_now')
+                            @endif
+                        </button>
                     </div>
                 </form>
             @endforeach
@@ -118,13 +128,12 @@
                     @csrf
                     <input type="hidden" name="id" value="{{ $plan->id }}">
                     <div
-                        class="plan-{{ $plan->id }} relative p-8 bg-gray-900 shadow-2xl rounded-3xl ring-1 ring-gray-900/10 sm:p-10 w-full lg:w-[475px]">
+                        class="relative p-8 bg-gray-900 shadow-2xl rounded-3xl ring-1 ring-gray-900/10 sm:p-10 w-full lg:w-[475px]">
                         <h3 id="tier-enterprise" class="font-semibold text-right text-indigo-400 text-base/7">
                             {{ (app()->getLocale() === 'ar' ? $plan->name_ar : $plan->name) ?? ($plan->name ?? $plan->name_ar) }}
                         </h3>
                         <p class="flex items-baseline mt-4 gap-x-2">
-                            <span
-                                class="plan-price-{{ $plan->id }} text-4xl font-semibold tracking-tight text-white">
+                            <span class="text-4xl font-semibold tracking-tight text-white">
 
                                 @if ($plan->price == $plan->price_after_discount)
                                     {{ (int) $plan->price }} {{ __('general.sar') }}
@@ -140,10 +149,8 @@
                                         {{ __('general.sar') }}
                                     </span>
                                 @endif
-
-
                             </span>
-                            <span class="plan-periodicity-{{ $plan->id }} text-gray-400">
+                            <span class="text-gray-400">
                                 @if ($plan->discount)
                                     {{ $plan->periodicity - $plan->discount }}
                                     {{ __('fields.month') }} +
@@ -176,7 +183,13 @@
 
                         </ul>
                         <button type="submit" aria-describedby="tier-enterprise" data-id="{{ $plan->id }}"
-                            class="subscribe-btn w-full mt-8 block rounded-lg bg-indigo-500 px-3.5 py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 sm:mt-10">@lang('general.subscribe_now')</button>
+                            class="subscribe-btn w-full mt-8 block rounded-lg bg-indigo-500 px-3.5 py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 sm:mt-10">
+                            @if (auth()->user()->company->subscription)
+                                @lang('general.switch_plan')
+                            @else
+                                @lang('general.subscribe_now')
+                            @endif
+                        </button>
                     </div>
                 </form>
             @endforeach
@@ -194,7 +207,6 @@
         });
 
         $(document).ready(function() {
-            // year();
             $('.yearly-form').removeClass('hidden')
         });
 
@@ -208,78 +220,8 @@
             });
         }
 
-        // function year() {
-        //     plans.forEach(plan => {
-        //         let yearlySpec = plan.specifications?.filter(spec => spec.periodicity_type === "Year")[0];
-        //         let planElement = $(`.plan-${plan.id}`);
-
-        //         if (yearlySpec) {
-        //             planElement.show();
-
-        //             let priceElement = $(`.plan-price-${plan.id}`);
-
-        //             if ((yearlySpec.price) == (yearlySpec.price_after_discount)) {
-        //                 priceElement.html(`${yearlySpec.price} {{ __('general.sar') }}`);
-        //             } else {
-        //                 priceElement.html(
-        //                     `<span class="text-gray-400 font-light font-italic line-through decoration-red-600 italic"> ${yearlySpec.price}</span> <span class="text-5xl">${yearlySpec.price_after_discount}</span> <span class="text-lg">{{ __('general.sar') }}</span>`
-        //                 );
-        //             }
-        //             let periodicityElement = $(`.plan-periodicity-${plan.id}`);
-        //             if (yearlySpec.discount) {
-        //                 let discount_period_type = yearlySpec.discount_period_type == "Month" ?
-        //                     "{{ __('fields.month') }}" : "{{ __('fields.year') }}";
-        //                 periodicityElement.html(
-        //                     `${(yearlySpec.periodicity *12) - yearlySpec.discount} {{ __('fields.month') }} + ${yearlySpec.discount} ${discount_period_type} {{ __('general.free') }}`
-        //                 );
-        //             } else {
-        //                 periodicityElement.html(`${yearlySpec.periodicity} {{ __('fields.year') }}`);
-        //             }
-
-        //         } else {
-        //             planElement.hide();
-        //         }
-        //     });
-        // }
-
-        // function month() {
-        //     plans.forEach(plan => {
-        //         let monthlySpec = plan.specifications?.filter(spec => spec.periodicity_type === "Month")[0];
-        //         let planElement = $(`.plan-${plan.id}`);
-
-        //         if (monthlySpec) {
-
-        //             planElement.show();
-
-        //             let priceElement = $(`.plan-price-${plan.id}`);
-
-        //             if ((monthlySpec.price) == (monthlySpec.price_after_discount)) {
-        //                 priceElement.html(`${monthlySpec.price} {{ __('general.sar') }}`);
-        //             } else {
-        //                 priceElement.html(
-        //                     `<span class="text-gray-400 font-light font-italic line-through decoration-red-600 italic"> ${monthlySpec.price}</span> <span class="text-5xl">${monthlySpec.price_after_discount}</span> <span class="text-lg">{{ __('general.sar') }}</span>`
-        //                 );
-        //             }
-
-        //             let periodicityElement = $(`.plan-periodicity-${plan.id}`);
-
-        //             if (monthlySpec.discount) {
-        //                 periodicityElement.html(
-        //                     `${monthlySpec.periodicity - monthlySpec.discount} {{ __('fields.month') }} + ${monthlySpec.discount} {{ __('fields.month') }} {{ __('general.free') }}`
-        //                 );
-        //             } else {
-        //                 periodicityElement.html(`${monthlySpec.periodicity} {{ __('fields.month') }}`);
-        //             }
-
-
-        //         } else {
-        //             planElement.hide();
-        //         }
-        //     });
-        // }
-
         $('.annual-btn, .monthly-btn').addClass('transition-all duration-500');
-
+        
         $('.annual-btn').on('click', function(e) {
             e.preventDefault();
             $(this)
