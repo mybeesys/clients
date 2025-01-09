@@ -5,16 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use LucasDotVin\Soulbscription\Models\Concerns\HasSubscriptions;
 
 class Company extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, HasSubscriptions;
 
     protected $fillable = [
         'name',
         'logo',
         'tax_name',
-        'subscribed',
         'ceo_name',
         'description',
         'user_id',
@@ -39,11 +39,6 @@ class Company extends Model
     public function country()
     {
         return $this->belongsTo(Country::class, 'country_id');
-    }
-
-    public function subscriptions()
-    {
-        return $this->morphMany(Subscription::class, 'subscriber');
     }
 
     public function tenant()

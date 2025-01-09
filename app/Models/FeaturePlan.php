@@ -17,6 +17,6 @@ class FeaturePlan extends ModelsFeaturePlan
      */
     protected $table = 'feature_plan';
 
-    protected $fillable = ['plan_id', 'feature_id', 'amount', 'charges'];
+    protected $fillable = ['plan_id', 'feature_id', 'charges'];
 
 }

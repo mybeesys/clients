@@ -16,10 +16,6 @@ return new class extends Migration
             $table->string('name_ar')->nullable()->after('name');
             $table->string('description_ar')->nullable()->after('description');
             $table->boolean('countable')->after('id')->default(false);
-            $table->dropColumn('quota');
-            $table->dropColumn('postpaid');
-            $table->dropColumn('periodicity');
-            $table->dropColumn('periodicity_type');
         });
     }
 
@@ -33,10 +29,6 @@ return new class extends Migration
             $table->dropColumn('name_ar');
             $table->dropColumn('description_ar');
             $table->dropColumn('countable');
-            $table->boolean('quota')->after('consumable')->default(false);
-            $table->boolean('postpaid')->after('quota')->default(false);
-            $table->integer('periodicity')->after('postpaid')->unsigned()->nullable();
-            $table->string('periodicity_type')->after('periodicity')->nullable();
         });
     }
 };

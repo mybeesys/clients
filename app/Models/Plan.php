@@ -17,22 +17,28 @@ class Plan extends ModelsPlan
      */
     protected $table = 'plans';
 
-    protected $fillable = ['name', 'name_ar', 'description', 'description_ar', 'specifications', 'grace_days', 'active', 'price'];
+    protected $fillable = [
+        'name',
+        'name_ar',
+        'description',
+        'description_ar',
+        'periodicity',
+        'periodicity_type',
+        'discount',
+        'price',
+        'price_after_discount',
+        'discount_period_type',
+        'grace_days',
+        'active',
+        'price'
+    ];
 
-    protected function casts(): array
-    {
-        return [
-            'specifications' => 'array',
-        ];
-    }
-
-
-    public function features()
-    {
-        return $this->belongsToMany(config('soulbscription.models.feature'))
-            ->using(config('soulbscription.models.feature_plan'))
-            ->withPivot(['amount', 'charges'])->withTimestamps();
-    }
+    // protected function casts(): array
+    // {
+    //     return [
+    //         'specifications' => 'array',
+    //     ];
+    // }
 
     public function payments()
     {

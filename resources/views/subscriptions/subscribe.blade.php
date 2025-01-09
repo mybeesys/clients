@@ -42,8 +42,8 @@
         </div>
         <div
             class="flex flex-col items-center justify-center max-w-lg mx-auto mt-16 gap-y-6 sm:mt-10 lg:max-w-[1700px] lg:flex-row lg:flex-wrap lg:gap-x-5">
-            @foreach ($plans as $plan)
-                <form action="{{ url('plan/subscribe') }}" method="POST">
+            @foreach ($plans->where('periodicity_type', 'Year') as $plan)
+                <form class="yearly-form hidden" action="{{ url('plan/subscribe') }}" method="POST">
                     @csrf
                     <input type="hidden" name="id" value="{{ $plan->id }}">
                     <div
@@ -53,8 +53,39 @@
                         </h3>
                         <p class="flex items-baseline mt-4 gap-x-2">
                             <span
-                                class="plan-price-{{ $plan->id }} text-4xl font-semibold tracking-tight text-white"></span>
-                            <span class="plan-periodicity-{{ $plan->id }} text-gray-400"></span>
+                                class="plan-price-{{ $plan->id }} text-4xl font-semibold tracking-tight text-white">
+
+                                @if ($plan->price == $plan->price_after_discount)
+                                    {{ (int) $plan->price }} {{ __('general.sar') }}
+                                @else
+                                    <span
+                                        class="text-gray-400 font-light font-italic line-through decoration-red-600 italic">
+                                        {{ (int) $plan->price }}
+                                    </span>
+                                    <span class="text-5xl">
+                                        {{ (int) $plan->price_after_discount }}
+                                    </span>
+                                    <span class="text-lg">
+                                        {{ __('general.sar') }}
+                                    </span>
+                                @endif
+
+                            </span>
+                            <span class="plan-periodicity-{{ $plan->id }} text-gray-400">
+
+                                @if ($plan->discount)
+                                    @php
+                                        $discountPeriodType =
+                                            $plan->discount_period_type === 'Month'
+                                                ? __('fields.month')
+                                                : __('fields.year');
+                                    @endphp
+                                    {{ $plan->periodicity * 12 - $plan->discount }} {{ __('fields.month') }} +
+                                    {{ $plan->discount }} {{ $discountPeriodType }} {{ __('general.free') }}
+                                @else
+                                    {{ $plan->periodicity }} {{ __('fields.year') }}
+                                @endif
+                            </span>
                         </p>
                         <p class="mt-6 text-white text-base/7">
                             {{ (app()->getLocale() === 'ar' ? $plan->description_ar : $plan->description) ?? ($plan->description ?? $plan->description_ar) }}
@@ -69,8 +100,76 @@
                                             clip-rule="evenodd" />
                                     </svg>
                                     {{ (app()->getLocale() === 'ar' ? $feature->name_ar : $feature->name) ?? ($feature->name ?? $feature->name_ar) }}
-                                    @if ($feature->countable)
-                                        :{{ $feature->pivot->amount }}
+                                    @if ($feature->consumable)
+                                        : {{ (int) $feature->pivot->charges }}
+                                    @endif
+                                </li>
+                            @endforeach
+
+                        </ul>
+                        <button type="submit" aria-describedby="tier-enterprise" data-id="{{ $plan->id }}"
+                            class="subscribe-btn w-full mt-8 block rounded-lg bg-indigo-500 px-3.5 py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 sm:mt-10">@lang('general.subscribe_now')</button>
+                    </div>
+                </form>
+            @endforeach
+
+            @foreach ($plans->where('periodicity_type', 'Month') as $plan)
+                <form class="monthly-form hidden" action="{{ url('plan/subscribe') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="id" value="{{ $plan->id }}">
+                    <div
+                        class="plan-{{ $plan->id }} relative p-8 bg-gray-900 shadow-2xl rounded-3xl ring-1 ring-gray-900/10 sm:p-10 w-full lg:w-[475px]">
+                        <h3 id="tier-enterprise" class="font-semibold text-right text-indigo-400 text-base/7">
+                            {{ (app()->getLocale() === 'ar' ? $plan->name_ar : $plan->name) ?? ($plan->name ?? $plan->name_ar) }}
+                        </h3>
+                        <p class="flex items-baseline mt-4 gap-x-2">
+                            <span
+                                class="plan-price-{{ $plan->id }} text-4xl font-semibold tracking-tight text-white">
+
+                                @if ($plan->price == $plan->price_after_discount)
+                                    {{ (int) $plan->price }} {{ __('general.sar') }}
+                                @else
+                                    <span
+                                        class="text-gray-400 font-light font-italic line-through decoration-red-600 italic">
+                                        {{ (int) $plan->price }}
+                                    </span>
+                                    <span class="text-5xl">
+                                        {{ (int) $plan->price_after_discount }}
+                                    </span>
+                                    <span class="text-lg">
+                                        {{ __('general.sar') }}
+                                    </span>
+                                @endif
+
+
+                            </span>
+                            <span class="plan-periodicity-{{ $plan->id }} text-gray-400">
+                                @if ($plan->discount)
+                                    {{ $plan->periodicity - $plan->discount }}
+                                    {{ __('fields.month') }} +
+                                    {{ $plan->discount }}
+                                    {{ __('fields.month') }} {{ __('general.free') }}
+                                @else
+                                    {{ $plan->periodicity }}
+                                    {{ __('fields.month') }}
+                                @endif
+                            </span>
+                        </p>
+                        <p class="mt-6 text-white text-base/7">
+                            {{ (app()->getLocale() === 'ar' ? $plan->description_ar : $plan->description) ?? ($plan->description ?? $plan->description_ar) }}
+                        </p>
+                        <ul role="list" class="mt-8 space-y-3 text-gray-300 text-sm/6 sm:mt-10">
+                            @foreach ($plan->features as $feature)
+                                <li class="flex gap-x-3 text-base">
+                                    <svg class="flex-none w-5 h-6 text-indigo-400" viewBox="0 0 20 20"
+                                        fill="currentColor" aria-hidden="true" data-slot="icon">
+                                        <path fill-rule="evenodd"
+                                            d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z"
+                                            clip-rule="evenodd" />
+                                    </svg>
+                                    {{ (app()->getLocale() === 'ar' ? $feature->name_ar : $feature->name) ?? ($feature->name ?? $feature->name_ar) }}
+                                    @if ($feature->consumable)
+                                        : {{ (int) $feature->pivot->charges }}
                                     @endif
                                 </li>
                             @endforeach
@@ -93,8 +192,10 @@
                 hideOverlay();
             }, 200);
         });
+
         $(document).ready(function() {
-            year();
+            // year();
+            $('.yearly-form').removeClass('hidden')
         });
 
         function showOverlay() {
@@ -107,75 +208,75 @@
             });
         }
 
-        function year() {
-            plans.forEach(plan => {
-                let yearlySpec = plan.specifications?.filter(spec => spec.periodicity_type === "Year")[0];
-                let planElement = $(`.plan-${plan.id}`);
+        // function year() {
+        //     plans.forEach(plan => {
+        //         let yearlySpec = plan.specifications?.filter(spec => spec.periodicity_type === "Year")[0];
+        //         let planElement = $(`.plan-${plan.id}`);
 
-                if (yearlySpec) {
-                    planElement.show();
+        //         if (yearlySpec) {
+        //             planElement.show();
 
-                    let priceElement = $(`.plan-price-${plan.id}`);
+        //             let priceElement = $(`.plan-price-${plan.id}`);
 
-                    if ((yearlySpec.price) == (yearlySpec.price_after_discount)) {
-                        priceElement.html(`${yearlySpec.price} {{ __('general.sar') }}`);
-                    } else {
-                        priceElement.html(
-                            `<span class="text-gray-400 font-light font-italic line-through decoration-red-600 italic"> ${yearlySpec.price}</span> <span class="text-5xl">${yearlySpec.price_after_discount}</span> <span class="text-lg">{{ __('general.sar') }}</span>`
-                        );
-                    }
-                    let periodicityElement = $(`.plan-periodicity-${plan.id}`);
-                    if (yearlySpec.discount) {
-                        let discount_period_type = yearlySpec.discount_period_type == "Month" ?
-                            "{{ __('fields.month') }}" : "{{ __('fields.year') }}";
-                        periodicityElement.html(
-                            `${(yearlySpec.periodicity *12) - yearlySpec.discount} {{ __('fields.month') }} + ${yearlySpec.discount} ${discount_period_type} {{ __('general.free') }}`
-                        );
-                    } else {
-                        periodicityElement.html(`${yearlySpec.periodicity} {{ __('fields.year') }}`);
-                    }
+        //             if ((yearlySpec.price) == (yearlySpec.price_after_discount)) {
+        //                 priceElement.html(`${yearlySpec.price} {{ __('general.sar') }}`);
+        //             } else {
+        //                 priceElement.html(
+        //                     `<span class="text-gray-400 font-light font-italic line-through decoration-red-600 italic"> ${yearlySpec.price}</span> <span class="text-5xl">${yearlySpec.price_after_discount}</span> <span class="text-lg">{{ __('general.sar') }}</span>`
+        //                 );
+        //             }
+        //             let periodicityElement = $(`.plan-periodicity-${plan.id}`);
+        //             if (yearlySpec.discount) {
+        //                 let discount_period_type = yearlySpec.discount_period_type == "Month" ?
+        //                     "{{ __('fields.month') }}" : "{{ __('fields.year') }}";
+        //                 periodicityElement.html(
+        //                     `${(yearlySpec.periodicity *12) - yearlySpec.discount} {{ __('fields.month') }} + ${yearlySpec.discount} ${discount_period_type} {{ __('general.free') }}`
+        //                 );
+        //             } else {
+        //                 periodicityElement.html(`${yearlySpec.periodicity} {{ __('fields.year') }}`);
+        //             }
 
-                } else {
-                    planElement.hide();
-                }
-            });
-        }
+        //         } else {
+        //             planElement.hide();
+        //         }
+        //     });
+        // }
 
-        function month() {
-            plans.forEach(plan => {
-                let monthlySpec = plan.specifications?.filter(spec => spec.periodicity_type === "Month")[0];
-                let planElement = $(`.plan-${plan.id}`);
+        // function month() {
+        //     plans.forEach(plan => {
+        //         let monthlySpec = plan.specifications?.filter(spec => spec.periodicity_type === "Month")[0];
+        //         let planElement = $(`.plan-${plan.id}`);
 
-                if (monthlySpec) {
+        //         if (monthlySpec) {
 
-                    planElement.show();
+        //             planElement.show();
 
-                    let priceElement = $(`.plan-price-${plan.id}`);
+        //             let priceElement = $(`.plan-price-${plan.id}`);
 
-                    if ((monthlySpec.price) == (monthlySpec.price_after_discount)) {
-                        priceElement.html(`${monthlySpec.price} {{ __('general.sar') }}`);
-                    } else {
-                        priceElement.html(
-                            `<span class="text-gray-400 font-light font-italic line-through decoration-red-600 italic"> ${monthlySpec.price}</span> <span class="text-5xl">${monthlySpec.price_after_discount}</span> <span class="text-lg">{{ __('general.sar') }}</span>`
-                        );
-                    }
+        //             if ((monthlySpec.price) == (monthlySpec.price_after_discount)) {
+        //                 priceElement.html(`${monthlySpec.price} {{ __('general.sar') }}`);
+        //             } else {
+        //                 priceElement.html(
+        //                     `<span class="text-gray-400 font-light font-italic line-through decoration-red-600 italic"> ${monthlySpec.price}</span> <span class="text-5xl">${monthlySpec.price_after_discount}</span> <span class="text-lg">{{ __('general.sar') }}</span>`
+        //                 );
+        //             }
 
-                    let periodicityElement = $(`.plan-periodicity-${plan.id}`);
+        //             let periodicityElement = $(`.plan-periodicity-${plan.id}`);
 
-                    if (monthlySpec.discount) {
-                        periodicityElement.html(
-                            `${monthlySpec.periodicity - monthlySpec.discount} {{ __('fields.month') }} + ${monthlySpec.discount} {{ __('fields.month') }} {{ __('general.free') }}`
-                        );
-                    } else {
-                        periodicityElement.html(`${monthlySpec.periodicity} {{ __('fields.month') }}`);
-                    }
+        //             if (monthlySpec.discount) {
+        //                 periodicityElement.html(
+        //                     `${monthlySpec.periodicity - monthlySpec.discount} {{ __('fields.month') }} + ${monthlySpec.discount} {{ __('fields.month') }} {{ __('general.free') }}`
+        //                 );
+        //             } else {
+        //                 periodicityElement.html(`${monthlySpec.periodicity} {{ __('fields.month') }}`);
+        //             }
 
 
-                } else {
-                    planElement.hide();
-                }
-            });
-        }
+        //         } else {
+        //             planElement.hide();
+        //         }
+        //     });
+        // }
 
         $('.annual-btn, .monthly-btn').addClass('transition-all duration-500');
 
@@ -189,7 +290,9 @@
                 .removeClass('text-white bg-gray-900 hover:bg-gray-800')
                 .addClass('text-gray-900 bg-white hover:bg-gray-100 hover:text-blue-700');
 
-            year();
+            $('.yearly-form').removeClass('hidden')
+            $('.monthly-form').addClass('hidden')
+
         });
 
         $('.monthly-btn').on('click', function(e) {
@@ -202,7 +305,8 @@
                 .removeClass('text-white bg-gray-900 hover:bg-gray-800')
                 .addClass('text-gray-900 bg-white hover:bg-gray-100 hover:text-blue-700');
 
-            month();
+            $('.yearly-form').addClass('hidden')
+            $('.monthly-form').removeClass('hidden')
         });
     </script>
 </body>

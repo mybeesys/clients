@@ -72,4 +72,5 @@ return [
     'discount' => 'Discount',
     'price_before_discount' => 'Price before discount',
     'price_after_discount' => 'Price after discount',
+    'grace_days' => 'Grace days',
 ];

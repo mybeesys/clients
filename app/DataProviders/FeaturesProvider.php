@@ -2,59 +2,61 @@
 
 return [
     [
-        'unique_name' => 'employee_module',
-        'name' => 'Employees management module',
+        'name' => 'employee_module',
+        'name_en' => 'Employees management module',
         'name_ar' => 'وحدة إدارة الموظفين',
         'description' => '',
         'description_ar' => '',
-        'countable' => false
+        'consumable' => false
     ],
     [
-        'unique_name' => 'establishment_module',
-        'name' => 'Establishments management module',
+        'name' => 'establishment_module',
+        'name_en' => 'Establishments management module',
         'name_ar' => 'وحدة إدارة الأفرع',
         'description' => '',
         'description_ar' => '',
-        'countable' => false
+        'consumable' => false
     ],
     [
-        'unique_name' => 'product_module',
-        'name' => 'Products management module',
+        'name' => 'product_module',
+        'name_en' => 'Products management module',
         'name_ar' => 'وحدة إدارة المنتجات',
         'description' => '',
         'description_ar' => '',
-        'countable' => false
+        'consumable' => false
     ],
     [
-        'unique_name' => 'accounting_module',
-        'name' => 'Accounting management module',
+        'name' => 'accounting_module',
+        'name_en' => 'Accounting management module',
         'name_ar' => 'وحدة المحاسبة',
         'description' => '',
         'description_ar' => '',
-        'countable' => false
+        'consumable' => false
     ],
     [
-        'unique_name' => 'accounting_module',
-        'name' => 'Accounting management module',
+        'name' => 'accounting_module',
+        'name_en' => 'Accounting management module',
         'name_ar' => 'وحدة المحاسبة',
         'description' => '',
         'description_ar' => '',
-        'countable' => false
+        'consumable' => false
     ],
     [
-        'unique_name' => 'establishment',
         'name' => 'establishment',
+        'name_en' => 'establishment',
         'name_ar' => 'عدد أفرع الشركة',
         'description' => '',
         'description_ar' => '',
-        'countable' => true
+        'consumable' => true,
+        'quota' => true
     ],
     [
-        'unique_name' => 'employees',
         'name' => 'employees',
+        'name_en' => 'employees',
         'name_ar' => 'عدد الموظفين',
         'description' => '',
         'description_ar' => '',
-        'countable' => true
+        'consumable' => true,
+        'quota' => true
     ],
 ];
