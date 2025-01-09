@@ -67,7 +67,6 @@ class DatabaseSeeder extends Seeder
         ]);
 
         Company::updateOrCreate(['user_id' => $user->id, 'name' => 'admin'], [
-            'subscribed' => 1,
             'description' => 'admin',
             'ceo_name' => 'admin',
         ]);
