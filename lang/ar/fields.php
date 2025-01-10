@@ -73,4 +73,8 @@ return [
     'price_before_dicount' => 'السعر قبل الحسم',
     'price_after_dicount' => 'السعر بعد الحسم',
     'grace_days' => 'عدد أيام السماح',
+    'plan_name' => 'اسم الخطة',
+    'expiring_date' => 'تاريخ الانتهاء',
+    'starting_date' => 'تاريخ البدء',
+    'plan_features' => 'ميزات الخطة'
 ];

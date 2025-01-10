@@ -73,4 +73,8 @@ return [
     'price_before_discount' => 'Price before discount',
     'price_after_discount' => 'Price after discount',
     'grace_days' => 'Grace days',
+    'plan_name' => 'Plan name',
+    'expiring_date' => 'Expire at',
+    'starting_date' => 'Starting date',
+    'plan_features' => 'Plan features'
 ];
