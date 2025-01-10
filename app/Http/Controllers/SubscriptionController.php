@@ -11,7 +11,6 @@ class SubscriptionController extends Controller
 {
     public function store(Request $request)
     {
-        dd(124);
         return DB::transaction(function () use ($request) {
             $plan = Plan::find($request->id);
             $user = auth()->user();

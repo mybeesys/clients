@@ -75,18 +75,18 @@ class SubscriptionResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('id'),
-                TextColumn::make('plan.name'),
-                TextColumn::make('subscriber.name')->label('Company'),
-                TextColumn::make('expired_at')->label('Expire at'),
-                TextColumn::make('created_at')->label('Subscribed at'),
+                TextColumn::make('id')->label(__('fields.id')),
+                TextColumn::make('plan.name')->label(__('fields.plan_name')),
+                TextColumn::make('subscriber.name')->label(__('fields.subscriber')),
+                TextColumn::make('expired_at')->label(__('fields.expiring_date')),
+                TextColumn::make('started_at')->label(__('fields.starting_date')),
                 TextColumn::make('plan.features')
-                    ->label('Plan Features')
+                    ->label(__('fields.plan_features'))
                     ->formatStateUsing(function ($state, $record) {
                         $features = $record->plan->features;
                         $featureList = $features->map(function ($feature) {
                             $name = app()->getLocale() === 'ar' ? 'name_ar' : 'name';
-                            return "<li>&#128900; {$feature->{$name} } - {$feature->pivot->charges}</li>";
+                            return "<li>&#128900; {$feature->{$name} }" . ($feature->consumable ? ": " . (int) $feature->pivot->charges : "") . "</li>";
                         })->implode('');
                         return "<ul>{$featureList}</ul>";
                     })
