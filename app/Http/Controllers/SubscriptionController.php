@@ -18,9 +18,6 @@ class SubscriptionController extends Controller
 
             $company->subscribeTo($plan);
 
-            $company->forceFill([
-                'subscribed' => true
-            ])->save();
             $domain = $user->tenant->domains->first()->domain;
             $protocol = request()->secure() ? 'https://' : 'http://';
             return redirect($protocol . $domain);
