@@ -51,7 +51,8 @@ class Registration extends Register
                         wire:loading.attr="disabled"
                         wire:submit="register"
                     >
-                        @lang(__('general.register'))
+                    @lang(__('general.register'))
+                    <x-filament::loading-indicator wire:loading class="h-5 w-5" />
                     </x-filament::button>
                     BLADE))),
             ]);
