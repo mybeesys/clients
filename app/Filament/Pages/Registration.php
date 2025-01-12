@@ -49,6 +49,7 @@ class Registration extends Register
                         type="submit"
                         size="sm"
                         wire:loading.attr="disabled"
+                        wire:loading.class="opacity-70 cursor-not-allowed"
                         wire:submit="register"
                     >
                     @lang(__('general.register'))
