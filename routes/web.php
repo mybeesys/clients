@@ -18,7 +18,14 @@ Route::get('/login', function () {
 
 Route::get('/subscribe', function () {
     $plans = Plan::where('active', true)->get();
-    return view('subscriptions.subscribe', compact('plans'));
+    $features = Feature::whereHas('feature_plans')->get();
+    return view('subscriptions.subscribe', compact('plans', 'features'));
+})->middleware('auth')->name('subscribe');
+
+Route::get('/subscribe2', function () {
+    $plans = Plan::where('active', true)->get();
+    $features = Feature::whereHas('feature_plans')->get();
+    return view('subscriptions.subscribe2', compact('plans', 'features'));
 })->middleware('auth')->name('subscribe');
 
 Route::post('/plan/subscribe', [SubscriptionController::class, 'store'])->middleware('auth');
