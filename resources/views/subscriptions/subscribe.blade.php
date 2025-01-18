@@ -14,30 +14,6 @@
         href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Cairo:wght@200..1000&display=swap"
         rel="stylesheet">
     <style>
-        .amiri-regular {
-            font-family: "Amiri", serif;
-            font-weight: 400;
-            font-style: normal;
-        }
-
-        .amiri-bold {
-            font-family: "Amiri", serif;
-            font-weight: 700;
-            font-style: normal;
-        }
-
-        .amiri-regular-italic {
-            font-family: "Amiri", serif;
-            font-weight: 400;
-            font-style: italic;
-        }
-
-        .amiri-bold-italic {
-            font-family: "Amiri", serif;
-            font-weight: 700;
-            font-style: italic;
-        }
-
         html {
             font-family: "Cairo", serif;
         }
@@ -57,7 +33,7 @@
     </div>
     <div class="flex flex-col items-center mb-10">
         <div class="max-w-4xl mx-auto text-center">
-            <h2 class="font-semibold text-indigo-600 text-base/7">@lang('general.pricing')</h2>
+            <h2 class="font-semibold text-red-800 text-lg">@lang('general.pricing')</h2>
             <p class="mt-2 text-5xl font-semibold tracking-tight text-gray-900 text-balance sm:text-6xl">
                 @lang('general.choose_right_plan')
             </p>
@@ -184,7 +160,7 @@
             <tbody class="{{ strtolower($periodType) }}ly-form hidden">
                 @foreach ($features as $feature)
                     <tr @class(['bg-slate-50' => $loop->even])>
-                        <td @class(['p-4 w-48 shadow-sm', 'rounded-br-2xl' => $loop->last && session('locale') === 'ar', 'rounded-bl-2xl' => $loop->last && session('locale') === 'en'])>
+                        <td @class(['p-4 w-48 shadow-sm hover:shadow-lg transition-shadow duration-400', 'rounded-br-2xl' => $loop->last && session('locale') === 'ar', 'rounded-bl-2xl' => $loop->last && session('locale') === 'en'])>
                             <p @class([
                                 'block text-base text-gray-700 font-bold',
                                 'text-right' => app()->getLocale() === 'ar',
@@ -194,7 +170,7 @@
                         </td>
                         @foreach ($plans->where('periodicity_type', $periodType) as $plan)
                             <td @class([
-                                'p-4 shadow-sm',
+                                'p-4 shadow-sm hover:shadow-lg transition-shadow duration-400',
                                 'rounded-bl-2xl' => $loop->last && $loop->parent->last && session('locale') === 'ar',
                                 'rounded-br-2xl' => $loop->last && $loop->parent->last && session('locale') === 'en',
 
