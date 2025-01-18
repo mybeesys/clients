@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\SubscriptionController;
+use App\Http\Middleware\LocalizationMiddleware;
 use App\Models\Company;
 use App\Models\Feature;
 use App\Models\Plan;
@@ -20,7 +21,7 @@ Route::get('/subscribe', function () {
     $plans = Plan::where('active', true)->get();
     $features = Feature::whereHas('feature_plans')->get();
     return view('subscriptions.subscribe', compact('plans', 'features'));
-})->middleware('auth')->name('subscribe');
+})->middleware(LocalizationMiddleware::class)->middleware('auth')->name('subscribe');
 
 Route::get('/subscribe2', function () {
     $plans = Plan::where('active', true)->get();
@@ -29,3 +30,9 @@ Route::get('/subscribe2', function () {
 })->middleware('auth')->name('subscribe');
 
 Route::post('/plan/subscribe', [SubscriptionController::class, 'store'])->middleware('auth');
+
+Route::get('/set-locale/{locale}', function ($locale) {
+    session()->put('locale', $locale);
+    app()->setLocale($locale);
+    return redirect()->back();
+})->name('set_locale');

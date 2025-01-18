@@ -8,9 +8,48 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>@lang('main.subscriptions')</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Cairo:wght@200..1000&display=swap"
+        rel="stylesheet">
+    <style>
+        .amiri-regular {
+            font-family: "Amiri", serif;
+            font-weight: 400;
+            font-style: normal;
+        }
+
+        .amiri-bold {
+            font-family: "Amiri", serif;
+            font-weight: 700;
+            font-style: normal;
+        }
+
+        .amiri-regular-italic {
+            font-family: "Amiri", serif;
+            font-weight: 400;
+            font-style: italic;
+        }
+
+        .amiri-bold-italic {
+            font-family: "Amiri", serif;
+            font-weight: 700;
+            font-style: italic;
+        }
+
+        html {
+            font-family: "Cairo", serif;
+        }
+    </style>
 </head>
 
-<body dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
+<body dir="{{ session('locale') === 'ar' ? 'rtl' : 'ltr' }}">
+    <div id="blur-overlay" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-lg z-50"></div>
+    <div class="px-5 mt-4 mb-3 mx-5">
+        <a href="{{ session('locale') === 'ar' ? url('set-locale/en') : url('set-locale/ar') }}"
+            class="bg-slate-700 px-3 pb-3 pt-2 rounded-xl text-white"> {{ session('locale') === 'ar' ? 'English' : 'عربي'}}</a>
+    </div>
     <div class="absolute inset-x-0 p-0 overflow-hidden -top-3 -z-10 transform-gpu px-36 blur-3xl" aria-hidden="true">
         <div class="mx-auto aspect-[1155/678] w-[72.1875rem] bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30"
             style="clip-path: polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)">
@@ -27,7 +66,7 @@
             @lang('general.choose_plan_description')</p>
         <div class="inline-flex mt-10 rounded-md shadow-sm">
             <a href="#" aria-current="page"
-                class="annual-btn px-8 py-3 text-sm font-medium  border border-gray-200 rounded-s-lg text-white bg-gray-900 hover:bg-gray-800 ">
+                class="annual-btn px-8 py-3 text-sm font-medium  border border-gray-200 rounded-s-lg text-white bg-slate-800 hover:bg-slate-900 ">
                 @lang('general.annual')
             </a>
             <a href="#"
@@ -57,9 +96,12 @@
     <table class="w-full mx-auto overflow-x-auto table-auto max-w-7xl shadow-lg rounded-2xl m-12">
         @foreach (['Year', 'Month'] as $periodType)
             <thead class="{{ strtolower($periodType) }}ly-form hidden">
-                <tr class="bg-gradient-to-r from-slate-900 to-slate-700">
-                    <th
-                        class="p-6 transition-colors border-b text-white rounded-tr-2xl hover:bg-slate-800 text-2xl shadow-lg min-w-52">
+                <tr @class(["bg-gradient-to-r ", 'from-slate-900 to-slate-700' => session('locale') === 'en', 'from-slate-700 to-slate-900' => session('locale') === 'ar'])>
+                    <th @class([
+                        'p-6 transition-colors border-b text-white hover:bg-slate-800 text-2xl shadow-lg min-w-52',
+                        'rounded-tr-2xl' => session('locale') === 'ar',
+                        'rounded-tl-2xl' => session('locale') === 'en',
+                    ])>
                         @lang('main.features')
                     </th>
                     @foreach ($plans->where('periodicity_type', $periodType) as $plan)
@@ -70,7 +112,8 @@
 
                             <th @class([
                                 'p-6 transition-colors hover:bg-slate-800 shadow-2xl min-w-96',
-                                'hover:rounded-tl-2xl rounded-tl-2xl' => $loop->last,
+                                'hover:rounded-tl-2xl rounded-tl-2xl' => $loop->last && session('locale') === 'ar',
+                                'hover:rounded-tr-2xl rounded-tr-2xl' => $loop->last && session('locale') === 'en',
                             ])>
                                 <h3 id="tier-{{ $plan->id }}"
                                     class="font-bold text-right text-gray-200 text-2xl mb-5">
@@ -82,7 +125,8 @@
                                     <span
                                         class="plan-price-{{ $plan->id }} text-start text-4xl tracking-tight text-gray-100 font-bold">
                                         @if ($plan->price == $plan->price_after_discount)
-                                            {{ (int) $plan->price }} {{ __('general.sar') }}
+                                            <span class="text-5xl">{{ (int) $plan->price }}</span> <span
+                                                class="text-lg">{{ __('general.sar') }}</span>
                                         @else
                                             <span
                                                 class="ml-2 text-gray-300 font-semibold font-italic line-through decoration-red-600 italic">
@@ -140,7 +184,7 @@
             <tbody class="{{ strtolower($periodType) }}ly-form hidden">
                 @foreach ($features as $feature)
                     <tr @class(['bg-slate-50' => $loop->even])>
-                        <td @class(['p-4 w-48 shadow-sm', 'rounded-br-2xl' => $loop->last])>
+                        <td @class(['p-4 w-48 shadow-sm', 'rounded-br-2xl' => $loop->last && session('locale') === 'ar', 'rounded-bl-2xl' => $loop->last && session('locale') === 'en'])>
                             <p @class([
                                 'block text-base text-gray-700 font-bold',
                                 'text-right' => app()->getLocale() === 'ar',
@@ -151,16 +195,13 @@
                         @foreach ($plans->where('periodicity_type', $periodType) as $plan)
                             <td @class([
                                 'p-4 shadow-sm',
-                                'rounded-bl-2xl' => $loop->last && $loop->parent->last,
+                                'rounded-bl-2xl' => $loop->last && $loop->parent->last && session('locale') === 'ar',
+                                'rounded-br-2xl' => $loop->last && $loop->parent->last && session('locale') === 'en',
+
                             ])>
                                 @if ($plan->features->where('id', $feature->id)->isNotEmpty())
                                     @if (!$feature->consumable)
                                         <p class="flex justify-center">
-                                            {{-- <svg class="h-7 w-7 text-green-500 " fill="none" viewBox="0 0 24 24"
-                                                stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg> --}}
                                             <svg class="h-7 w-7 text-green-500" viewBox="0 0 24 24" fill="none"
                                                 stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                                 stroke-linejoin="round">
@@ -176,11 +217,6 @@
                                     @endif
                                 @else
                                     <p class="flex justify-center">
-                                        {{-- <svg class="h-7 w-7 text-red-500" fill="none" viewBox="0 0 24 24"
-                                            stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg> --}}
                                         <svg class="h-7 w-7 text-red-500" width="24" height="24"
                                             viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
                                             stroke-linecap="round" stroke-linejoin="round">
@@ -229,11 +265,11 @@
         $('.annual-btn').on('click', function(e) {
             e.preventDefault();
             $(this)
-                .addClass('text-white bg-gray-900 hover:bg-gray-800')
+                .addClass('text-white bg-slate-800 hover:bg-slate-900')
                 .removeClass('text-gray-900 bg-white hover:bg-gray-100 hover:text-blue-700');
 
             $('.monthly-btn')
-                .removeClass('text-white bg-gray-900 hover:bg-gray-800')
+                .removeClass('text-white bg-slate-800 hover:bg-slate-900')
                 .addClass('text-gray-900 bg-white hover:bg-gray-100 hover:text-blue-700');
 
             $('.yearly-form').removeClass('hidden')
@@ -244,11 +280,11 @@
         $('.monthly-btn').on('click', function(e) {
             e.preventDefault();
             $(this)
-                .addClass('text-white bg-gray-900 hover:bg-gray-800')
+                .addClass('text-white bg-slate-800 hover:bg-slate-900')
                 .removeClass('text-gray-900 bg-white hover:bg-gray-100 hover:text-blue-700');
 
             $('.annual-btn')
-                .removeClass('text-white bg-gray-900 hover:bg-gray-800')
+                .removeClass('text-white bg-slate-800 hover:bg-slate-900')
                 .addClass('text-gray-900 bg-white hover:bg-gray-100 hover:text-blue-700');
 
             $('.yearly-form').addClass('hidden')
