@@ -24,7 +24,8 @@
     <div id="blur-overlay" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-lg z-50"></div>
     <div class="px-5 mt-4 mb-3 mx-5">
         <a href="{{ session('locale') === 'ar' ? url('set-locale/en') : url('set-locale/ar') }}"
-            class="bg-slate-700 px-3 pb-3 pt-2 rounded-xl text-white"> {{ session('locale') === 'ar' ? 'English' : 'عربي'}}</a>
+            class="bg-slate-700 px-3 pb-3 pt-2 rounded-xl text-white">
+            {{ session('locale') === 'ar' ? 'English' : 'عربي' }}</a>
     </div>
     <div class="absolute inset-x-0 p-0 overflow-hidden -top-3 -z-10 transform-gpu px-36 blur-3xl" aria-hidden="true">
         <div class="mx-auto aspect-[1155/678] w-[72.1875rem] bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30"
@@ -72,7 +73,11 @@
     <table class="w-full mx-auto overflow-x-auto table-auto max-w-7xl shadow-lg rounded-2xl m-12">
         @foreach (['Year', 'Month'] as $periodType)
             <thead class="{{ strtolower($periodType) }}ly-form hidden">
-                <tr @class(["bg-gradient-to-r ", 'from-slate-900 to-slate-700' => session('locale') === 'en', 'from-slate-700 to-slate-900' => session('locale') === 'ar'])>
+                <tr @class([
+                    'bg-gradient-to-r ',
+                    'from-slate-900 to-slate-700' => session('locale') === 'en',
+                    'from-slate-700 to-slate-900' => session('locale') === 'ar',
+                ])>
                     <th @class([
                         'p-6 transition-colors border-b text-white hover:bg-slate-800 text-2xl shadow-lg min-w-52',
                         'rounded-tr-2xl' => session('locale') === 'ar',
@@ -88,8 +93,10 @@
 
                             <th @class([
                                 'p-6 transition-colors hover:bg-slate-800 shadow-2xl min-w-96',
-                                'hover:rounded-tl-2xl rounded-tl-2xl' => $loop->last && session('locale') === 'ar',
-                                'hover:rounded-tr-2xl rounded-tr-2xl' => $loop->last && session('locale') === 'en',
+                                'hover:rounded-tl-2xl rounded-tl-2xl' =>
+                                    $loop->last && session('locale') === 'ar',
+                                'hover:rounded-tr-2xl rounded-tr-2xl' =>
+                                    $loop->last && session('locale') === 'en',
                             ])>
                                 <h3 id="tier-{{ $plan->id }}"
                                     class="font-bold text-right text-gray-200 text-2xl mb-5">
@@ -116,7 +123,7 @@
                                     {{-- Period Display --}}
                                     <span
                                         class="plan-periodicity-{{ $plan->id }} text-gray-100 font-semibold text-start">
-                                        @if ($plan->discount)
+                                        @if ($plan->discount && $plan->discount_type === 'period')
                                             @if ($periodType === 'Year')
                                                 {{ $plan->periodicity * 12 - $plan->discount }}
                                                 {{ __('fields.month') }} +
@@ -128,6 +135,22 @@
                                                 {{ $plan->discount }} {{ __('fields.month') }}
                                                 {{ __('general.free') }}
                                             @endif
+                                        @elseif ($plan->discount && $plan->discount_type === 'value')
+                                            <div class="flex gap-3 text-gray-100 font-semibold text-start">
+                                                <div>
+                                                    @if ($plan->discount_period_amount_type === 'fixed')
+                                                        @lang('general.discount_value'): {{ $plan->discount }} <span
+                                                            class="text-xs">@lang('general.sar')</span> 
+                                                    @else
+                                                        @lang('general.discount_percent'): {{ $plan->discount }} %
+                                                    @endif
+                                                </div>
+                                                <div>
+                                                     | @lang('general.the_period'):
+                                                    {{ $plan->periodicity }}
+                                                    {{ __('fields.' . strtolower($periodType) . '') }}
+                                                </div>
+                                            </div>
                                         @else
                                             {{ $plan->periodicity }}
                                             {{ __('fields.' . strtolower($periodType) . '') }}
@@ -160,7 +183,11 @@
             <tbody class="{{ strtolower($periodType) }}ly-form hidden">
                 @foreach ($features as $feature)
                     <tr @class(['bg-slate-50' => $loop->even])>
-                        <td @class(['p-4 w-48 shadow-sm hover:shadow-lg transition-shadow duration-400', 'rounded-br-2xl' => $loop->last && session('locale') === 'ar', 'rounded-bl-2xl' => $loop->last && session('locale') === 'en'])>
+                        <td @class([
+                            'p-4 w-48 shadow-sm hover:shadow-lg transition-shadow duration-400',
+                            'rounded-br-2xl' => $loop->last && session('locale') === 'ar',
+                            'rounded-bl-2xl' => $loop->last && session('locale') === 'en',
+                        ])>
                             <p @class([
                                 'block text-base text-gray-700 font-bold',
                                 'text-right' => app()->getLocale() === 'ar',
@@ -171,9 +198,10 @@
                         @foreach ($plans->where('periodicity_type', $periodType) as $plan)
                             <td @class([
                                 'p-4 shadow-sm hover:shadow-lg transition-shadow duration-400',
-                                'rounded-bl-2xl' => $loop->last && $loop->parent->last && session('locale') === 'ar',
-                                'rounded-br-2xl' => $loop->last && $loop->parent->last && session('locale') === 'en',
-
+                                'rounded-bl-2xl' =>
+                                    $loop->last && $loop->parent->last && session('locale') === 'ar',
+                                'rounded-br-2xl' =>
+                                    $loop->last && $loop->parent->last && session('locale') === 'en',
                             ])>
                                 @if ($plan->features->where('id', $feature->id)->isNotEmpty())
                                     @if (!$feature->consumable)

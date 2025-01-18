@@ -61,4 +61,10 @@ return [
     'free' => 'for free',
     'switch_plan'=> 'Switch plan',
     'current_plan' => 'Current plan',
+    'discount_type' => 'Discount type',
+    'period' => 'Period',
+    'percent' => 'Percent',
+    'value' => 'Value',
+    'fixed' => 'Fixed value',
+    'the_period' => 'Period',
 ];
