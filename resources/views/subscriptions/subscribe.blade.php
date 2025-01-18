@@ -14,30 +14,6 @@
         href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Cairo:wght@200..1000&display=swap"
         rel="stylesheet">
     <style>
-        .amiri-regular {
-            font-family: "Amiri", serif;
-            font-weight: 400;
-            font-style: normal;
-        }
-
-        .amiri-bold {
-            font-family: "Amiri", serif;
-            font-weight: 700;
-            font-style: normal;
-        }
-
-        .amiri-regular-italic {
-            font-family: "Amiri", serif;
-            font-weight: 400;
-            font-style: italic;
-        }
-
-        .amiri-bold-italic {
-            font-family: "Amiri", serif;
-            font-weight: 700;
-            font-style: italic;
-        }
-
         html {
             font-family: "Cairo", serif;
         }
