@@ -52,7 +52,7 @@ class SeedTenantDatabase implements ShouldQueue
                 'name' => 'آدمن',
                 'name_en' => 'admin',
                 'establishment_id' => $default_est_id,
-                'password' => Hash::make('12345678'),
+                'password' => Hash::make('123456789'),
                 'pin' => 99913,
                 'ems_access' => true,
                 'pos_is_active' => true

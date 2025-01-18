@@ -25,7 +25,7 @@ Route::get('/subscribe2', function () {
     $plans = Plan::where('active', true)->get();
     $features = Feature::whereHas('feature_plans')->get();
     return view('subscriptions.subscribe2', compact('plans', 'features'));
-})->middleware('auth')->name('subscribe');
+})->middleware('auth')->name('subscribe2');
 
 Route::post('/plan/subscribe', [SubscriptionController::class, 'store'])->middleware('auth');
 
