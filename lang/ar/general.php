@@ -69,4 +69,5 @@ return [
     'discount_value' => 'حسم بقيمة',
     'discount_percent' => 'حسم بنسبة',
     'the_period' => 'المدة',
+    'return_to_dashboard' => 'العودة إلى لوحة التحكم',
 ];
