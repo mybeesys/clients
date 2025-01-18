@@ -128,7 +128,7 @@
                                                 {{ $plan->periodicity * 12 - $plan->discount }}
                                                 {{ __('fields.month') }} +
                                                 {{ $plan->discount }}
-                                                {{ $plan->discount_period_type === 'Month' ? __('fields.month') : __('fields.year') }}
+                                                {{ $plan->discount_period_amount_type === 'Month' ? __('fields.month') : __('fields.year') }}
                                                 {{ __('general.free') }}
                                             @else
                                                 {{ $plan->periodicity - $plan->discount }} {{ __('fields.month') }} +
