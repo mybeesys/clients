@@ -27,7 +27,8 @@ class Plan extends ModelsPlan
         'discount',
         'price',
         'price_after_discount',
-        'discount_period_type',
+        'discount_period_amount_type',
+        'discount_type',
         'grace_days',
         'active',
         'price'

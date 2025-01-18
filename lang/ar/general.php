@@ -61,4 +61,12 @@ return [
     'free' => 'مجاناً',
     'switch_plan'=> 'استبدال الخطة',
     'current_plan' => 'الخطة الحالية',
+    'discount_type' => 'نوع الخصم',
+    'period' => 'مدة',
+    'percent' => 'نسبة',
+    'value' => 'قيمة',
+    'fixed' => 'قيمة ثابتة',
+    'discount_value' => 'حسم بقيمة',
+    'discount_percent' => 'حسم بنسبة',
+    'the_period' => 'المدة',
 ];

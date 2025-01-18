@@ -2,10 +2,8 @@
 
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Middleware\LocalizationMiddleware;
-use App\Models\Company;
 use App\Models\Feature;
 use App\Models\Plan;
-use App\Models\Subscription;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
