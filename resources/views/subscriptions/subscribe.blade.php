@@ -182,9 +182,9 @@
             </thead>
             <tbody class="{{ strtolower($periodType) }}ly-form hidden">
                 @foreach ($features as $feature)
-                    <tr @class(['bg-slate-50' => $loop->even])>
+                    <tr @class(['bg-slate-50' => $loop->even, 'hover:shadow-lg transition-shadow duration-400'])>
                         <td @class([
-                            'p-4 w-48 shadow-sm hover:shadow-lg transition-shadow duration-400',
+                            'p-4 w-48 shadow-sm hover:shadow-xl transition-shadow duration-400',
                             'rounded-br-2xl' => $loop->last && session('locale') === 'ar',
                             'rounded-bl-2xl' => $loop->last && session('locale') === 'en',
                         ])>
