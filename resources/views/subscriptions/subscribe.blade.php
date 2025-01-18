@@ -22,10 +22,18 @@
 
 <body dir="{{ session('locale') === 'ar' ? 'rtl' : 'ltr' }}">
     <div id="blur-overlay" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-lg z-50"></div>
-    <div class="px-5 mt-4 mb-3 mx-5">
+    <div class="flex gap-3 px-5 mt-4 mb-3 mx-5">
         <a href="{{ session('locale') === 'ar' ? url('set-locale/en') : url('set-locale/ar') }}"
-            class="bg-slate-700 px-3 pb-3 pt-2 rounded-xl text-white">
+            class="bg-slate-700 px-3 py-2 rounded-xl text-white">
             {{ session('locale') === 'ar' ? 'English' : 'عربي' }}</a>
+        @php
+            $domain = auth()->user()->tenant->domains->first()->domain;
+            $protocol = request()->secure() ? 'https://' : 'http://';
+        @endphp
+        @if (auth()->user()->company->subscription)
+            <a href="{{ $protocol . $domain }}"
+                class="bg-slate-700 px-3 py-2 rounded-xl text-white">@lang('general.return_to_dashboard')</a>
+        @endif
     </div>
     <div class="absolute inset-x-0 p-0 overflow-hidden -top-3 -z-10 transform-gpu px-36 blur-3xl" aria-hidden="true">
         <div class="mx-auto aspect-[1155/678] w-[72.1875rem] bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30"
@@ -70,7 +78,7 @@
                 ($feature->name ?? $feature->name_ar);
         }
     @endphp
-    <table class="w-full mx-auto overflow-x-auto table-auto max-w-7xl shadow-lg rounded-2xl m-12">
+    <table class="mx-auto overflow-x-auto table-auto w-fit shadow-lg rounded-2xl m-12">
         @foreach (['Year', 'Month'] as $periodType)
             <thead class="{{ strtolower($periodType) }}ly-form hidden">
                 <tr @class([
@@ -86,7 +94,8 @@
                         @lang('main.features')
                     </th>
                     @foreach ($plans->where('periodicity_type', $periodType) as $plan)
-                        <form class="{{ strtolower($periodType) }}ly-form" action="{{ url('plan/subscribe') }}"
+                        <form class="{{ strtolower($periodType) }}ly-form"
+                            action="{{ auth()->user()->company->subscription ? url('switch-plan') : url('plan/subscribe') }}"
                             method="POST">
                             @csrf
                             <input type="hidden" name="id" value="{{ $plan->id }}">
@@ -140,13 +149,13 @@
                                                 <div>
                                                     @if ($plan->discount_period_amount_type === 'fixed')
                                                         @lang('general.discount_value'): {{ $plan->discount }} <span
-                                                            class="text-xs">@lang('general.sar')</span> 
+                                                            class="text-xs">@lang('general.sar')</span>
                                                     @else
                                                         @lang('general.discount_percent'): {{ $plan->discount }} %
                                                     @endif
                                                 </div>
                                                 <div>
-                                                     | @lang('general.the_period'):
+                                                    | @lang('general.the_period'):
                                                     {{ $plan->periodicity }}
                                                     {{ __('fields.' . strtolower($periodType) . '') }}
                                                 </div>
@@ -182,7 +191,10 @@
             </thead>
             <tbody class="{{ strtolower($periodType) }}ly-form hidden">
                 @foreach ($features as $feature)
-                    <tr @class(['bg-slate-50' => $loop->even, 'hover:shadow-lg transition-shadow duration-400'])>
+                    <tr @class([
+                        'bg-slate-50' => $loop->even,
+                        'hover:shadow-lg transition-shadow duration-400',
+                    ])>
                         <td @class([
                             'p-4 w-48 shadow-sm hover:shadow-xl transition-shadow duration-400',
                             'rounded-br-2xl' => $loop->last && session('locale') === 'ar',

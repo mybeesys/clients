@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\SubscriptionController;
+use App\Http\Middleware\EnsureSubscription;
 use App\Http\Middleware\LocalizationMiddleware;
 use App\Models\Feature;
 use App\Models\Plan;
@@ -28,6 +29,7 @@ Route::get('/subscribe2', function () {
 })->middleware('auth')->name('subscribe2');
 
 Route::post('/plan/subscribe', [SubscriptionController::class, 'store'])->middleware('auth');
+Route::post('/switch-plan', [SubscriptionController::class, 'switchPlan'])->middleware('auth');
 
 Route::get('/set-locale/{locale}', function ($locale) {
     session()->put('locale', $locale);

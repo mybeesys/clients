@@ -11,8 +11,11 @@ class SubscriptionController extends Controller
 {
     public function store(Request $request)
     {
-        return DB::transaction(function () use ($request) {
-            $plan = Plan::find($request->id);
+        $validated = $request->validate([
+            'id' => ['int', 'exists:plans,id', 'required']
+        ]);
+        return DB::transaction(function () use ($validated) {
+            $plan = Plan::find($validated['id']);
             $user = auth()->user();
             $company = Company::firstWhere('user_id', $user->id);
 
@@ -22,5 +25,23 @@ class SubscriptionController extends Controller
             $protocol = request()->secure() ? 'https://' : 'http://';
             return redirect($protocol . $domain);
         });
+    }
+
+    public function switchPlan(Request $request)
+    {
+        $user = auth()->user();
+        if ($user->company->subscription) {
+            $validated = $request->validate([
+                'id' => ['int', 'exists:plans,id', 'required']
+            ]);
+            $plan = Plan::find($validated['id']);
+            $company = Company::firstWhere('user_id', $user->id);
+            $company->switchTo($plan);
+            $domain = $user->tenant->domains->first()->domain;
+            $protocol = request()->secure() ? 'https://' : 'http://';
+            return redirect($protocol . $domain);
+        } else {
+            return redirect(route('subscribe'));
+        }
     }
 }

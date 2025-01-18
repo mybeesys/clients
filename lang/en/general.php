@@ -67,4 +67,5 @@ return [
     'value' => 'Value',
     'fixed' => 'Fixed value',
     'the_period' => 'Period',
+    'return_to_dashboard' => 'Return to dashboard',
 ];
