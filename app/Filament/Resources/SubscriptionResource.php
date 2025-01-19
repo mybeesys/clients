@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\SubscriptionResource\Pages;
+use App\Models\Plan;
 use App\Models\Subscription;
 use Filament\Forms;
 use Filament\Forms\Components\DateTimePicker;
@@ -18,6 +19,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use App\Models\Company;
 use Filament\Tables\Filters\Filter;
+use Illuminate\Database\Eloquent\Model;
 
 
 class SubscriptionResource extends Resource
@@ -55,6 +57,7 @@ class SubscriptionResource extends Resource
                         Select::make('plan_id')
                             ->label(__('fields.plan'))
                             ->relationship('plan', 'name')
+                            ->getOptionLabelFromRecordUsing(fn(Plan $record): ?string => (app()->getLocale() === 'ar' ? $record->name_ar : $record->name) . "- {$record->periodicity_type}")
                             ->searchable()
                             ->preload(),
                         DateTimePicker::make('expired_at')->label(__('fields.end_date')),

@@ -251,20 +251,22 @@ class PlanResource extends Resource
                     ->formatStateUsing(function ($state) {
                         return \Illuminate\Support\Str::limit(strip_tags($state), 50);
                     }),
-                // TextColumn::make('price')
-                //     ->label(__('fields.price')),
-                // TextColumn::make('periodicity')
-                //     ->label(__('fields.duration')),
-                // TextColumn::make('periodicity_type')
-                //     ->label(__('fields.duration'))
-                //     ->formatStateUsing(function ($record) {
-                //         return match ($record->periodicity_type) {
-                //             'Year' => __('fields.year'),
-                //             'Month' => __('fields.month'),
-                //             'Weak' => __('fields.weak'),
-                //             'Day' => __('fields.day'),
-                //         };
-                //     }),
+                TextColumn::make('price')
+                    ->label(__('fields.price')),
+                TextColumn::make('price_after_discount')
+                    ->label(__('fields.price_after_dicount')),
+                TextColumn::make('periodicity')
+                    ->label(__('fields.duration')),
+                TextColumn::make('periodicity_type')
+                    ->label(__('fields.duration'))
+                    ->formatStateUsing(function ($record) {
+                        return match ($record->periodicity_type) {
+                            'Year' => __('fields.year'),
+                            'Month' => __('fields.month'),
+                            'Weak' => __('fields.weak'),
+                            'Day' => __('fields.day'),
+                        };
+                    }),
                 ToggleColumn::make('active')
                     ->label(__('fields.active'))
             ])
