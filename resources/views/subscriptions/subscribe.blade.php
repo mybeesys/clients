@@ -26,13 +26,9 @@
         <a href="{{ session('locale') === 'ar' ? url('set-locale/en') : url('set-locale/ar') }}"
             class="bg-slate-700 px-3 py-2 rounded-xl text-white">
             {{ session('locale') === 'ar' ? 'English' : 'عربي' }}</a>
-        @php
-            $domain = auth()->user()->tenant->domains->first()->domain;
-            $protocol = request()->secure() ? 'https://' : 'http://';
-        @endphp
         @if (auth()->user()->company->subscription)
-            <a href="{{ $protocol . $domain }}"
-                class="bg-slate-700 px-3 py-2 rounded-xl text-white">@lang('general.return_to_dashboard')</a>
+            <a href="{{ auth()->user()->tenant->domains->first()->domain . request()->secure() ? 'https://' : 'http://' }}"
+                class="bg-slate-700 px-3 py-2 rounded-xl text-white back-btn">@lang('general.return_to_dashboard')</a>
         @endif
     </div>
     <div class="absolute inset-x-0 p-0 overflow-hidden -top-3 -z-10 transform-gpu px-36 blur-3xl" aria-hidden="true">
@@ -263,7 +259,25 @@
         });
 
         $(document).ready(function() {
-            $('.yearly-form').removeClass('hidden')
+            console.log(window.history, document.referrer);
+
+            $('.yearly-form').removeClass('hidden');
+            $('.back-btn').on('click', function(e) {
+                e.preventDefault();
+
+                const previousPage = document.referrer;
+                const subdomain = /^http:\/\/[^.]+\.[^.]+\.[^.]+$/;
+                const subdomainSecure = /^https:\/\/[^.]+\.[^.]+\.[^.]+$/;
+                
+                if (window.history && window.history.length > 1 && previousPage &&
+                    (subdomain.test(previousPage) || subdomainSecure.test(previousPage))) {
+                    history.back();
+                } else {
+                    const fallbackUrl =
+                        '{{ (request()->secure() ? 'https://' : 'http://') . auth()->user()->tenant->domains->first()->domain }}';
+                    window.location.href = fallbackUrl;
+                }
+            });
         });
 
         function showOverlay() {

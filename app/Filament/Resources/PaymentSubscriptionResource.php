@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\PaymentSubscriptionResource\Pages;
 use App\Models\PaymentSubscription;
+use App\Models\Plan;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
@@ -64,6 +65,7 @@ class PaymentSubscriptionResource extends Resource
                         Select::make('plan_id')
                             ->label(__('fields.plan'))
                             ->relationship('plan', 'name')
+                            ->getOptionLabelFromRecordUsing(fn(Plan $record): ?string => (app()->getLocale() === 'ar' ? $record->name_ar : $record->name) . "- {$record->periodicity_type}")
                             ->exists('plans', 'id')
                             ->required(),
                         TextInput::make('amount')

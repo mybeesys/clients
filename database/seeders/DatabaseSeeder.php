@@ -76,7 +76,7 @@ class DatabaseSeeder extends Seeder
             Feature::updateOrInsert(
                 ['name' => $feature['name']],
                 [
-                    'name_en' => $feature['name'],
+                    'name_en' => $feature['name_en'],
                     'name_ar' => $feature['name_ar'],
                     'consumable' => $feature['consumable']
                 ]
