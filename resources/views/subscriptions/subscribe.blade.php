@@ -259,8 +259,6 @@
         });
 
         $(document).ready(function() {
-            console.log(window.history, document.referrer);
-
             $('.yearly-form').removeClass('hidden');
             $('.back-btn').on('click', function(e) {
                 e.preventDefault();
@@ -271,8 +269,7 @@
 
                 if (window.history && window.history.length > 1 && previousPage &&
                     (subdomain.test(previousPage) || subdomainSecure.test(previousPage))) {
-                    // history.back();
-                    window.location.href = document.referrer;
+                    history.back();
                 } else {
                     const fallbackUrl =
                         '{{ (request()->secure() ? 'https://' : 'http://') . auth()->user()->tenant->domains->first()->domain }}';
