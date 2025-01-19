@@ -268,10 +268,11 @@
                 const previousPage = document.referrer;
                 const subdomain = /^http:\/\/[^.]+\.[^.]+\.[^.]+$/;
                 const subdomainSecure = /^https:\/\/[^.]+\.[^.]+\.[^.]+$/;
-                
+
                 if (window.history && window.history.length > 1 && previousPage &&
                     (subdomain.test(previousPage) || subdomainSecure.test(previousPage))) {
-                    history.back();
+                    // history.back();
+                    window.location.href = document.referrer;
                 } else {
                     const fallbackUrl =
                         '{{ (request()->secure() ? 'https://' : 'http://') . auth()->user()->tenant->domains->first()->domain }}';
