@@ -81,10 +81,10 @@ class Registration extends Register
         $data = $this->form->getState();
 
         $user = User::create([
-            'name' => $data['name'],
+            'name' => $data['userName'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
-            'phone_number' => $data['phone_number'],
+            'phone_number' => $data['user_phone_number'],
             'isCompany' => true
         ]);
         $company = new CompanyAction($user);
@@ -110,9 +110,18 @@ class Registration extends Register
 
     protected function getPhoneFormComponent(): Component
     {
-        return TextInput::make('phone_number')
+        return TextInput::make('user_phone_number')
             ->label(__('fields.phone'))
             ->tel()
             ->maxLength(255);
+    }
+
+    protected function getNameFormComponent(): Component
+    {
+        return TextInput::make('userName')
+            ->label(__('filament-panels::pages/auth/register.form.name.label'))
+            ->required()
+            ->maxLength(255)
+            ->autofocus();
     }
 }
