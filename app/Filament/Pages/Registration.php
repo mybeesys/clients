@@ -36,7 +36,6 @@ class Registration extends Register
                         ->schema([
                             $this->getNameFormComponent(),
                             $this->getEmailFormComponent(),
-                            $this->getPhoneFormComponent(),
                             $this->getPasswordFormComponent(),
                             $this->getPasswordConfirmationFormComponent(),
                         ]),
@@ -84,8 +83,7 @@ class Registration extends Register
             'name' => $data['userName'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
-            'phone_number' => $data['user_phone_number'],
-            'isCompany' => true
+            'is_company' => true
         ]);
         $company = new CompanyAction($user);
 
@@ -106,14 +104,6 @@ class Registration extends Register
             ->link()
             ->label(__('filament-panels::pages/auth/register.actions.login.label'))
             ->url('/');
-    }
-
-    protected function getPhoneFormComponent(): Component
-    {
-        return TextInput::make('user_phone_number')
-            ->label(__('fields.phone'))
-            ->tel()
-            ->maxLength(255);
     }
 
     protected function getNameFormComponent(): Component
