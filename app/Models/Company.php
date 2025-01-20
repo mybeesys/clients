@@ -15,6 +15,7 @@ class Company extends Model
         'name',
         'logo',
         'tax_name',
+        'tax_number',
         'ceo_name',
         'description',
         'phone',
