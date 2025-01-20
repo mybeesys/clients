@@ -29,13 +29,13 @@ class CompanyAction
             Section::make()
                 ->columnSpan(1)
                 ->schema([
-                    TextInput::make('companyName')
+                    TextInput::make('name')
                         ->label(__('fields.name'))
                         ->string()
-                        ->unique('companies', 'name')
+                        ->unique('companies', 'name', ignoreRecord: true)
                         ->required()
                         ->maxLength(255),
-                    TextInput::make('companyPhone')
+                    TextInput::make('phone')
                         ->label(__('fields.phone'))
                         ->tel()->minLength(8)->maxLength(11),
                     TextInput::make('website')
@@ -97,52 +97,6 @@ class CompanyAction
                         ->image()
                         ->directory('companies/logos'),
                 ])->visible(!$register)
-
-            // [
-            //     TextInput::make('companyName')
-            //         ->label(__('fields.name'))
-            //         ->string()
-            //         ->unique('companies', 'name')
-            //         ->required()
-            //         ->maxLength(255),
-            //     TextInput::make('companyPhone')
-            //         ->label(__('fields.phone'))
-            //         ->tel()->minLength(8)->maxLength(11),
-            //     TextInput::make('website')
-            //         ->label(__('fields.website'))
-            //         ->url()
-            //         ->suffixIcon('heroicon-m-globe-alt')
-            //         ->maxLength(255),
-            //     TextInput::make('ceo_name')
-            //         ->label(__('fields.ceo_name'))
-            //         ->maxLength(255),
-            //     TextInput::make('tax_name')
-            //         ->label(__('fields.tax_name'))
-            //         ->maxLength(255),
-            //     Select::make('country_id')
-            //         ->label(__('fields.country'))
-            //         ->options(Country::pluck('name_en', 'id'))->exists('countries', 'id')
-            //         ->live()->preload()->searchable()->required(),
-            //     TextInput::make('state')
-            //         ->label(__('fields.state'))
-            //         ->string()
-            //         ->required()
-            //         ->maxLength(255),
-            //     TextInput::make('city')
-            //         ->label(__('fields.city'))
-            //         ->string()
-            //         ->required()
-            //         ->maxLength(255),
-            //     TextInput::make('national_address')
-            //         ->string()
-            //         ->label(__('fields.national_address')),
-            //     TextInput::make('zipcode')
-            //         ->numeric()
-            //         ->label(__('fields.zip_code'))
-            //         ->required(),
-            // ]
-
-
         ];
     }
 
@@ -152,9 +106,9 @@ class CompanyAction
         $company = null;
         try {
             $company = Company::create([
-                'name' => $data['companyName'],
+                'name' => $data['name'],
                 'user_id' => $this->user->id,
-                'phone' => $data['companyPhone'],
+                'phone' => $data['phone'],
                 'website' => $data['website'],
                 'ceo_name' => $data['ceo_name'],
                 'tax_name' => $data['tax_name'],
@@ -169,15 +123,15 @@ class CompanyAction
             ]);
 
             $tenant = Tenant::create([
-                'id' => trim($data['companyName']),
+                'id' => trim($data['name']),
                 'company_id' => $company->id,
                 'user_id' => $this->user->id
             ]);
 
 
             Domain::create([
-                'domain' => trim($data['companyName']) . '.' . str_replace(['http://', 'https://'], '', config('app.url')),
-                'tenant_id' => trim($data['companyName'])
+                'domain' => trim($data['name']) . '.' . str_replace(['http://', 'https://'], '', config('app.url')),
+                'tenant_id' => trim($data['name'])
             ]);
 
             MigrateDatabase::withChain([
