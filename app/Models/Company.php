@@ -25,7 +25,8 @@ class Company extends Model
         'country_id',
         'website',
         'state',
-        'city'
+        'city',
+        'phone'
     ];
 
     public function user()
