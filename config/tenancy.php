@@ -196,6 +196,7 @@ return [
             base_path('../mybeeCompany/Modules/Sales/database/migrations/tenant'),
             base_path('../mybeeCompany/Modules/General/database/migrations/tenant'),
             base_path('../mybeeCompany/Modules/purchases/database/migrations/tenant'),
+            base_path('../mybeeCompany/Modules/Screen/database/migrations/tenant'),
         ],
         '--realpath' => true,
     ],
