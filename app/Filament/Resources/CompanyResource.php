@@ -48,6 +48,10 @@ class CompanyResource extends Resource
                 TextColumn::make('name')
                     ->label(__('fields.name'))
                     ->searchable(),
+                TextColumn::make('business_type')
+                    ->label(__('fields.business_type'))
+                    ->formatStateUsing(fn(string $state): string => __("fields.business_types.{$state}"))
+                    ->searchable(),
                 TextColumn::make('description')
                     ->label(__('fields.description'))
                     ->searchable(),

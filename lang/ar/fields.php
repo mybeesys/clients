@@ -76,5 +76,14 @@ return [
     'plan_name' => 'اسم الخطة',
     'expiring_date' => 'تاريخ الانتهاء',
     'starting_date' => 'تاريخ البدء',
-    'plan_features' => 'ميزات الخطة'
+    'plan_features' => 'ميزات الخطة',
+    "business_type" => "نوع النشاط",
+    "business_types" => [
+        "contractors" => "المقاولون",
+        "e-commerce" => "التجارة الإلكترونية",
+        "restaurant-cafe" => "مطاعم ومقاهي",
+        "services" => "خدمات",
+        "general" => "عام"
+    ],
+
 ];

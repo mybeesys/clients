@@ -19,9 +19,7 @@ use Filament\Forms\Components\TextInput;
 class CompanyAction
 {
 
-    public function __construct(protected User $user)
-    {
-    }
+    public function __construct(protected User $user) {}
 
     public static function getCompanyForm($register)
     {
@@ -35,6 +33,16 @@ class CompanyAction
                         ->unique('companies', 'name', ignoreRecord: true)
                         ->required()
                         ->maxLength(255),
+                    Select::make('business_type')
+                        ->label(__('fields.business_type'))
+                        ->options([
+                            'contractors' => __('fields.business_types.contractors'),
+                            'e-commerce' => __('fields.business_types.e-commerce'),
+                            'restaurant-cafe' => __('fields.business_types.restaurant-cafe'),
+                            'services' => __('fields.business_types.services'),
+                            'general' => __('fields.business_types.general'),
+                        ])
+                        ->required(),
                     TextInput::make('phone')
                         ->label(__('fields.phone'))
                         ->tel()->minLength(8)->maxLength(11),
@@ -107,6 +115,7 @@ class CompanyAction
         try {
             $company = Company::create([
                 'name' => $data['name'],
+                'business_type' => $data['business_type'],
                 'user_id' => $this->user->id,
                 'phone' => $data['phone'],
                 'website' => $data['website'],
@@ -170,5 +179,4 @@ class CompanyAction
             \Log::error('User cleanup error: ' . $e->getMessage());
         }
     }
-
 }

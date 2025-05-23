@@ -76,5 +76,13 @@ return [
     'plan_name' => 'Plan name',
     'expiring_date' => 'Expire at',
     'starting_date' => 'Starting date',
-    'plan_features' => 'Plan features'
+    'plan_features' => 'Plan features',
+    "business_type" => "Business Type",
+    "business_types" => [
+        "contractors" => "Contractors",
+        "e-commerce" => "E-Commerce",
+        "restaurant-cafe" => "Restaurant & Cafe",
+        "services" => "Services",
+        "general" => "General"
+    ]
 ];
