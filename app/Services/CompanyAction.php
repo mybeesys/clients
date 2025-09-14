@@ -14,7 +14,7 @@ use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-
+use Illuminate\Support\Facades\Bus;
 
 class CompanyAction
 {
@@ -59,7 +59,7 @@ class CompanyAction
                     TextInput::make('tax_number')
                         ->numeric()
                         ->label(__('fields.tax_number'))
-                        ->length(13),
+                        ->length(15),
                     Select::make('user_id')
                         ->label(__('fields.user'))
                         ->relationship('user', 'email', fn($query) => $query->doesntHave('company'))
@@ -110,48 +110,55 @@ class CompanyAction
 
     public function storeCompany($data)
     {
+
+
         $tenant = null;
         $company = null;
-        try {
-            $company = Company::create([
-                'name' => $data['name'],
-                'business_type' => $data['business_type'],
-                'user_id' => $this->user->id,
-                'phone' => $data['phone'],
-                'website' => $data['website'],
-                'ceo_name' => $data['ceo_name'],
-                'tax_name' => $data['tax_name'],
-                'tax_number' => $data['tax_number'],
-                'country_id' => $data['country_id'],
-                'state' => $data['state'],
-                'city' => $data['city'],
-                'national_address' => $data['national_address'],
-                'zip_code' => $data['zipcode'],
-                'description' => $data['description'] ?? null,
-                'logo' => $data['logo'] ?? null
-            ]);
+        // try {
+        $company = Company::create([
+            'name' => $data['name'],
+            'business_type' => $data['business_type'],
+            'user_id' => $this->user->id,
+            'phone' => $data['phone'],
+            'website' => $data['website'],
+            'ceo_name' => $data['ceo_name'],
+            'tax_name' => $data['tax_name'],
+            'tax_number' => $data['tax_number'],
+            'country_id' => $data['country_id'],
+            'state' => $data['state'],
+            'city' => $data['city'],
+            'national_address' => $data['national_address'],
+            'zip_code' => $data['zipcode'],
+            'description' => $data['description'] ?? null,
+            'logo' => $data['logo'] ?? null
+        ]);
 
-            $tenant = Tenant::create([
-                'id' => trim($data['name']),
-                'company_id' => $company->id,
-                'user_id' => $this->user->id
-            ]);
+        $tenant = Tenant::create([
+            'id' => trim($data['name']),
+            'company_id' => $company->id,
+            'user_id' => $this->user->id
+        ]);
 
 
-            Domain::create([
-                'domain' => trim($data['name']) . '.' . str_replace(['http://', 'https://'], '', config('app.url')),
-                'tenant_id' => trim($data['name'])
-            ]);
+        Domain::create([
+            'domain' => trim($data['name']) . '.' . str_replace(['http://', 'https://'], '', config('app.url')),
+            'tenant_id' => trim($data['name'])
+        ]);
 
-            MigrateDatabase::withChain([
-                new SeedTenantDatabase($tenant)
-            ])->dispatch($tenant);
 
-            return $company;
-        } catch (\Throwable $e) {
-            $this->cleanup($tenant, $company);
-            throw $e;
-        }
+        Bus::chain([
+            new MigrateDatabase($tenant),
+            new SeedTenantDatabase($tenant)
+        ])->dispatch();
+        // MigrateDatabase::withChain([
+        //     new SeedTenantDatabase($tenant)
+        // ])->dispatch($tenant);
+        //
+        return $company;
+        // } catch (\Throwable $e) {
+        //     $this->cleanup($tenant, $company);
+        //     throw $e;
+        // }
     }
 
     private function cleanup(?Tenant $tenant, ?Company $company)
