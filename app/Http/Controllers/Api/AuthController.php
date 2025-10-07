@@ -12,7 +12,7 @@ class AuthController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(Request $request)
+    public function store(LoginRequest $request)
     {
         $request->authenticate();
 
