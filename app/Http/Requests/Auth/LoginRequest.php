@@ -28,7 +28,7 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => [ 'max:255', 'exists:users,email'],
+            // 'email' => [ 'max:255', 'exists:users,email'],
         ];
     }
 
