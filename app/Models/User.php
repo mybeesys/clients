@@ -9,6 +9,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Support\Str;
+
 
 class User extends Authenticatable
 {
@@ -23,7 +25,9 @@ class User extends Authenticatable
         'name',
         'email',
         'is_company',
+        'pin',
         'password',
+
     ];
 
     /**
@@ -67,5 +71,19 @@ class User extends Authenticatable
     public function tenant()
     {
         return $this->hasOne(Tenant::class);
+    }
+
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($user) {
+             do {
+                $code = strtoupper(Str::random(6));
+            } while (self::where('pin', $code)->exists());
+
+            $user->code = $code;
+        });
     }
 }
