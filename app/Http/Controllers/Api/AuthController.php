@@ -17,6 +17,7 @@ class AuthController extends Controller
         // $request->authenticate();
 
         $user = User::where('email', $request->email)->first();
+        return [$request->email,$user];
         $tenant = $user->tenant;
         $user->tokens()->delete();
 
