@@ -77,9 +77,9 @@ class UserResource extends Resource
                         TextInput::make('password')
                             ->label(__('fields.password'))
                             ->password()
-                            ->required()
                             ->revealable()
-                            ->hiddenOn('edit')
+                            ->required(fn (string $operation): bool => $operation === 'create')
+                            ->dehydrated(fn (?string $state): bool => filled($state))
                             ->maxLength(255),
                         Toggle::make('is_company')->default(false)
                             ->label(__('fields.is_company')),
