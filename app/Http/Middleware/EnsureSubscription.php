@@ -16,14 +16,17 @@ class EnsureSubscription
     public function handle(Request $request, Closure $next): Response
     {
         $user = auth()->user();
-        if ($user->is_company()) {
-            if ($user->company->subscription) {
-                $domain = $user->tenant->domains->first()->domain;
+        $company = $user->company;
+        $domain = $user->tenant?->domains?->first()?->domain;
+
+        if ($user->is_company() && $company && $domain) {
+            if ($company->subscription) {
                 $protocol = request()->secure() ? 'https://' : 'http://';
+
                 return redirect($protocol . $domain);
-            } else {
-                return redirect(route('subscribe'));
             }
+
+            return redirect(route('subscribe'));
         }
         return $next($request);
     }

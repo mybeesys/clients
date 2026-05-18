@@ -16,21 +16,13 @@ class AuthController extends Controller
     {
         $request->authenticate();
 
-        // $user = User::where('email', $request->email)->first();
-
-        $user = User::where('email', $request->email)
-            ->orWhere('name', $request->email)
-            ->orWhere('pin', $request->email)
-            ->first();
-
-
-        $tenant = $user->tenant;
+        $user = $request->user();
         $user->tokens()->delete();
 
         return response()->json([
             'token' => $user->createToken($user->email)->plainTextToken,
             'user_id' => $user->id,
-            'tenant_id' => $tenant->id
+            'tenant_id' => $user->tenant?->id,
         ]);
     }
 

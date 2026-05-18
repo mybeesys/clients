@@ -68,6 +68,17 @@ class User extends Authenticatable
         return $query->where('is_company', 0);
     }
 
+    public static function findByLoginIdentifier(string $identifier): ?self
+    {
+        return static::query()
+            ->where(function ($query) use ($identifier) {
+                $query->where('email', $identifier)
+                    ->orWhere('name', $identifier)
+                    ->orWhere('pin', $identifier);
+            })
+            ->first();
+    }
+
     public function tenant()
     {
         return $this->hasOne(Tenant::class);

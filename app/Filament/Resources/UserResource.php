@@ -81,7 +81,7 @@ class UserResource extends Resource
                             ->revealable()
                             ->hiddenOn('edit')
                             ->maxLength(255),
-                        Toggle::make('is_company')->default(true)
+                        Toggle::make('is_company')->default(false)
                             ->label(__('fields.is_company')),
                         Hidden::make('email_verified_at')->default(now()),
                     ])

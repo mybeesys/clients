@@ -2,11 +2,12 @@
 
 namespace App\Filament\Pages\Auth;
 
+use App\Models\User;
+use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
 use Filament\Facades\Filament;
 use Filament\Http\Responses\Auth\Contracts\LoginResponse;
-use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
 use Filament\Models\Contracts\FilamentUser;
-
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 class Login extends \Filament\Pages\Auth\Login
@@ -23,11 +24,13 @@ class Login extends \Filament\Pages\Auth\Login
 
         $data = $this->form->getState();
 
-        if (!Filament::auth()->attempt($this->getCredentialsFromFormData($data), $data['remember'] ?? false)) {
+        $user = User::findByLoginIdentifier($data['email']);
+
+        if (! $user || ! Hash::check($data['password'], $user->password)) {
             $this->throwFailureValidationException();
         }
 
-        $user = Filament::auth()->user();
+        Filament::auth()->login($user, $data['remember'] ?? false);
         if (($user instanceof FilamentUser) && (!$user->canAccessPanel(Filament::getCurrentPanel()))) {
             Filament::auth()->logout();
             $this->throwFailureValidationException();
@@ -35,16 +38,20 @@ class Login extends \Filament\Pages\Auth\Login
 
         session()->regenerate();
 
-        if ($user->is_company()) {
-            if ($user->company->subscribed) {
-                $domain = $user->tenant->domains->first()->domain;
+        $company = $user->company;
+        $domain = $user->tenant?->domains?->first()?->domain;
+
+        if ($user->is_company() && $company && $domain) {
+            if ($company->subscribed) {
                 $protocol = request()->secure() ? 'https://' : 'http://';
                 $this->redirect($protocol . $domain);
-                return null;
-            } else {
-                $this->redirect(route('subscribe'));
+
                 return null;
             }
+
+            $this->redirect(route('subscribe'));
+
+            return null;
         }
         return app(LoginResponse::class);
     }
