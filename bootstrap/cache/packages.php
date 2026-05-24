@@ -8,14 +8,14 @@
   ),
   'barryvdh/laravel-dompdf' => 
   array (
+    'aliases' => 
+    array (
+      'PDF' => 'Barryvdh\\DomPDF\\Facade\\Pdf',
+      'Pdf' => 'Barryvdh\\DomPDF\\Facade\\Pdf',
+    ),
     'providers' => 
     array (
       0 => 'Barryvdh\\DomPDF\\ServiceProvider',
-    ),
-    'aliases' => 
-    array (
-      'Pdf' => 'Barryvdh\\DomPDF\\Facade\\Pdf',
-      'PDF' => 'Barryvdh\\DomPDF\\Facade\\Pdf',
     ),
   ),
   'bezhansalleh/filament-language-switch' => 
@@ -27,13 +27,13 @@
   ),
   'bezhansalleh/filament-shield' => 
   array (
-    'providers' => 
-    array (
-      0 => 'BezhanSalleh\\FilamentShield\\FilamentShieldServiceProvider',
-    ),
     'aliases' => 
     array (
       'FilamentShield' => 'BezhanSalleh\\FilamentShield\\Facades\\FilamentShield',
+    ),
+    'providers' => 
+    array (
+      0 => 'BezhanSalleh\\FilamentShield\\FilamentShieldServiceProvider',
     ),
   ),
   'blade-ui-kit/blade-heroicons' => 
@@ -143,23 +143,23 @@
   ),
   'livewire/livewire' => 
   array (
-    'providers' => 
-    array (
-      0 => 'Livewire\\LivewireServiceProvider',
-    ),
     'aliases' => 
     array (
       'Livewire' => 'Livewire\\Livewire',
     ),
+    'providers' => 
+    array (
+      0 => 'Livewire\\LivewireServiceProvider',
+    ),
   ),
   'lucasdotvin/laravel-soulbscription' => 
   array (
+    'aliases' => 
+    array (
+    ),
     'providers' => 
     array (
       0 => 'LucasDotVin\\Soulbscription\\SoulbscriptionServiceProvider',
-    ),
-    'aliases' => 
-    array (
     ),
   ),
   'nesbot/carbon' => 
@@ -206,13 +206,13 @@
   ),
   'ryangjchandler/blade-capture-directive' => 
   array (
-    'providers' => 
-    array (
-      0 => 'RyanChandler\\BladeCaptureDirective\\BladeCaptureDirectiveServiceProvider',
-    ),
     'aliases' => 
     array (
       'BladeCaptureDirective' => 'RyanChandler\\BladeCaptureDirective\\Facades\\BladeCaptureDirective',
+    ),
+    'providers' => 
+    array (
+      0 => 'RyanChandler\\BladeCaptureDirective\\BladeCaptureDirectiveServiceProvider',
     ),
   ),
   'spatie/laravel-permission' => 
@@ -224,14 +224,14 @@
   ),
   'stancl/tenancy' => 
   array (
-    'providers' => 
-    array (
-      0 => 'Stancl\\Tenancy\\TenancyServiceProvider',
-    ),
     'aliases' => 
     array (
       'Tenancy' => 'Stancl\\Tenancy\\Facades\\Tenancy',
       'GlobalCache' => 'Stancl\\Tenancy\\Facades\\GlobalCache',
+    ),
+    'providers' => 
+    array (
+      0 => 'Stancl\\Tenancy\\TenancyServiceProvider',
     ),
   ),
 );

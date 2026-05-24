@@ -11,7 +11,7 @@
         "bezhansalleh/filament-shield": "^3.2",
         "filament/filament": "3.2.57",
         "guava/filament-clusters": "^1.4",
-        "laravel/framework": "^11.37",
+        "laravel/framework": "^11.9",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
         "lucasdotvin/laravel-soulbscription": "^4.2",
@@ -32,6 +32,8 @@
     "autoload": {
         "files": [
             "app/Support/laravel_cloud_polyfill.php",
+            "app/Support/Polyfills/Illuminate/Http/Middleware/laravel_cloud.php",
+            "app/Support/Polyfills/Illuminate/Foundation/laravel_cloud.php",
             "app/Helpers/helpers.php"
         ],
         "psr-4": {
