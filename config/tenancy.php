@@ -185,12 +185,9 @@ return [
      * Parameters used by the tenants:migrate command.
      */
     'migration_parameters' => [
-        '--force' => true, // This needs to be true to run migrations in production.
-        '--path' => array_values(array_filter(array_map(
-            static fn (string $path): ?string => realpath(rtrim(config('tenant-app.path'), '/\\').'/'.$path) ?: null,
-            config('tenant-app.migration_paths', [])
-        ))),
+        '--force' => true,
         '--realpath' => true,
+        // --path is set at runtime in TenancyServiceProvider (avoid empty paths from config:cache).
     ],
 
     /**

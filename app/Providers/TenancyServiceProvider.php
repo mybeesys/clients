@@ -7,6 +7,7 @@ namespace App\Providers;
 use App\Jobs\MigrateTenantDatabase;
 use App\Jobs\SeedTenantDatabase;
 use App\Support\TenantAppAutoloader;
+use App\Support\TenantMigrationPaths;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -98,6 +99,10 @@ class TenancyServiceProvider extends ServiceProvider
 
     public function boot()
     {
+        config([
+            'tenancy.migration_parameters.--path' => TenantMigrationPaths::resolve(),
+        ]);
+
         $this->bootEvents();
         $this->mapRoutes();
 

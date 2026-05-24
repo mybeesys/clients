@@ -6,6 +6,8 @@ use App\Models\Tenant;
 use App\Support\TenantAppAutoloader;
 use DB;
 use Hash;
+use Illuminate\Support\Facades\Schema;
+use RuntimeException;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -118,6 +120,13 @@ class SeedTenantDatabase implements ShouldQueue
 
     private function insertDefaultEstablishment()
     {
+        if (! Schema::hasTable('est_establishments')) {
+            throw new RuntimeException(
+                'Table est_establishments is missing. Tenant migrations did not run. '.
+                'Run: php artisan tenants:migrate --tenants='.$this->tenant->getTenantKey()
+            );
+        }
+
         DB::table('est_establishments')->updateOrInsert(
             ['name_en' => 'main'],
             [
