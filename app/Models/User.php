@@ -90,11 +90,15 @@ class User extends Authenticatable
         parent::boot();
 
         static::creating(function ($user) {
-             do {
-                $code = strtoupper(Str::random(6));
-            } while (self::where('pin', $code)->exists());
+            if (filled($user->pin)) {
+                return;
+            }
 
-            $user->code = $code;
+            do {
+                $pin = strtoupper(Str::random(6));
+            } while (self::where('pin', $pin)->exists());
+
+            $user->pin = $pin;
         });
     }
 }
