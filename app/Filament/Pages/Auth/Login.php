@@ -31,7 +31,7 @@ class Login extends \Filament\Pages\Auth\Login
         }
 
         Filament::auth()->login($user, $data['remember'] ?? false);
-        if (($user instanceof FilamentUser) && (!$user->canAccessPanel(Filament::getCurrentPanel()))) {
+        if (($user instanceof FilamentUser) && (! $user->canAccessPanel(Filament::getCurrentPanel()))) {
             Filament::auth()->logout();
             $this->throwFailureValidationException();
         }
@@ -44,7 +44,7 @@ class Login extends \Filament\Pages\Auth\Login
         if ($user->is_company() && $company && $domain) {
             if ($company->subscribed) {
                 $protocol = request()->secure() ? 'https://' : 'http://';
-                $this->redirect($protocol . $domain);
+                $this->redirect($protocol.$domain);
 
                 return null;
             }
@@ -53,6 +53,7 @@ class Login extends \Filament\Pages\Auth\Login
 
             return null;
         }
+
         return app(LoginResponse::class);
     }
 

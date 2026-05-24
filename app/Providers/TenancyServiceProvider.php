@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Jobs\MigrateTenantDatabase;
 use App\Jobs\SeedTenantDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
@@ -27,7 +28,7 @@ class TenancyServiceProvider extends ServiceProvider
             Events\TenantCreated::class => [
                 JobPipeline::make([
                     Jobs\CreateDatabase::class,
-                    Jobs\MigrateDatabase::class,
+                    MigrateTenantDatabase::class,
                     SeedTenantDatabase::class,
                 ])->send(function (Events\TenantCreated $event) {
                     return $event->tenant;

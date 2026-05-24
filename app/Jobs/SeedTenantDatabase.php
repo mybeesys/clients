@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Tenant;
+use App\Support\TenantAppAutoloader;
 use DB;
 use Hash;
 use Illuminate\Bus\Queueable;
@@ -27,6 +28,8 @@ class SeedTenantDatabase implements ShouldQueue
 
     public function handle(): void
     {
+        TenantAppAutoloader::register();
+
         try {
             $this->tenant->run(function () {
                 $this->insertDefaultEstablishment();
