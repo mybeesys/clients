@@ -22,19 +22,22 @@ class TenantAppAutoloader
             return;
         }
 
-        $vendorAutoload = $tenantAppPath.DIRECTORY_SEPARATOR.'vendor'.DIRECTORY_SEPARATOR.'autoload.php';
-
-        if (is_file($vendorAutoload)) {
-            require_once $vendorAutoload;
-
-            return;
-        }
+        // Never load mybeeCompany/vendor/autoload.php here — it replaces Symfony/Laravel
+        // classes (e.g. NullOutput::VERBOSITY_SILENT) and breaks Artisan during company create.
 
         $modulesPath = $tenantAppPath.DIRECTORY_SEPARATOR.'Modules';
 
         if (! is_dir($modulesPath)) {
             return;
         }
+
+        static $registered = false;
+
+        if ($registered) {
+            return;
+        }
+
+        $registered = true;
 
         spl_autoload_register(static function (string $class) use ($modulesPath): void {
             if (! str_starts_with($class, 'Modules\\')) {
