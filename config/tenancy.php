@@ -186,17 +186,10 @@ return [
      */
     'migration_parameters' => [
         '--force' => true, // This needs to be true to run migrations in production.
-        '--path' => [
-            base_path('../mybeeCompany/Modules/Employee/database/migrations/tenant'),
-            base_path('../mybeeCompany/Modules/Establishment/database/migrations/tenant'),
-            base_path('../mybeeCompany/Modules/Product/database/migrations/tenant'),
-            base_path('../mybeeCompany/Modules/Accounting/database/migrations/tenant'),
-            base_path('../mybeeCompany/Modules/Inventory/database/migrations/tenant'),
-            base_path('../mybeeCompany/Modules/ClientsAndSuppliers/database/migrations/tenant'),
-            base_path('../mybeeCompany/Modules/Sales/database/migrations/tenant'),
-            base_path('../mybeeCompany/Modules/General/database/migrations/tenant'),
-            base_path('../mybeeCompany/Modules/purchases/database/migrations/tenant'),
-        ],
+        '--path' => array_values(array_filter(array_map(
+            static fn (string $path): ?string => realpath(rtrim(config('tenant-app.path'), '/\\').'/'.$path) ?: null,
+            config('tenant-app.migration_paths', [])
+        ))),
         '--realpath' => true,
     ],
 

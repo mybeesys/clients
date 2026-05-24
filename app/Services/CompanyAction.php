@@ -2,19 +2,16 @@
 
 namespace App\Services;
 
-use App\Jobs\SeedTenantDatabase;
 use App\Models\Company;
 use App\Models\Country;
 use App\Models\Tenant;
 use App\Models\User;
 use Stancl\Tenancy\Database\Models\Domain;
-use Stancl\Tenancy\Jobs\MigrateDatabase;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Illuminate\Support\Facades\Bus;
 
 class CompanyAction
 {
@@ -146,14 +143,8 @@ class CompanyAction
         ]);
 
 
-        Bus::chain([
-            new MigrateDatabase($tenant),
-            new SeedTenantDatabase($tenant)
-        ])->dispatch();
-        // MigrateDatabase::withChain([
-        //     new SeedTenantDatabase($tenant)
-        // ])->dispatch($tenant);
-        //
+        // TenantCreated pipeline: CreateDatabase → MigrateDatabase → SeedTenantDatabase
+
         return $company;
         // } catch (\Throwable $e) {
         //     $this->cleanup($tenant, $company);

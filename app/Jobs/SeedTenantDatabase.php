@@ -75,9 +75,26 @@ class SeedTenantDatabase implements ShouldQueue
     private function insertPermissions()
     {
         try {
-            $pos_permissions = include base_path('../mybeeCompany/Modules/Employee/data/pos-permissions.php');
-            $dashboard_permissions = include base_path('../mybeeCompany/Modules/Employee/data/dashboard-permissions.php');
-            $permissions = array_merge($pos_permissions, $dashboard_permissions);
+            $tenantAppPath = rtrim(config('tenant-app.path'), '/\\');
+            $permissions = [];
+
+            foreach (config('tenant-app.permission_data_paths', []) as $relativePath) {
+                $file = $tenantAppPath.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $relativePath);
+
+                if (! is_file($file)) {
+                    \Log::warning("Tenant permission file missing: {$file}");
+
+                    continue;
+                }
+
+                $permissions = array_merge($permissions, include $file);
+            }
+
+            if ($permissions === []) {
+                \Log::warning('No tenant permission files loaded. Check TENANT_APP_PATH on the server.');
+
+                return;
+            }
 
             foreach ($permissions as $permission) {
                 DB::table('permissions')->updateOrInsert([
