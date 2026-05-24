@@ -6,6 +6,7 @@ namespace App\Providers;
 
 use App\Jobs\MigrateTenantDatabase;
 use App\Jobs\SeedTenantDatabase;
+use App\Support\TenantAppAutoloader;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -101,6 +102,10 @@ class TenancyServiceProvider extends ServiceProvider
         $this->mapRoutes();
 
         $this->makeTenancyMiddlewareHighestPriority();
+
+        Event::listen(Events\MigratingDatabase::class, static function (): void {
+            TenantAppAutoloader::register();
+        });
     }
 
     protected function bootEvents()
