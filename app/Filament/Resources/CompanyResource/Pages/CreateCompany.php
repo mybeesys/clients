@@ -6,6 +6,7 @@ use App\Filament\Forms\CompanyOnboardingWizard;
 use App\Filament\Resources\CompanyResource;
 use App\Models\Company;
 use App\Services\CompanyOnboardingService;
+use App\Support\TenantApplicationUrl;
 use Filament\Forms\Form;
 use Filament\Resources\Pages\CreateRecord;
 
@@ -28,6 +29,22 @@ class CreateCompany extends CreateRecord
     protected function handleRecordCreation(array $data): Company
     {
         return app(CompanyOnboardingService::class)->create($data);
+    }
+
+    protected function afterCreate(): void
+    {
+        /** @var Company $company */
+        $company = $this->getRecord();
+
+        session()->flash('company_created_success', [
+            'name' => $company->name,
+            'url' => TenantApplicationUrl::forCompany($company),
+        ]);
+    }
+
+    protected function getCreatedNotification(): ?\Filament\Notifications\Notification
+    {
+        return null;
     }
 
     protected function getRedirectUrl(): string

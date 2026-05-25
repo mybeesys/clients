@@ -2,10 +2,8 @@
 
 namespace App\Filament\Forms;
 
-use App\Models\Plan;
 use App\Models\User;
 use App\Services\CompanyAction;
-use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -24,7 +22,7 @@ class CompanyOnboardingWizard
                 Wizard::make([
                     static::companyStep(),
                     static::userStep(),
-                    static::subscriptionStep(),
+                    SubscriptionWizardStep::make(),
                 ])
                     ->columnSpanFull()
                     ->skippable(false)
@@ -67,7 +65,8 @@ class CompanyOnboardingWizard
                     ->label(__('fields.name'))
                     ->minLength(2)
                     ->required()
-                    ->maxLength(255),
+                    ->maxLength(255)
+                    ->unique(User::class, 'name'),
                 TextInput::make('user.email')
                     ->label(__('fields.email'))
                     ->email()
@@ -96,34 +95,4 @@ class CompanyOnboardingWizard
             ]);
     }
 
-    protected static function subscriptionStep(): Wizard\Step
-    {
-        return Wizard\Step::make('subscription')
-            ->label(__('main.wizard.subscription_information'))
-            ->icon('heroicon-o-credit-card')
-            ->columns(2)
-            ->schema([
-                Select::make('subscription.plan_id')
-                    ->label(__('fields.plan'))
-                    ->options(
-                        Plan::query()
-                            ->get()
-                            ->mapWithKeys(fn (Plan $plan) => [
-                                $plan->id => (app()->getLocale() === 'ar' ? $plan->name_ar : $plan->name)
-                                    ." - {$plan->periodicity_type}",
-                            ])
-                    )
-                    ->searchable()
-                    ->preload()
-                    ->required(),
-                DateTimePicker::make('subscription.started_at')
-                    ->label(__('fields.start_date'))
-                    ->required()
-                    ->default(now()),
-                DateTimePicker::make('subscription.expired_at')
-                    ->label(__('fields.end_date')),
-                DateTimePicker::make('subscription.grace_days_ended_at')
-                    ->label(__('fields.grace_days_ended_at')),
-            ]);
-    }
 }

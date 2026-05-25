@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Http\Responses\RegistrationThankYouResponse;
 use BezhanSalleh\FilamentLanguageSwitch\LanguageSwitch;
+use Filament\Http\Responses\Auth\Contracts\RegistrationResponse as RegistrationResponseContract;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -12,7 +14,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(RegistrationResponseContract::class, RegistrationThankYouResponse::class);
     }
 
     /**

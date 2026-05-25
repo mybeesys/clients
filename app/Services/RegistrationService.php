@@ -8,83 +8,52 @@ use App\Models\Subscription;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Support\TenantKeyGenerator;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Throwable;
 
-class CompanyOnboardingService
+class RegistrationService
 {
-    public function create(array $data): Company
+    public function register(array $data): User
     {
+        Validator::make($data, [
+            'userName' => ['required', 'string', 'min:2', 'max:255', Rule::unique('users', 'name')],
+            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')],
+            'password' => ['required', 'string', 'max:255', 'confirmed'],
+        ], [], [
+            'userName' => __('fields.name'),
+            'email' => __('fields.email'),
+            'password' => __('fields.password'),
+        ])->validate();
+
         $payload = $this->mapCompanyPayload($data);
-        $user = $this->createUser($data);
+
+        $user = User::create([
+            'name' => $data['userName'],
+            'email' => $data['email'],
+            'password' => Hash::make($data['password']),
+            'is_company' => true,
+            'email_verified_at' => now(),
+        ]);
 
         try {
             $company = (new CompanyAction($user))->storeCompany($payload);
 
             $this->createSubscription($company, $data);
 
-            return $company;
+            return $user;
         } catch (Throwable $e) {
-            $this->rollbackOnboarding($user);
+            $this->rollback($user);
 
             throw $e;
         }
     }
 
-    protected function rollbackOnboarding(User $user): void
-    {
-        $company = Company::query()->where('user_id', $user->id)->first();
-
-        if ($company) {
-            try {
-                $company->tenant?->delete();
-            } catch (Throwable) {
-                // Tenant DB may be missing if creation failed early.
-            }
-
-            $company->forceDelete();
-        }
-
-        $user->forceDelete();
-    }
-
-    protected function createUser(array $data): User
-    {
-        Validator::make(
-            ['user' => $data['user'] ?? []],
-            [
-                'user.name' => ['required', 'string', 'min:2', 'max:255', Rule::unique('users', 'name')],
-                'user.email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')],
-                'user.password' => ['required', 'string', 'max:255'],
-            ],
-            [],
-            [
-                'user.name' => __('fields.name'),
-                'user.email' => __('fields.email'),
-                'user.password' => __('fields.password'),
-            ]
-        )->validate();
-
-        $user = User::create([
-            'name' => $data['user']['name'],
-            'email' => $data['user']['email'],
-            'password' => $data['user']['password'],
-            'is_company' => $data['user']['is_company'] ?? true,
-            'email_verified_at' => $data['user']['email_verified_at'] ?? now(),
-        ]);
-
-        if (! empty($data['user']['roles'])) {
-            $user->syncRoles($data['user']['roles']);
-        }
-
-        return $user;
-    }
-
     protected function mapCompanyPayload(array $data): array
     {
-        $company = $data['company'];
+        $company = $data['company'] ?? [];
 
         $tenantKey = $company['tenant_key']
             ?? TenantKeyGenerator::fromEnglishName($company['name_en'] ?? null);
@@ -112,7 +81,7 @@ class CompanyOnboardingService
             'ceo_name' => $company['ceo_name'] ?? null,
             'tax_name' => $company['tax_name'] ?? null,
             'logo' => $company['logo'] ?? null,
-            'owner_phone_number' => $data['user']['phone_number'] ?? null,
+            'owner_phone_number' => null,
         ];
     }
 
@@ -126,11 +95,27 @@ class CompanyOnboardingService
 
         Subscription::create([
             'plan_id' => $subscription['plan_id'],
-            'started_at' => $subscription['started_at'],
+            'started_at' => $subscription['started_at'] ?? now(),
             'expired_at' => $subscription['expired_at'] ?? null,
             'grace_days_ended_at' => $subscription['grace_days_ended_at'] ?? null,
             'subscriber_type' => Company::class,
             'subscriber_id' => $company->id,
         ]);
+    }
+
+    protected function rollback(User $user): void
+    {
+        $company = Company::query()->where('user_id', $user->id)->first();
+
+        if ($company) {
+            try {
+                $company->tenant?->delete();
+            } catch (Throwable) {
+            }
+
+            $company->forceDelete();
+        }
+
+        $user->forceDelete();
     }
 }

@@ -60,6 +60,7 @@ class CompanyAction
                         ->required()
                         ->maxLength(255)
                         ->live(onBlur: true)
+                        ->helperText(__('main.wizard.name_en_domain_hint'))
                         ->afterStateUpdated(fn (Set $set, ?string $state) => $set(
                             $f('tenant_key'),
                             TenantKeyGenerator::fromEnglishName($state)
@@ -88,66 +89,71 @@ class CompanyAction
         ];
     }
 
-    public static function getCompanyFormSections(string $prefix = ''): array
+    public static function getCompanyFormSections(string $prefix = '', bool $forRegistration = false): array
     {
         $f = fn (string $name) => static::fieldName($name, $prefix);
+
+        $mainFields = [
+            TextInput::make($f('name'))
+                ->label(__('fields.name_ar'))
+                ->string()
+                ->unique('companies', 'name', ignoreRecord: true)
+                ->required()
+                ->maxLength(255),
+            Select::make($f('business_type'))
+                ->label(__('fields.business_type'))
+                ->options(static::businessTypeOptions())
+                ->default('general')
+                ->required(),
+            TextInput::make($f('phone'))
+                ->label(__('fields.phone'))
+                ->tel()
+                ->minLength(8)
+                ->maxLength(20),
+            TextInput::make($f('website'))
+                ->label(__('fields.website'))
+                ->url()
+                ->maxLength(255),
+            TextInput::make($f('ceo_name'))
+                ->label(__('fields.ceo_name'))
+                ->maxLength(255),
+            TextInput::make($f('tax_name'))
+                ->label(__('fields.tax_name'))
+                ->maxLength(255),
+            TextInput::make($f('tax_number'))
+                ->numeric()
+                ->label(__('fields.tax_number'))
+                ->maxLength(15),
+        ];
+
+        if (! $forRegistration) {
+            $mainFields[] = Select::make($f('user_id'))
+                ->label(__('fields.user'))
+                ->relationship(
+                    'user',
+                    'email',
+                    modifyQueryUsing: function (Builder $query, $livewire): void {
+                        $ownerId = $livewire->record?->user_id ?? null;
+
+                        $query->where(function (Builder $inner) use ($ownerId): void {
+                            $inner->doesntHave('company');
+
+                            if ($ownerId) {
+                                $inner->orWhere('users.id', $ownerId);
+                            }
+                        });
+                    }
+                )
+                ->exists('users', 'id')
+                ->searchable()
+                ->preload()
+                ->required();
+        }
 
         return [
             Section::make(__('fields.main_info'))
                 ->columns(2)
-                ->schema([
-                    TextInput::make($f('name'))
-                        ->label(__('fields.name_ar'))
-                        ->string()
-                        ->unique('companies', 'name', ignoreRecord: true)
-                        ->required()
-                        ->maxLength(255),
-                    Select::make($f('business_type'))
-                        ->label(__('fields.business_type'))
-                        ->options(static::businessTypeOptions())
-                        ->default('general')
-                        ->required(),
-                    TextInput::make($f('phone'))
-                        ->label(__('fields.phone'))
-                        ->tel()
-                        ->minLength(8)
-                        ->maxLength(20),
-                    TextInput::make($f('website'))
-                        ->label(__('fields.website'))
-                        ->url()
-                        ->maxLength(255),
-                    TextInput::make($f('ceo_name'))
-                        ->label(__('fields.ceo_name'))
-                        ->maxLength(255),
-                    TextInput::make($f('tax_name'))
-                        ->label(__('fields.tax_name'))
-                        ->maxLength(255),
-                    TextInput::make($f('tax_number'))
-                        ->numeric()
-                        ->label(__('fields.tax_number'))
-                        ->maxLength(15),
-                    Select::make($f('user_id'))
-                        ->label(__('fields.user'))
-                        ->relationship(
-                            'user',
-                            'email',
-                            modifyQueryUsing: function (Builder $query, $livewire): void {
-                                $ownerId = $livewire->record?->user_id ?? null;
-
-                                $query->where(function (Builder $inner) use ($ownerId): void {
-                                    $inner->doesntHave('company');
-
-                                    if ($ownerId) {
-                                        $inner->orWhere('users.id', $ownerId);
-                                    }
-                                });
-                            }
-                        )
-                        ->exists('users', 'id')
-                        ->searchable()
-                        ->preload()
-                        ->required(),
-                ]),
+                ->schema($mainFields),
             Section::make(__('fields.address'))
                 ->columns(2)
                 ->schema([
@@ -193,7 +199,7 @@ class CompanyAction
 
     public static function getCompanyForm(bool $forRegistration = false): array
     {
-        return static::getCompanyFormSections('', false);
+        return static::getCompanyFormSections('', $forRegistration);
     }
 
     public function storeCompany($data)

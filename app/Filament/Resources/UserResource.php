@@ -56,7 +56,8 @@ class UserResource extends Resource
                             ->label(__('fields.name'))
                             ->minLength(2)->maxLength(15)->string()
                             ->required()
-                            ->maxLength(255),
+                            ->maxLength(255)
+                            ->unique(User::class, 'name', ignoreRecord: true),
                         TextInput::make('email')
                             ->label(__('fields.email'))
                             ->email()

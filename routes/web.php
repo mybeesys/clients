@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\RegistrationThankYouController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Middleware\EnsureSubscription;
 use App\Http\Middleware\LocalizationMiddleware;
@@ -15,6 +16,9 @@ Route::get('/', function () {
 Route::get('/login', function () {
     return to_route('filament.admin.auth.login');
 })->name('login');
+
+Route::get('/register/thank-you', RegistrationThankYouController::class)
+    ->name('register.thank-you');
 
 Route::get('/subscribe', function () {
     $plans = Plan::where('active', true)->get();

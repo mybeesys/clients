@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'tenant_app' => [
+        'port' => env('TENANT_APP_PORT'),
+    ],
+
 ];

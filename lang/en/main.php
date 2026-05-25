@@ -38,11 +38,37 @@ return [
         'user_information' => 'User information',
         'user_information_hint' => 'Create the company owner account (same rules as Users).',
         'subscription_information' => 'Subscription information',
-        'subscription_information_hint' => 'Assign a plan to the company (same rules as Subscriptions).',
+        'subscription_information_hint' => 'Assign a plan to the company.',
         'tenant_key_hint' => 'Auto-generated from the English name (lowercase, no spaces or special characters).',
+        'name_en_domain_hint' => 'Used to create your company login link (subdomain), e.g. company-name.your-domain.com. Pick a short, clear English name.',
         'tenant_key_taken' => 'The tenant identifier derived from the English name is already in use. Please change the English name.',
         'complete_setup' => 'Complete setup',
         'saving' => 'Saving...',
+        'account_information' => 'Account',
+        'account_information_hint' => 'Create login credentials for the company owner.',
+        'company_information_hint_register' => 'Your company basics — the English name is used to build your system URL.',
+        'subscription_period' => 'Subscription period',
+        'subscription_period_hint' => 'Set subscription dates after choosing a plan.',
+        'subscription_plan_optional_hint' => 'Pick a plan now or continue without one — you can assign a plan later from the admin panel.',
+        'plan_grace_days' => ':days day grace period',
+        'no_plans_available' => 'No plans are available at the moment.',
+    ],
+
+    'company_created' => [
+        'title' => 'Company created successfully',
+        'body' => 'Company “:name” has been created and its system is ready.',
+        'open_system' => 'Open company system',
+        'close' => 'Close',
+    ],
+
+    'registration_thank_you' => [
+        'title' => 'Registration complete',
+        'message' => 'Thank you for signing up. Your company has been created and your system is ready.',
+        'link_intro' => 'You can access your system using this link:',
+        'open_system' => 'Open company system',
+        'back_to_login' => 'Back to login',
+        'verify_email_note' => 'We sent a verification email to :email if verification is enabled.',
+        'no_link_yet' => 'Your system link is still being prepared. Contact support if it does not appear shortly.',
     ],
 
 
