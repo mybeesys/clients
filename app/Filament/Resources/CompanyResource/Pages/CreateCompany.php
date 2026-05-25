@@ -8,7 +8,10 @@ use App\Models\Company;
 use App\Services\CompanyOnboardingService;
 use App\Support\TenantApplicationUrl;
 use Filament\Forms\Form;
+use Filament\Notifications\Actions\Action as NotificationAction;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Support\HtmlString;
 
 class CreateCompany extends CreateRecord
 {
@@ -42,13 +45,43 @@ class CreateCompany extends CreateRecord
         ]);
     }
 
-    protected function getCreatedNotification(): ?\Filament\Notifications\Notification
+    protected function getCreatedNotification(): ?Notification
     {
-        return null;
+        /** @var Company $company */
+        $company = $this->getRecord();
+        $tenantUrl = TenantApplicationUrl::forCompany($company);
+
+        $body = $tenantUrl
+            ? new HtmlString(
+                e(__('main.company_created.body', ['name' => $company->name]))
+                .'<br><br><span style="direction:ltr;display:inline-block;font-size:0.8125rem;">'
+                .e($tenantUrl)
+                .'</span>'
+            )
+            : __('main.company_created.body', ['name' => $company->name]);
+
+        $notification = Notification::make()
+            ->success()
+            ->title(__('main.company_created.title'))
+            ->body($body)
+            ->persistent();
+
+        if ($tenantUrl) {
+            $notification->actions([
+                NotificationAction::make('openTenant')
+                    ->label(__('main.company_created.open_system'))
+                    ->url($tenantUrl, shouldOpenInNewTab: true)
+                    ->button(),
+            ]);
+        }
+
+        return $notification;
     }
 
     protected function getRedirectUrl(): string
     {
-        return $this->getResource()::getUrl('index');
+        return $this->getResource()::getUrl('index', [
+            'company_created' => $this->getRecord()->getKey(),
+        ]);
     }
 }

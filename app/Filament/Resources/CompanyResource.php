@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\CompanyResource\Pages;
 use App\Models\Company;
 use App\Services\CompanyAction;
+use App\Support\TenantApplicationUrl;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -46,10 +47,18 @@ class CompanyResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn ($query) => $query->with(['tenant.domains', 'user.tenant.domains']))
             ->columns([
                 TextColumn::make('name')
                     ->label(__('fields.name'))
                     ->searchable(),
+                TextColumn::make('tenant_link')
+                    ->label(__('fields.tenant_system_link'))
+                    ->state(fn (Company $record): ?string => TenantApplicationUrl::forCompany($record))
+                    ->url(fn (Company $record): ?string => TenantApplicationUrl::forCompany($record), shouldOpenInNewTab: true)
+                    ->copyable()
+                    ->placeholder('—')
+                    ->toggleable(),
                 TextColumn::make('business_type')
                     ->label(__('fields.business_type'))
                     ->formatStateUsing(fn(string $state): string => __("fields.business_types.{$state}"))
@@ -105,6 +114,12 @@ class CompanyResource extends Resource
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
+                Tables\Actions\Action::make('openTenant')
+                    ->label(__('main.company_created.open_system'))
+                    ->icon('heroicon-o-arrow-top-right-on-square')
+                    ->url(fn (Company $record): ?string => TenantApplicationUrl::forCompany($record))
+                    ->openUrlInNewTab()
+                    ->visible(fn (Company $record): bool => TenantApplicationUrl::forCompany($record) !== null),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
                 Tables\Actions\ForceDeleteAction::make()->action(function ($record) {

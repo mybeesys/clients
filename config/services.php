@@ -36,6 +36,7 @@ return [
     ],
 
     'tenant_app' => [
+        'protocol' => env('TENANT_APP_PROTOCOL'),
         'port' => env('TENANT_APP_PORT'),
     ],
 

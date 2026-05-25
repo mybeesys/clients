@@ -72,7 +72,7 @@ class RegistrationService
             'tax_number' => $company['tax_number'] ?? null,
             'description' => $company['description'] ?? null,
             'business_type' => $company['business_type'] ?? 'general',
-            'country_id' => $company['country_id'] ?? Country::query()->value('id'),
+            'country_id' => $company['country_id'] ?? Country::defaultId(),
             'state' => $company['state'] ?? '-',
             'zipcode' => $company['zipcode'] ?? '00000',
             'national_address' => $company['national_address'] ?? null,

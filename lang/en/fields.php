@@ -61,6 +61,7 @@ return [
     'grace_days_ended_at' => 'Grace days ended at',
     'suppressed_at' => 'Suppressed at',
     'company_subdomain' => 'Company subdomain',
+    'tenant_system_link' => 'Company system link',
     'duration' => 'Duration',
     'count' => 'Count',
     'subscription' => 'Subscription',

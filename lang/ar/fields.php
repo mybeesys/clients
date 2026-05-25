@@ -61,6 +61,7 @@ return [
     'grace_days_ended_at' => 'تنتهي فترة السماح بتاريخ',
     'suppressed_at' => 'ايقاف في تاريخ',
     'company_subdomain' => 'دومين الشركة الفرعي',
+    'tenant_system_link' => 'رابط نظام الشركة',
     'duration' => 'المدة',
     'count' => 'العدد',
     'subscription' => 'الإشتراك',

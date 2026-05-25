@@ -161,6 +161,7 @@ class CompanyAction
                         ->label(__('fields.country'))
                         ->options(Country::pluck('name_en', 'id'))
                         ->exists('countries', 'id')
+                        ->default(fn () => Country::defaultId())
                         ->live()
                         ->preload()
                         ->searchable()

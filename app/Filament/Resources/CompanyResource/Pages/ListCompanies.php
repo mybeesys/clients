@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\CompanyResource\Pages;
 
 use App\Filament\Resources\CompanyResource;
+use App\Models\Company;
+use App\Support\TenantApplicationUrl;
 use Filament\Actions;
 use Filament\Actions\Action;
 use Filament\Resources\Pages\ListRecords;
@@ -19,11 +21,39 @@ class ListCompanies extends ListRecords
     {
         parent::mount();
 
-        $this->companyCreatedSuccess = session()->pull('company_created_success');
+        $this->openCompanyCreatedModalIfNeeded();
+    }
 
-        if ($this->companyCreatedSuccess !== null) {
-            $this->mountAction('companyCreatedSuccess');
+    protected function openCompanyCreatedModalIfNeeded(): void
+    {
+        if (filled($this->companyCreatedSuccess)) {
+            return;
         }
+
+        $payload = session()->pull('company_created_success');
+
+        if ($payload === null) {
+            $companyId = request()->integer('company_created');
+
+            if ($companyId) {
+                $company = Company::query()->find($companyId);
+
+                if ($company) {
+                    $payload = [
+                        'name' => $company->name,
+                        'url' => TenantApplicationUrl::forCompany($company),
+                    ];
+                }
+            }
+        }
+
+        if ($payload === null) {
+            return;
+        }
+
+        $this->companyCreatedSuccess = $payload;
+
+        $this->mountAction('companyCreatedSuccess');
     }
 
     public function companyCreatedSuccessAction(): Action
