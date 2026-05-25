@@ -8,24 +8,44 @@ use App\Models\Subscription;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Support\TenantKeyGenerator;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class CompanyOnboardingService
 {
     public function create(array $data): Company
     {
-        return DB::transaction(function () use ($data) {
-            $user = $this->createUser($data);
+        $payload = $this->mapCompanyPayload($data);
+        $user = $this->createUser($data);
 
-            $company = (new CompanyAction($user))->storeCompany(
-                $this->mapCompanyPayload($data)
-            );
+        try {
+            $company = (new CompanyAction($user))->storeCompany($payload);
 
             $this->createSubscription($company, $data);
 
             return $company;
-        });
+        } catch (Throwable $e) {
+            $this->rollbackOnboarding($user);
+
+            throw $e;
+        }
+    }
+
+    protected function rollbackOnboarding(User $user): void
+    {
+        $company = Company::query()->where('user_id', $user->id)->first();
+
+        if ($company) {
+            try {
+                $company->tenant?->delete();
+            } catch (Throwable) {
+                // Tenant DB may be missing if creation failed early.
+            }
+
+            $company->forceDelete();
+        }
+
+        $user->forceDelete();
     }
 
     protected function createUser(array $data): User
