@@ -62,7 +62,7 @@ class CompanyOnboardingService
             'name' => $company['name_ar'],
             'name_en' => $company['name_en'] ?? null,
             'tenant_key' => $tenantKey,
-            'city' => $company['city'],
+            'city' => $company['city'] ?? '-',
             'tax_number' => $company['tax_number'] ?? null,
             'description' => $company['description'] ?? null,
             'business_type' => $company['business_type'] ?? 'general',
