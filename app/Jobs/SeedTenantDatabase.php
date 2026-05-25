@@ -3,10 +3,12 @@
 namespace App\Jobs;
 
 use App\Models\Tenant;
+use App\Models\User;
 use App\Support\TenantAppAutoloader;
 use DB;
 use Hash;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use RuntimeException;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -32,11 +34,14 @@ class SeedTenantDatabase implements ShouldQueue
     {
         TenantAppAutoloader::register();
 
+        $ownerUser = User::query()->find($this->tenant->user_id);
+
         try {
-            $this->tenant->run(function () {
+            $this->tenant->run(function () use ($ownerUser) {
                 $this->insertDefaultEstablishment();
                 $this->insertPermissions();
                 $this->insertEmployee();
+                $this->insertOwnerEmployee($ownerUser);
                 $this->insertCountries();
             });
         } catch (\Exception $e) {
@@ -47,34 +52,84 @@ class SeedTenantDatabase implements ShouldQueue
         }
     }
 
-    private function insertEmployee()
+    private function insertEmployee(): void
     {
         try {
             $default_est_id = DB::table('est_establishments')->whereNotNull('parent_id')->first()?->id;
+
             DB::table('emp_employees')->updateOrInsert([
-                'email' => 'admin@admin.com'
+                'email' => 'admin@admin.com',
             ], [
                 'name' => 'آدمن',
                 'name_en' => 'admin',
+                'user_name' => 'admin',
                 'establishment_id' => $default_est_id,
                 'password' => Hash::make('123456789'),
                 'pin' => 99913,
                 'ems_access' => true,
-                'pos_is_active' => true
+                'pos_is_active' => true,
             ]);
-            $employee_id = DB::table('emp_employees')->where('email', 'admin@admin.com')->first()?->id;
-            $permissions = DB::table('permissions')->where('name', 'LIKE', '%all%')->where('type', 'ems')->pluck('id');
-            $permissions->each(function ($permission_id) use ($employee_id) {
-                DB::table('model_has_permissions')->insertOrIgnore([
-                    'permission_id' => $permission_id,
-                    'model_type' => 'Modules\Employee\Models\Employee',
-                    'model_id' => $employee_id
-                ]);
-            });
+
+            $employee_id = DB::table('emp_employees')->where('email', 'admin@admin.com')->value('id');
+
+            if ($employee_id) {
+                $this->grantEmsAllPermissions((int) $employee_id);
+            }
         } catch (\Exception $e) {
             \Log::error('Employee insertion failed: ' . $e->getMessage());
             throw $e;
         }
+    }
+
+    private function insertOwnerEmployee(?User $ownerUser): void
+    {
+        if ($ownerUser === null || $ownerUser->email === 'admin@admin.com') {
+            return;
+        }
+
+        try {
+            $default_est_id = DB::table('est_establishments')->whereNotNull('parent_id')->first()?->id;
+            $emailLocalPart = Str::before($ownerUser->email, '@');
+
+            DB::table('emp_employees')->updateOrInsert([
+                'email' => $ownerUser->email,
+            ], [
+                'name' => Str::limit($ownerUser->name, 50, ''),
+                'name_en' => Str::limit($emailLocalPart, 50, ''),
+                'user_name' => Str::limit($emailLocalPart, 50, ''),
+                'establishment_id' => $default_est_id,
+                'password' => $ownerUser->getAuthPassword(),
+                'phone_number' => $this->tenant->owner_phone_number ?? null,
+                'pin' => $ownerUser->pin,
+                'ems_access' => true,
+                'pos_is_active' => true,
+            ]);
+
+            $employee_id = DB::table('emp_employees')->where('email', $ownerUser->email)->value('id');
+
+            if ($employee_id) {
+                $this->grantEmsAllPermissions((int) $employee_id);
+            }
+        } catch (\Exception $e) {
+            \Log::error('Owner employee insertion failed: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    private function grantEmsAllPermissions(int $employeeId): void
+    {
+        $permissions = DB::table('permissions')
+            ->where('name', 'LIKE', '%all%')
+            ->where('type', 'ems')
+            ->pluck('id');
+
+        $permissions->each(function ($permission_id) use ($employeeId) {
+            DB::table('model_has_permissions')->insertOrIgnore([
+                'permission_id' => $permission_id,
+                'model_type' => 'Modules\Employee\Models\Employee',
+                'model_id' => $employeeId,
+            ]);
+        });
     }
 
     private function insertPermissions()

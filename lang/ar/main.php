@@ -32,6 +32,19 @@ return [
     'country' => 'بلد',
     'account' => 'حساب',
 
+    'wizard' => [
+        'company_information' => 'معلومات الشركة',
+        'company_information_hint' => 'أدخل بيانات الشركة المستخدمة لإنشاء الـ tenant.',
+        'user_information' => 'معلومات المستخدم',
+        'user_information_hint' => 'إنشاء حساب مالك الشركة (نفس قواعد صفحة المستخدمين).',
+        'subscription_information' => 'معلومات الاشتراك',
+        'subscription_information_hint' => 'تعيين خطة للشركة (نفس قواعد صفحة الاشتراكات).',
+        'tenant_key_hint' => 'يُولَّد تلقائياً من الاسم الإنجليزي (أحرف صغيرة بدون مسافات أو رموز).',
+        'tenant_key_taken' => 'معرّف الـ tenant المشتق من الاسم الإنجليزي مستخدم مسبقاً. غيّر الاسم الإنجليزي.',
+        'complete_setup' => 'إتمام الإعداد',
+        'saving' => 'جاري الحفظ...',
+    ],
+
 
     'notifications_settings' => 'إعدادات الإشعارات',
     'system_settings' => 'إعدادات النظام',

@@ -32,6 +32,19 @@ return [
     'country' => 'Country',
     'account' => 'Acount',
 
+    'wizard' => [
+        'company_information' => 'Company information',
+        'company_information_hint' => 'Enter the company profile used to provision the tenant.',
+        'user_information' => 'User information',
+        'user_information_hint' => 'Create the company owner account (same rules as Users).',
+        'subscription_information' => 'Subscription information',
+        'subscription_information_hint' => 'Assign a plan to the company (same rules as Subscriptions).',
+        'tenant_key_hint' => 'Auto-generated from the English name (lowercase, no spaces or special characters).',
+        'tenant_key_taken' => 'The tenant identifier derived from the English name is already in use. Please change the English name.',
+        'complete_setup' => 'Complete setup',
+        'saving' => 'Saving...',
+    ],
+
 
     'notifications_settings' => 'Notifications settings',
     'system_settings' => 'System settings',

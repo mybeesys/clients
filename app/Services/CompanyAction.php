@@ -6,150 +6,235 @@ use App\Models\Company;
 use App\Models\Country;
 use App\Models\Tenant;
 use App\Models\User;
-use Stancl\Tenancy\Database\Models\Domain;
+use App\Support\TenantKeyGenerator;
+use Illuminate\Database\Eloquent\Builder;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Set;
+use Stancl\Tenancy\Database\Models\Domain;
 
 class CompanyAction
 {
-
     public function __construct(protected User $user) {}
 
-    public static function getCompanyForm($register)
+    public static function businessTypeOptions(): array
     {
         return [
-            Section::make()
-                ->columnSpan(1)
+            'contractors' => __('fields.business_types.contractors'),
+            'e-commerce' => __('fields.business_types.e-commerce'),
+            'restaurant-cafe' => __('fields.business_types.restaurant-cafe'),
+            'services' => __('fields.business_types.services'),
+            'general' => __('fields.business_types.general'),
+        ];
+    }
+
+    protected static function fieldName(string $name, string $prefix = ''): string
+    {
+        return $prefix !== '' ? "{$prefix}.{$name}" : $name;
+    }
+
+    /**
+     * Minimal company fields for the admin onboarding wizard (step: company).
+     *
+     * @return array<int, Section>
+     */
+    public static function getCompanyWizardSchema(string $prefix = 'company'): array
+    {
+        $f = fn (string $name) => static::fieldName($name, $prefix);
+
+        return [
+            Section::make(__('fields.main_info'))
+                ->columns(2)
                 ->schema([
-                    TextInput::make('name')
-                        ->label(__('fields.name'))
+                    TextInput::make($f('name_ar'))
+                        ->label(__('fields.name_ar'))
+                        ->required()
+                        ->unique('companies', 'name')
+                        ->maxLength(255),
+                    TextInput::make($f('name_en'))
+                        ->label(__('fields.name_en'))
+                        ->required()
+                        ->maxLength(255)
+                        ->live(onBlur: true)
+                        ->afterStateUpdated(fn (Set $set, ?string $state) => $set(
+                            $f('tenant_key'),
+                            TenantKeyGenerator::fromEnglishName($state)
+                        )),
+                    Hidden::make($f('tenant_key'))->dehydrated(),
+                    Select::make($f('business_type'))
+                        ->label(__('fields.business_type'))
+                        ->options(static::businessTypeOptions())
+                        ->default('general')
+                        ->required(),
+                    TextInput::make($f('tax_number'))
+                        ->numeric()
+                        ->label(__('fields.tax_number'))
+                        ->required()
+                        ->maxLength(15),
+                    TextInput::make($f('national_address'))
+                        ->label(__('fields.national_address'))
+                        ->required()
+                        ->maxLength(255)
+                        ->columnSpanFull(),
+                    Textarea::make($f('description'))
+                        ->label(__('fields.description'))
+                        ->rows(3)
+                        ->columnSpanFull(),
+                ]),
+        ];
+    }
+
+    public static function getCompanyFormSections(string $prefix = ''): array
+    {
+        $f = fn (string $name) => static::fieldName($name, $prefix);
+
+        return [
+            Section::make(__('fields.main_info'))
+                ->columns(2)
+                ->schema([
+                    TextInput::make($f('name'))
+                        ->label(__('fields.name_ar'))
                         ->string()
                         ->unique('companies', 'name', ignoreRecord: true)
                         ->required()
                         ->maxLength(255),
-                    Select::make('business_type')
+                    Select::make($f('business_type'))
                         ->label(__('fields.business_type'))
-                        ->options([
-                            'contractors' => __('fields.business_types.contractors'),
-                            'e-commerce' => __('fields.business_types.e-commerce'),
-                            'restaurant-cafe' => __('fields.business_types.restaurant-cafe'),
-                            'services' => __('fields.business_types.services'),
-                            'general' => __('fields.business_types.general'),
-                        ])
+                        ->options(static::businessTypeOptions())
+                        ->default('general')
                         ->required(),
-                    TextInput::make('phone')
+                    TextInput::make($f('phone'))
                         ->label(__('fields.phone'))
-                        ->tel()->minLength(8)->maxLength(11),
-                    TextInput::make('website')
+                        ->tel()
+                        ->minLength(8)
+                        ->maxLength(20),
+                    TextInput::make($f('website'))
                         ->label(__('fields.website'))
                         ->url()
                         ->maxLength(255),
-                    TextInput::make('ceo_name')
+                    TextInput::make($f('ceo_name'))
                         ->label(__('fields.ceo_name'))
                         ->maxLength(255),
-                    TextInput::make('tax_name')
+                    TextInput::make($f('tax_name'))
                         ->label(__('fields.tax_name'))
                         ->maxLength(255),
-                    TextInput::make('tax_number')
+                    TextInput::make($f('tax_number'))
                         ->numeric()
                         ->label(__('fields.tax_number'))
-                        ->length(15),
-                    Select::make('user_id')
+                        ->maxLength(15),
+                    Select::make($f('user_id'))
                         ->label(__('fields.user'))
-                        ->relationship('user', 'email', fn($query) => $query->doesntHave('company'))
+                        ->relationship(
+                            'user',
+                            'email',
+                            modifyQueryUsing: function (Builder $query, $livewire): void {
+                                $ownerId = $livewire->record?->user_id ?? null;
+
+                                $query->where(function (Builder $inner) use ($ownerId): void {
+                                    $inner->doesntHave('company');
+
+                                    if ($ownerId) {
+                                        $inner->orWhere('users.id', $ownerId);
+                                    }
+                                });
+                            }
+                        )
                         ->exists('users', 'id')
                         ->searchable()
                         ->preload()
-                        ->required()->visible(!$register)
-
+                        ->required(),
                 ]),
-            Section::make()
-                ->columnSpan(1)
+            Section::make(__('fields.address'))
+                ->columns(2)
                 ->schema([
-                    Select::make('country_id')
+                    Select::make($f('country_id'))
                         ->label(__('fields.country'))
-                        ->options(Country::pluck('name_en', 'id'))->exists('countries', 'id')
-                        ->live()->preload()->searchable()->required(),
-                    TextInput::make('state')
+                        ->options(Country::pluck('name_en', 'id'))
+                        ->exists('countries', 'id')
+                        ->live()
+                        ->preload()
+                        ->searchable()
+                        ->required(),
+                    TextInput::make($f('state'))
                         ->label(__('fields.state'))
                         ->string()
                         ->required()
                         ->maxLength(255),
-                    TextInput::make('city')
+                    TextInput::make($f('city'))
                         ->label(__('fields.city'))
                         ->string()
                         ->required()
                         ->maxLength(255),
-
-                    TextInput::make('national_address')
+                    TextInput::make($f('national_address'))
                         ->string()
-                        ->label(__('fields.national_address')),
-                    TextInput::make('zipcode')
-                        ->numeric()
+                        ->label(__('fields.national_address'))
+                        ->maxLength(255),
+                    TextInput::make($f('zipcode'))
                         ->label(__('fields.zip_code'))
-                        ->required(),
+                        ->required()
+                        ->maxLength(20),
                 ]),
-            Section::make()
-                ->columns(2)
+            Section::make(__('fields.additional_details'))
                 ->schema([
-                    Textarea::make('description')
-                        ->label(__('fields.description')),
-                    FileUpload::make('logo')
+                    Textarea::make($f('description'))
+                        ->label(__('fields.description'))
+                        ->rows(3),
+                    FileUpload::make($f('logo'))
                         ->label(__('fields.logo'))
                         ->image()
                         ->directory('companies/logos'),
-                ])->visible(!$register)
+                ]),
         ];
+    }
+
+    public static function getCompanyForm(bool $forRegistration = false): array
+    {
+        return static::getCompanyFormSections('', false);
     }
 
     public function storeCompany($data)
     {
-
-
         $tenant = null;
         $company = null;
-        // try {
+
+        $tenantKey = $data['tenant_key']
+            ?? TenantKeyGenerator::fromEnglishName($data['name_en'] ?? $data['name'] ?? null);
+
         $company = Company::create([
             'name' => $data['name'],
             'business_type' => $data['business_type'],
             'user_id' => $this->user->id,
-            'phone' => $data['phone'],
-            'website' => $data['website'],
-            'ceo_name' => $data['ceo_name'],
-            'tax_name' => $data['tax_name'],
-            'tax_number' => $data['tax_number'],
+            'phone' => $data['phone'] ?? null,
+            'website' => $data['website'] ?? null,
+            'ceo_name' => $data['ceo_name'] ?? null,
+            'tax_name' => $data['tax_name'] ?? null,
+            'tax_number' => $data['tax_number'] ?? null,
             'country_id' => $data['country_id'],
             'state' => $data['state'],
             'city' => $data['city'],
-            'national_address' => $data['national_address'],
-            'zip_code' => $data['zipcode'],
+            'national_address' => $data['national_address'] ?? null,
+            'zipcode' => $data['zipcode'],
             'description' => $data['description'] ?? null,
-            'logo' => $data['logo'] ?? null
+            'logo' => $data['logo'] ?? null,
         ]);
 
         $tenant = Tenant::create([
-            'id' => trim($data['name']),
+            'id' => $tenantKey,
             'company_id' => $company->id,
-            'user_id' => $this->user->id
+            'user_id' => $this->user->id,
+            'owner_phone_number' => $data['owner_phone_number'] ?? null,
         ]);
-
 
         Domain::create([
-            'domain' => trim($data['name']) . '.' . str_replace(['http://', 'https://'], '', config('app.url')),
-            'tenant_id' => trim($data['name'])
+            'domain' => $tenantKey.'.'.str_replace(['http://', 'https://'], '', config('app.url')),
+            'tenant_id' => $tenantKey,
         ]);
 
-
-        // TenantCreated pipeline: CreateDatabase → MigrateDatabase → SeedTenantDatabase
-
         return $company;
-        // } catch (\Throwable $e) {
-        //     $this->cleanup($tenant, $company);
-        //     throw $e;
-        // }
     }
 
     private function cleanup(?Tenant $tenant, ?Company $company)
@@ -159,7 +244,7 @@ class CompanyAction
                 $tenant->domains()->delete();
                 $tenant->delete();
             } catch (\Exception $e) {
-                \Log::error('Tenant cleanup error: ' . $e->getMessage());
+                \Log::error('Tenant cleanup error: '.$e->getMessage());
             }
         }
 
@@ -167,14 +252,14 @@ class CompanyAction
             try {
                 $company->forceDelete();
             } catch (\Exception $e) {
-                \Log::error('Company cleanup error: ' . $e->getMessage());
+                \Log::error('Company cleanup error: '.$e->getMessage());
             }
         }
 
         try {
             $this->user->forceDelete();
         } catch (\Exception $e) {
-            \Log::error('User cleanup error: ' . $e->getMessage());
+            \Log::error('User cleanup error: '.$e->getMessage());
         }
     }
 }

@@ -38,7 +38,9 @@ class CompanyResource extends Resource
 
     public static function form(Form $form): Form
     {
-        return $form->schema(array_merge(CompanyAction::getCompanyForm(false)));
+        return $form
+            ->columns(2)
+            ->schema(CompanyAction::getCompanyForm());
     }
 
     public static function table(Table $table): Table
