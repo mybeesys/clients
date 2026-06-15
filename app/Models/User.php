@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Services\SyncTenantOwnerPasswordService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -99,6 +100,14 @@ class User extends Authenticatable
             } while (self::where('pin', $pin)->exists());
 
             $user->pin = $pin;
+        });
+
+        static::updated(function (User $user) {
+            if (! $user->wasChanged('password')) {
+                return;
+            }
+
+            app(SyncTenantOwnerPasswordService::class)->sync($user);
         });
     }
 }
