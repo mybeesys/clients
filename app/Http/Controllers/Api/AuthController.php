@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Models\User;
+use App\Services\CompanyTokenService;
 use Illuminate\Http\Request;
 
 class AuthController extends Controller
@@ -17,10 +18,15 @@ class AuthController extends Controller
         $request->authenticate();
 
         $user = $request->user();
-        $user->tokens()->delete();
+
+        $accessToken = app(CompanyTokenService::class)->issue(
+            $user,
+            $request->input('client_type'),
+            $request->input('device_id'),
+        );
 
         return response()->json([
-            'token' => $user->createToken($user->email)->plainTextToken,
+            'token' => $accessToken->plainTextToken,
             'user_id' => $user->id,
             'tenant_id' => $user->tenant?->id,
         ]);
@@ -38,6 +44,6 @@ class AuthController extends Controller
 
     public function destroy(Request $request)
     {
-        $request->user()->tokens()->delete();
+        $request->user()->currentAccessToken()?->delete();
     }
 }
