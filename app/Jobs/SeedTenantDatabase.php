@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\GrantTenantAdminPermissionsService;
 use App\Support\TenantAppAutoloader;
 use DB;
 use Hash;
@@ -73,7 +74,7 @@ class SeedTenantDatabase implements ShouldQueue
             $employee_id = DB::table('emp_employees')->where('email', 'admin@admin.com')->value('id');
 
             if ($employee_id) {
-                $this->grantEmsAllPermissions((int) $employee_id);
+                app(GrantTenantAdminPermissionsService::class)->grantAdminEmployee('admin@admin.com');
             }
         } catch (\Exception $e) {
             \Log::error('Employee insertion failed: ' . $e->getMessage());
@@ -108,28 +109,12 @@ class SeedTenantDatabase implements ShouldQueue
             $employee_id = DB::table('emp_employees')->where('email', $ownerUser->email)->value('id');
 
             if ($employee_id) {
-                $this->grantEmsAllPermissions((int) $employee_id);
+                app(GrantTenantAdminPermissionsService::class)->grantAdminEmployee($ownerUser->email);
             }
         } catch (\Exception $e) {
             \Log::error('Owner employee insertion failed: ' . $e->getMessage());
             throw $e;
         }
-    }
-
-    private function grantEmsAllPermissions(int $employeeId): void
-    {
-        $permissions = DB::table('permissions')
-            ->where('name', 'LIKE', '%all%')
-            ->where('type', 'ems')
-            ->pluck('id');
-
-        $permissions->each(function ($permission_id) use ($employeeId) {
-            DB::table('model_has_permissions')->insertOrIgnore([
-                'permission_id' => $permission_id,
-                'model_type' => 'Modules\Employee\Models\Employee',
-                'model_id' => $employeeId,
-            ]);
-        });
     }
 
     private function insertPermissions()

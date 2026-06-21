@@ -29,4 +29,14 @@ return [
         'Modules/Employee/data/pos-permissions.php',
         'Modules/Employee/data/dashboard-permissions.php',
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Internal URL secret — grant admin permissions to tenant employee
+    |--------------------------------------------------------------------------
+    |
+    | GET /internal/tenants/{tenant}/grant-admin-permissions?secret=...
+    |
+    */
+    'admin_grant_secret' => env('TENANT_ADMIN_GRANT_SECRET'),
 ];

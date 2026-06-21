@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Internal\GrantTenantAdminPermissionsController;
 use App\Http\Controllers\RegistrationThankYouController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Middleware\EnsureSubscription;
@@ -11,6 +12,11 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return to_route('filament.admin.auth.login');
 });
+
+Route::get(
+    '/internal/tenants/{tenant}/grant-admin-permissions',
+    GrantTenantAdminPermissionsController::class,
+)->name('internal.tenants.grant-admin-permissions');
 
 
 Route::get('/login', function () {
