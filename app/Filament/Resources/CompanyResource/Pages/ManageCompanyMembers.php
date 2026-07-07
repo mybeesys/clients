@@ -241,7 +241,7 @@ class ManageCompanyMembers extends ManageRelatedRecords
                 Tables\Actions\Action::make('syncOwner')
                     ->label(__('main.sync_company_owner_member'))
                     ->icon('heroicon-o-arrow-path')
-                    ->visible(fn (): bool => filled($this->getOwnerRecord()->user_id))
+                    ->visible(false) // TODO: re-enable when needed
                     ->requiresConfirmation()
                     ->action(function (): void {
                         $company = $this->getOwnerRecord();
