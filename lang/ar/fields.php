@@ -55,6 +55,7 @@ return [
     'website' => 'الموقع الإلكتروني',
     'has_subscription' => 'يملك اشتراك',
     'user' => 'المستخدم',
+    'role' => 'الدور',
     'plan' => 'الخطة',
     'company' => 'الشركة',
     'subscriber' => 'المشترك',

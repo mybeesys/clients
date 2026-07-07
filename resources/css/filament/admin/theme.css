@@ -6,3 +6,34 @@
 .fi-sidebar-nav-groups {
     @apply gap-y-4;
 }
+
+/* Filament modals inside tables: escape parent stacking + keep window above backdrop */
+.fi-modal.fi-modal-open {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+}
+
+.fi-modal:not(.fi-modal-open) > div > .fi-modal-close-overlay,
+.fi-modal.fi-modal-open:not(:last-of-type) .fi-modal-close-overlay {
+    display: none !important;
+}
+
+.fi-modal.fi-modal-open .fi-modal-close-overlay {
+    z-index: 91 !important;
+}
+
+.fi-modal.fi-modal-open > div > .fixed.inset-0:not(.fi-modal-close-overlay) {
+    z-index: 92 !important;
+    pointer-events: none;
+}
+
+.fi-modal.fi-modal-open .fi-modal-window {
+    z-index: 93 !important;
+    pointer-events: auto;
+}
+
+.fi-fo-select .choices__list--dropdown,
+.fi-fo-select .choices__list[aria-expanded] {
+    @apply z-[100];
+}

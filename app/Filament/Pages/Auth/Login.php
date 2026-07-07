@@ -38,8 +38,8 @@ class Login extends \Filament\Pages\Auth\Login
 
         session()->regenerate();
 
-        $company = $user->company;
-        $domain = $user->tenant?->domains?->first()?->domain;
+        $company = $user->defaultCompany();
+        $domain = $user->defaultTenant()?->domains?->first()?->domain;
 
         if ($user->is_company() && $company && $domain) {
             if ($company->subscribed) {

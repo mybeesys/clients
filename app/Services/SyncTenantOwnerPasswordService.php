@@ -10,12 +10,6 @@ class SyncTenantOwnerPasswordService
 {
     public function sync(User $user): void
     {
-        $tenant = $user->tenant;
-
-        if ($tenant === null) {
-            return;
-        }
-
         $lookupEmail = $user->wasChanged('email')
             ? ($user->getOriginal('email') ?? $user->email)
             : $user->email;
@@ -36,18 +30,26 @@ class SyncTenantOwnerPasswordService
             $updates['email'] = $user->email;
         }
 
-        $tenant->run(function () use ($lookupEmail, $updates, $user, $tenant) {
-            $updated = DB::table('emp_employees')
-                ->where('email', $lookupEmail)
-                ->update($updates);
+        foreach ($user->accessibleCompanies()->with('tenant')->get() as $company) {
+            $tenant = $company->tenant;
 
-            if ($updated === 0) {
-                Log::warning('Tenant owner password sync: no emp_employees row matched', [
-                    'tenant_id' => $tenant->id,
-                    'email' => $lookupEmail,
-                    'user_id' => $user->id,
-                ]);
+            if ($tenant === null) {
+                continue;
             }
-        });
+
+            $tenant->run(function () use ($lookupEmail, $updates, $user, $tenant) {
+                $updated = DB::table('emp_employees')
+                    ->where('email', $lookupEmail)
+                    ->update($updates);
+
+                if ($updated === 0) {
+                    Log::warning('Tenant owner password sync: no emp_employees row matched', [
+                        'tenant_id' => $tenant->id,
+                        'email' => $lookupEmail,
+                        'user_id' => $user->id,
+                    ]);
+                }
+            });
+        }
     }
 }

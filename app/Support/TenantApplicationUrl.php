@@ -23,6 +23,12 @@ class TenantApplicationUrl
 
     public static function forUser(User $user): ?string
     {
+        $company = $user->defaultCompany() ?? $user->company;
+
+        if ($company) {
+            return static::forCompany($company);
+        }
+
         $user->loadMissing('tenant.domains');
 
         $domain = $user->tenant?->domains?->first()?->domain;

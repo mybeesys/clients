@@ -18,7 +18,7 @@ class CompanyOnboardingService
     public function create(array $data): Company
     {
         $payload = $this->mapCompanyPayload($data);
-        $user = $this->createUser($data);
+        $user = $this->resolveUser($data);
 
         try {
             $company = (new CompanyAction($user))->storeCompany($payload);
@@ -27,14 +27,29 @@ class CompanyOnboardingService
 
             return $company;
         } catch (Throwable $e) {
-            $this->rollbackOnboarding($user);
+            $this->rollbackOnboarding($user, $data);
 
             throw $e;
         }
     }
 
-    protected function rollbackOnboarding(User $user): void
+    protected function resolveUser(array $data): User
     {
+        $existingUserId = $data['user']['existing_user_id'] ?? null;
+
+        if (filled($existingUserId)) {
+            return User::query()->findOrFail($existingUserId);
+        }
+
+        return $this->createUser($data);
+    }
+
+    protected function rollbackOnboarding(User $user, array $data = []): void
+    {
+        if (filled($data['user']['existing_user_id'] ?? null)) {
+            return;
+        }
+
         $company = Company::query()->where('user_id', $user->id)->first();
 
         if ($company) {

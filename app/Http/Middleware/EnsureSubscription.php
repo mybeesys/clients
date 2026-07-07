@@ -16,8 +16,8 @@ class EnsureSubscription
     public function handle(Request $request, Closure $next): Response
     {
         $user = auth()->user();
-        $company = $user->company;
-        $domain = $user->tenant?->domains?->first()?->domain;
+        $company = $user->defaultCompany();
+        $domain = $user->defaultTenant()?->domains?->first()?->domain;
 
         if ($user->is_company() && $company && $domain) {
             if ($company->subscription) {

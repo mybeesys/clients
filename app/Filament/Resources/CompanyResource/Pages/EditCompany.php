@@ -5,8 +5,6 @@ namespace App\Filament\Resources\CompanyResource\Pages;
 use App\Filament\Resources\CompanyResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
-use Illuminate\Support\Facades\Hash;
-use Symfony\Component\VarDumper\VarDumper;
 
 class EditCompany extends EditRecord
 {
@@ -15,6 +13,10 @@ class EditCompany extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            Actions\Action::make('manageMembers')
+                ->label(__('main.company_members'))
+                ->icon('heroicon-o-users')
+                ->url(fn (): string => CompanyResource::getUrl('members', ['record' => $this->getRecord()])),
             Actions\DeleteAction::make(),
         ];
     }

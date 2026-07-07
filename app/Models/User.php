@@ -59,6 +59,48 @@ class User extends Authenticatable
         return $this->hasOne(Company::class);
     }
 
+    public function companies()
+    {
+        return $this->belongsToMany(Company::class, 'company_user')
+            ->withPivot(['role', 'is_primary'])
+            ->withTimestamps();
+    }
+
+    public function accessibleCompanies()
+    {
+        $memberIds = $this->companies()->pluck('companies.id');
+        $ownedIds = Company::query()->where('user_id', $this->id)->pluck('id');
+
+        return Company::query()
+            ->whereIn('id', $memberIds->merge($ownedIds)->unique())
+            ->with(['tenant.domains']);
+    }
+
+    public function defaultCompany(): ?Company
+    {
+        $primary = $this->companies()->wherePivot('is_primary', true)->first();
+        if ($primary) {
+            return $primary;
+        }
+
+        $owned = $this->company;
+        if ($owned) {
+            return $owned;
+        }
+
+        return $this->companies()->first();
+    }
+
+    public function defaultTenant(): ?Tenant
+    {
+        return $this->defaultCompany()?->tenant;
+    }
+
+    public function hasMultipleCompanies(): bool
+    {
+        return $this->accessibleCompanies()->count() > 1;
+    }
+
     public function is_company()
     {
         return $this->is_company;

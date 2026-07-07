@@ -55,6 +55,7 @@ return [
     'website' => 'Website',
     'has_subscription' => 'Has subscription',
     'user' => 'User',
+    'role' => 'Role',
     'plan' => 'Plan',
     'company' => 'Company',
     'subscriber' => 'Subscriber',

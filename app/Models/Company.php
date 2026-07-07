@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\CompanyMembershipService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -35,6 +36,13 @@ class Company extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function members()
+    {
+        return $this->belongsToMany(User::class, 'company_user')
+            ->withPivot(['role', 'is_primary'])
+            ->withTimestamps();
+    }
+
     public function payments()
     {
         return $this->hasMany(PaymentSubscription::class);
@@ -48,5 +56,20 @@ class Company extends Model
     public function tenant()
     {
         return $this->hasOne(Tenant::class);
+    }
+
+    protected static function booted(): void
+    {
+        static::saved(function (Company $company): void {
+            if (! $company->user_id) {
+                return;
+            }
+
+            $user = $company->user;
+
+            if ($user) {
+                app(CompanyMembershipService::class)->attachOwner($user, $company);
+            }
+        });
     }
 }

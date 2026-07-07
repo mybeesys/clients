@@ -5,6 +5,7 @@ namespace App\Filament\Forms;
 use App\Models\User;
 use App\Services\CompanyAction;
 use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Wizard;
@@ -61,33 +62,55 @@ class CompanyOnboardingWizard
             ->icon('heroicon-o-user-circle')
             ->columns(2)
             ->schema([
+                Radio::make('user.link_mode')
+                    ->label(__('main.wizard.user_link_mode'))
+                    ->options([
+                        'new' => __('main.wizard.user_link_new'),
+                        'existing' => __('main.wizard.user_link_existing'),
+                    ])
+                    ->default('new')
+                    ->live()
+                    ->columnSpanFull(),
+                Select::make('user.existing_user_id')
+                    ->label(__('fields.user'))
+                    ->options(fn () => User::query()->orderBy('email')->pluck('email', 'id'))
+                    ->searchable()
+                    ->preload()
+                    ->visible(fn (callable $get) => $get('user.link_mode') === 'existing')
+                    ->required(fn (callable $get) => $get('user.link_mode') === 'existing')
+                    ->columnSpanFull(),
                 TextInput::make('user.name')
                     ->label(__('fields.name'))
                     ->minLength(2)
-                    ->required()
+                    ->required(fn (callable $get) => $get('user.link_mode') !== 'existing')
+                    ->visible(fn (callable $get) => $get('user.link_mode') !== 'existing')
                     ->maxLength(255)
                     ->unique(User::class, 'name'),
                 TextInput::make('user.email')
                     ->label(__('fields.email'))
                     ->email()
                     ->unique(User::class, 'email')
-                    ->required()
+                    ->required(fn (callable $get) => $get('user.link_mode') !== 'existing')
+                    ->visible(fn (callable $get) => $get('user.link_mode') !== 'existing')
                     ->maxLength(255),
                 TextInput::make('user.phone_number')
                     ->label(__('fields.phone_number'))
                     ->tel()
+                    ->visible(fn (callable $get) => $get('user.link_mode') !== 'existing')
                     ->maxLength(25),
                 Select::make('user.roles')
                     ->label(__('filament-shield::filament-shield.resource.label.roles'))
                     ->options(Role::query()->pluck('name', 'id'))
                     ->multiple()
                     ->preload()
-                    ->searchable(),
+                    ->searchable()
+                    ->visible(fn (callable $get) => $get('user.link_mode') !== 'existing'),
                 TextInput::make('user.password')
                     ->label(__('fields.password'))
                     ->password()
                     ->revealable()
-                    ->required()
+                    ->required(fn (callable $get) => $get('user.link_mode') !== 'existing')
+                    ->visible(fn (callable $get) => $get('user.link_mode') !== 'existing')
                     ->maxLength(255)
                     ->columnSpanFull(),
                 Hidden::make('user.is_company')->default(true),

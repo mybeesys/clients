@@ -6,6 +6,7 @@ use App\Models\Company;
 use App\Models\Country;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\CompanyMembershipService;
 use App\Support\TenantKeyGenerator;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Forms\Components\FileUpload;
@@ -129,21 +130,7 @@ class CompanyAction
         if (! $forRegistration) {
             $mainFields[] = Select::make($f('user_id'))
                 ->label(__('fields.user'))
-                ->relationship(
-                    'user',
-                    'email',
-                    modifyQueryUsing: function (Builder $query, $livewire): void {
-                        $ownerId = $livewire->record?->user_id ?? null;
-
-                        $query->where(function (Builder $inner) use ($ownerId): void {
-                            $inner->doesntHave('company');
-
-                            if ($ownerId) {
-                                $inner->orWhere('users.id', $ownerId);
-                            }
-                        });
-                    }
-                )
+                ->relationship('user', 'email')
                 ->exists('users', 'id')
                 ->searchable()
                 ->preload()
@@ -240,6 +227,8 @@ class CompanyAction
             'domain' => $tenantKey.'.'.str_replace(['http://', 'https://'], '', config('app.url')),
             'tenant_id' => $tenantKey,
         ]);
+
+        app(CompanyMembershipService::class)->attachOwner($this->user, $company);
 
         return $company;
     }
