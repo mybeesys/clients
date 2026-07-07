@@ -33,6 +33,7 @@ class ProvisionTenantMemberEmployeeService
                 'pin' => $user->pin,
                 'ems_access' => true,
                 'pos_is_active' => in_array($role, ['owner', 'admin'], true),
+                'deleted_at' => null,
             ]);
 
             if (in_array($role, ['owner', 'admin'], true)) {

@@ -24,7 +24,11 @@ class SyncTenantOwnerPasswordService
             return;
         }
 
-        $updates = ['password' => $hashedPassword];
+        $updates = [
+            'password' => $hashedPassword,
+            'deleted_at' => null,
+            'ems_access' => true,
+        ];
 
         if ($user->wasChanged('email') && filled($user->email)) {
             $updates['email'] = $user->email;
@@ -37,19 +41,25 @@ class SyncTenantOwnerPasswordService
                 continue;
             }
 
-            $tenant->run(function () use ($lookupEmail, $updates, $user, $tenant) {
-                $updated = DB::table('emp_employees')
+            $updated = $tenant->run(function () use ($lookupEmail, $updates) {
+                return DB::table('emp_employees')
                     ->where('email', $lookupEmail)
                     ->update($updates);
-
-                if ($updated === 0) {
-                    Log::warning('Tenant owner password sync: no emp_employees row matched', [
-                        'tenant_id' => $tenant->id,
-                        'email' => $lookupEmail,
-                        'user_id' => $user->id,
-                    ]);
-                }
             });
+
+            if ($updated === 0) {
+                Log::warning('Tenant owner password sync: no emp_employees row matched, provisioning', [
+                    'tenant_id' => $tenant->id,
+                    'email' => $lookupEmail,
+                    'user_id' => $user->id,
+                ]);
+
+                $role = (int) $company->user_id === (int) $user->id
+                    ? 'owner'
+                    : (string) ($user->companies()->where('companies.id', $company->id)->first()?->pivot?->role ?? 'member');
+
+                app(ProvisionTenantMemberEmployeeService::class)->provision($user, $company, $role);
+            }
         }
     }
 }
