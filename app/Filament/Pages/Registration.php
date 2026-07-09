@@ -17,6 +17,17 @@ class Registration extends Register
 {
     protected ?string $maxWidth = '7xl';
 
+    public function mount(): void
+    {
+        parent::mount();
+
+        $ref = request()->query('ref');
+
+        if (is_string($ref) && $ref !== '') {
+            session(['referral_code' => strtoupper(trim($ref))]);
+        }
+    }
+
     public function form(Form $form): Form
     {
         return RegistrationWizard::configure($form);

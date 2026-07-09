@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Internal\GrantTenantAdminPermissionsController;
+use App\Http\Controllers\InviteLandingController;
 use App\Http\Controllers\RegistrationThankYouController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Middleware\EnsureSubscription;
@@ -25,6 +26,10 @@ Route::get('/login', function () {
 
 Route::get('/register/thank-you', RegistrationThankYouController::class)
     ->name('register.thank-you');
+
+Route::get('/invite/{code}', InviteLandingController::class)
+    ->middleware(LocalizationMiddleware::class)
+    ->name('referrals.landing');
 
 Route::get('/subscribe', function () {
     $plans = Plan::where('active', true)->get();

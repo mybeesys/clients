@@ -7,6 +7,7 @@ use App\Models\Country;
 use App\Models\Subscription;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\ReferralService;
 use App\Support\TenantKeyGenerator;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -42,6 +43,14 @@ class RegistrationService
             $company = (new CompanyAction($user))->storeCompany($payload);
 
             $this->createSubscription($company, $data);
+
+            app(ReferralService::class)->handleRegistrationConversion(
+                referralCodeValue: $data['referral_code'] ?? session('referral_code'),
+                company: $company,
+                subscriber: $user,
+                planId: isset($data['subscription']['plan_id']) ? (int) $data['subscription']['plan_id'] : null,
+                request: request(),
+            );
 
             return $user;
         } catch (Throwable $e) {

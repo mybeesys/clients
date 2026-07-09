@@ -85,6 +85,8 @@ class RegistrationWizard
                             ->dehydrated(false)
                             ->columnSpanFull(),
                         Hidden::make('is_company')->default(true),
+                        Hidden::make('referral_code')
+                            ->default(fn () => session('referral_code')),
                     ]),
             ]);
     }
