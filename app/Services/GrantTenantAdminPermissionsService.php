@@ -9,14 +9,19 @@ use RuntimeException;
 
 class GrantTenantAdminPermissionsService
 {
+    private const MODEL_TYPE = 'Modules\Employee\Models\Employee';
+
     public function grantForTenant(Tenant $tenant, ?string $employeeEmail = null): array
     {
         TenantAppAutoloader::register();
 
         return $tenant->run(function () use ($employeeEmail) {
-            $this->ensurePermissionsExist();
+            $catalog = $this->ensurePermissionsCatalog();
 
-            return $this->grantAdminEmployee($employeeEmail ?? 'admin@admin.com');
+            return array_merge(
+                $this->grantAdminEmployee($employeeEmail ?? 'admin@admin.com'),
+                ['permissions_catalog_synced' => $catalog],
+            );
         });
     }
 
@@ -35,78 +40,89 @@ class GrantTenantAdminPermissionsService
             'pos_is_active' => true,
         ]);
 
-        $emsGranted = $this->grantEmsAllPermissions($employeeId);
-        $posGranted = $this->grantPosAllPermissions($employeeId);
+        $ems = $this->grantPermissionsOfType($employeeId, 'ems');
+        $pos = $this->grantPermissionsOfType($employeeId, 'pos');
+
+        $this->forgetPermissionCache($employeeId);
 
         return [
             'employee_id' => $employeeId,
             'employee_email' => $email,
-            'ems_permissions_granted' => $emsGranted,
-            'pos_permissions_granted' => $posGranted,
+            'ems_permissions_available' => $ems['available'],
+            'ems_permissions_newly_granted' => $ems['newly_granted'],
+            'ems_permissions_total' => $ems['total_attached'],
+            'pos_permissions_available' => $pos['available'],
+            'pos_permissions_newly_granted' => $pos['newly_granted'],
+            'pos_permissions_total' => $pos['total_attached'],
+            // backward-compatible keys (total attached, not only newly inserted)
+            'ems_permissions_granted' => $ems['total_attached'],
+            'pos_permissions_granted' => $pos['total_attached'],
         ];
     }
 
+    /**
+     * Grant every EMS permission (full dashboard access).
+     */
     public function grantEmsAllPermissions(int $employeeId): int
     {
-        $permissions = DB::table('permissions')
-            ->where('name', 'LIKE', '%all%')
-            ->where('type', 'ems')
-            ->pluck('id');
-
-        $granted = 0;
-
-        foreach ($permissions as $permissionId) {
-            $inserted = DB::table('model_has_permissions')->insertOrIgnore([
-                'permission_id' => $permissionId,
-                'model_type' => 'Modules\Employee\Models\Employee',
-                'model_id' => $employeeId,
-            ]);
-
-            if ($inserted) {
-                $granted++;
-            }
-        }
-
-        return $granted;
+        return $this->grantPermissionsOfType($employeeId, 'ems')['total_attached'];
     }
 
+    /**
+     * Grant every POS permission (including select_all / owner / manager).
+     */
     public function grantPosAllPermissions(int $employeeId): int
     {
-        $permissionNames = [
-            'select_all_permissions',
-            'owner_access',
-            'manager_access',
-        ];
+        return $this->grantPermissionsOfType($employeeId, 'pos')['total_attached'];
+    }
 
-        $permissions = DB::table('permissions')
-            ->where('type', 'pos')
-            ->whereIn('name', $permissionNames)
-            ->pluck('id');
+    /**
+     * @return array{available: int, newly_granted: int, total_attached: int}
+     */
+    private function grantPermissionsOfType(int $employeeId, string $type): array
+    {
+        $permissionIds = DB::table('permissions')
+            ->where('type', $type)
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
 
-        $granted = 0;
+        $available = count($permissionIds);
+        $newlyGranted = 0;
 
-        foreach ($permissions as $permissionId) {
+        foreach ($permissionIds as $permissionId) {
             $inserted = DB::table('model_has_permissions')->insertOrIgnore([
                 'permission_id' => $permissionId,
-                'model_type' => 'Modules\Employee\Models\Employee',
+                'model_type' => self::MODEL_TYPE,
                 'model_id' => $employeeId,
             ]);
 
-            if ($inserted) {
-                $granted++;
+            if ((int) $inserted > 0) {
+                $newlyGranted++;
             }
         }
 
-        return $granted;
+        $totalAttached = (int) DB::table('model_has_permissions')
+            ->where('model_type', self::MODEL_TYPE)
+            ->where('model_id', $employeeId)
+            ->whereIn('permission_id', $permissionIds ?: [0])
+            ->count();
+
+        return [
+            'available' => $available,
+            'newly_granted' => $newlyGranted,
+            'total_attached' => $totalAttached,
+        ];
     }
 
-    private function ensurePermissionsExist(): void
+    /**
+     * Always upsert the full permission catalog from tenant app data files.
+     *
+     * @return array{synced: int, ems: int, pos: int}
+     */
+    private function ensurePermissionsCatalog(): array
     {
-        if (DB::table('permissions')->exists()) {
-            return;
-        }
-
-        $tenantAppPath = rtrim(config('tenant-app.path'), '/\\');
+        $tenantAppPath = rtrim((string) config('tenant-app.path'), '/\\');
         $permissions = [];
 
         foreach (config('tenant-app.permission_data_paths', []) as $relativePath) {
@@ -116,23 +132,71 @@ class GrantTenantAdminPermissionsService
                 continue;
             }
 
-            $permissions = array_merge($permissions, include $file);
+            $loaded = include $file;
+            if (is_array($loaded)) {
+                $permissions = array_merge($permissions, $loaded);
+            }
         }
 
         if ($permissions === []) {
-            throw new RuntimeException('No tenant permission files found. Check TENANT_APP_PATH.');
+            // Fall back to whatever already exists in the tenant DB.
+            if (! DB::table('permissions')->exists()) {
+                throw new RuntimeException(
+                    'No tenant permission files found and permissions table is empty. Check TENANT_APP_PATH.'
+                );
+            }
+
+            return [
+                'synced' => 0,
+                'ems' => (int) DB::table('permissions')->where('type', 'ems')->count(),
+                'pos' => (int) DB::table('permissions')->where('type', 'pos')->count(),
+            ];
         }
 
+        $synced = 0;
+
         foreach ($permissions as $permission) {
-            DB::table('permissions')->updateOrInsert([
-                'name' => $permission['name'],
-            ], [
-                'type' => $permission['type'],
-                'name_ar' => $permission['name_ar'],
-                'description' => $permission['description'],
-                'description_ar' => $permission['description_ar'],
-                'guard_name' => 'web',
-            ]);
+            if (! is_array($permission) || empty($permission['name'])) {
+                continue;
+            }
+
+            DB::table('permissions')->updateOrInsert(
+                ['name' => $permission['name']],
+                [
+                    'type' => $permission['type'] ?? null,
+                    'name_ar' => $permission['name_ar'] ?? null,
+                    'description' => $permission['description'] ?? null,
+                    'description_ar' => $permission['description_ar'] ?? null,
+                    'guard_name' => 'web',
+                ]
+            );
+            $synced++;
+        }
+
+        return [
+            'synced' => $synced,
+            'ems' => (int) DB::table('permissions')->where('type', 'ems')->count(),
+            'pos' => (int) DB::table('permissions')->where('type', 'pos')->count(),
+        ];
+    }
+
+    private function forgetPermissionCache(int $employeeId): void
+    {
+        try {
+            if (class_exists(\Spatie\Permission\PermissionRegistrar::class)) {
+                app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+            }
+        } catch (\Throwable) {
+            // ignore — tenant may not boot full Spatie container
+        }
+
+        // Best-effort: drop common Spatie cache keys if cache table exists.
+        try {
+            if (DB::getSchemaBuilder()->hasTable('cache')) {
+                DB::table('cache')->where('key', 'like', '%spatie.permission.cache%')->delete();
+            }
+        } catch (\Throwable) {
+            // ignore
         }
     }
 }
