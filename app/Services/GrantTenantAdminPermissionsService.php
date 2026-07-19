@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Tenant;
 use App\Support\TenantAppAutoloader;
+use App\Support\TenantPermissionCatalog;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
@@ -54,23 +55,16 @@ class GrantTenantAdminPermissionsService
             'pos_permissions_available' => $pos['available'],
             'pos_permissions_newly_granted' => $pos['newly_granted'],
             'pos_permissions_total' => $pos['total_attached'],
-            // backward-compatible keys (total attached, not only newly inserted)
             'ems_permissions_granted' => $ems['total_attached'],
             'pos_permissions_granted' => $pos['total_attached'],
         ];
     }
 
-    /**
-     * Grant every EMS permission (full dashboard access).
-     */
     public function grantEmsAllPermissions(int $employeeId): int
     {
         return $this->grantPermissionsOfType($employeeId, 'ems')['total_attached'];
     }
 
-    /**
-     * Grant every POS permission (including select_all / owner / manager).
-     */
     public function grantPosAllPermissions(int $employeeId): int
     {
         return $this->grantPermissionsOfType($employeeId, 'pos')['total_attached'];
@@ -116,33 +110,19 @@ class GrantTenantAdminPermissionsService
     }
 
     /**
-     * Always upsert the full permission catalog from tenant app data files.
-     *
-     * @return array{synced: int, ems: int, pos: int}
+     * @return array{synced: int, ems: int, pos: int, sources: list<string>, tried: list<string>}
      */
     private function ensurePermissionsCatalog(): array
     {
-        $tenantAppPath = rtrim((string) config('tenant-app.path'), '/\\');
-        $permissions = [];
-
-        foreach (config('tenant-app.permission_data_paths', []) as $relativePath) {
-            $file = $tenantAppPath.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $relativePath);
-
-            if (! is_file($file)) {
-                continue;
-            }
-
-            $loaded = include $file;
-            if (is_array($loaded)) {
-                $permissions = array_merge($permissions, $loaded);
-            }
-        }
+        $loaded = TenantPermissionCatalog::load();
+        $permissions = $loaded['permissions'];
 
         if ($permissions === []) {
-            // Fall back to whatever already exists in the tenant DB.
             if (! DB::table('permissions')->exists()) {
                 throw new RuntimeException(
-                    'No tenant permission files found and permissions table is empty. Check TENANT_APP_PATH.'
+                    'No tenant permission files found and permissions table is empty. '.
+                    'Deploy database/tenant-permissions/* or fix TENANT_APP_PATH. Tried: '.
+                    implode(' | ', $loaded['tried'])
                 );
             }
 
@@ -150,6 +130,8 @@ class GrantTenantAdminPermissionsService
                 'synced' => 0,
                 'ems' => (int) DB::table('permissions')->where('type', 'ems')->count(),
                 'pos' => (int) DB::table('permissions')->where('type', 'pos')->count(),
+                'sources' => $loaded['sources'],
+                'tried' => $loaded['tried'],
             ];
         }
 
@@ -177,6 +159,8 @@ class GrantTenantAdminPermissionsService
             'synced' => $synced,
             'ems' => (int) DB::table('permissions')->where('type', 'ems')->count(),
             'pos' => (int) DB::table('permissions')->where('type', 'pos')->count(),
+            'sources' => $loaded['sources'],
+            'tried' => $loaded['tried'],
         ];
     }
 
@@ -187,10 +171,9 @@ class GrantTenantAdminPermissionsService
                 app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
             }
         } catch (\Throwable) {
-            // ignore — tenant may not boot full Spatie container
+            // ignore
         }
 
-        // Best-effort: drop common Spatie cache keys if cache table exists.
         try {
             if (DB::getSchemaBuilder()->hasTable('cache')) {
                 DB::table('cache')->where('key', 'like', '%spatie.permission.cache%')->delete();

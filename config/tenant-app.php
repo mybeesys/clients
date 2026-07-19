@@ -11,7 +11,7 @@ return [
     | the sibling tenant Laravel application (mybeeCompany).
     |
     */
-    'path' => env('TENANT_APP_PATH', base_path('../mybeeCompany')),
+    'path' => env('TENANT_APP_PATH', base_path('../my-bee-company')),
 
     'migration_paths' => [
         'Modules/Employee/database/migrations/tenant',
@@ -28,6 +28,15 @@ return [
     'permission_data_paths' => [
         'Modules/Employee/data/pos-permissions.php',
         'Modules/Employee/data/dashboard-permissions.php',
+    ],
+
+    /*
+    | Bundled permission catalogs inside this (central) app.
+    | Used when TENANT_APP_PATH is missing/wrong on the server.
+    */
+    'bundled_permission_data_paths' => [
+        'database/tenant-permissions/pos-permissions.php',
+        'database/tenant-permissions/dashboard-permissions.php',
     ],
 
     /*

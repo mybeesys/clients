@@ -120,23 +120,13 @@ class SeedTenantDatabase implements ShouldQueue
     private function insertPermissions()
     {
         try {
-            $tenantAppPath = rtrim(config('tenant-app.path'), '/\\');
-            $permissions = [];
-
-            foreach (config('tenant-app.permission_data_paths', []) as $relativePath) {
-                $file = $tenantAppPath.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $relativePath);
-
-                if (! is_file($file)) {
-                    \Log::warning("Tenant permission file missing: {$file}");
-
-                    continue;
-                }
-
-                $permissions = array_merge($permissions, include $file);
-            }
+            $loaded = \App\Support\TenantPermissionCatalog::load();
+            $permissions = $loaded['permissions'];
 
             if ($permissions === []) {
-                \Log::warning('No tenant permission files loaded. Check TENANT_APP_PATH on the server.');
+                \Log::warning('No tenant permission files loaded.', [
+                    'tried' => $loaded['tried'],
+                ]);
 
                 return;
             }
