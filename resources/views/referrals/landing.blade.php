@@ -196,28 +196,30 @@
             display: grid;
             place-items: center;
             position: relative;
-            clip-path: var(--hex);
-            background: #000;
-            box-shadow: 0 22px 50px rgba(235, 184, 30, 0.35);
+            background: transparent;
+            filter:
+                drop-shadow(0 10px 22px rgba(235, 184, 30, 0.38))
+                drop-shadow(0 2px 8px rgba(184, 137, 18, 0.22));
             animation: markIn 1.1s cubic-bezier(0.34, 1.15, 0.48, 1) both;
         }
 
-        .hero-logo-frame::before {
-            content: '';
+        .hero-logo-hex-ring {
             position: absolute;
-            inset: 3px;
-            clip-path: var(--hex);
-            background: #000;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
         }
 
         .hero-logo {
             position: relative;
             z-index: 1;
-            width: 78%;
+            width: 72%;
             height: auto;
-            max-height: 78%;
+            max-height: 72%;
             object-fit: contain;
-            filter: drop-shadow(0 8px 16px rgba(235, 184, 30, 0.25));
+            filter: drop-shadow(0 6px 14px rgba(26, 26, 26, 0.08));
         }
 
         .eyebrow {
@@ -283,6 +285,12 @@
             align-items: center;
             gap: 0.75rem;
             margin-bottom: 1rem;
+        }
+
+        .referrer-label {
+            font-weight: 700;
+            color: var(--ink);
+            font-size: 1rem;
         }
 
         .avatar {
@@ -545,6 +553,14 @@
                     <div>
                         <div class="hero-logo-wrap">
                             <div class="hero-logo-frame">
+                                <svg class="hero-logo-hex-ring" viewBox="0 0 120 104" fill="none" aria-hidden="true">
+                                    <path
+                                        d="M30 2 L90 2 L118 52 L90 102 L30 102 L2 52 Z"
+                                        stroke="var(--accent)"
+                                        stroke-width="3.2"
+                                        stroke-linejoin="round"
+                                    />
+                                </svg>
                                 <img
                                     class="hero-logo"
                                     src="{{ asset('images/brand/mybee-lockup.png') }}"
@@ -552,7 +568,7 @@
                                 >
                             </div>
                         </div>
-                        <span class="eyebrow">{{ __('referrals.invited_by', ['name' => $referralCode->employee_name ?: __('referrals.default_referrer_name')]) }}</span>
+                        <span class="eyebrow">{{ __('referrals.personal_invite') }}</span>
                         <h1>{{ __('referrals.hero_title') }}</h1>
                         <p class="lead">{{ __('referrals.hero_subtitle') }}</p>
                         <div class="hero-actions">
@@ -562,11 +578,7 @@
                     </div>
                     <div class="hero-card">
                         <div class="referrer">
-                            <div class="avatar">{{ mb_substr($referralCode->employee_name ?: 'M', 0, 1) }}</div>
-                            <div>
-                                <div style="font-weight:700;">{{ $referralCode->employee_name ?: __('referrals.default_referrer_name') }}</div>
-                                <div style="color:var(--muted); font-size:.9rem;">{{ __('referrals.personal_invite') }}</div>
-                            </div>
+                            <div class="referrer-label">{{ __('referrals.personal_invite') }}</div>
                         </div>
                         <p style="white-space:pre-line; color:var(--muted); line-height:1.8; margin:0 0 1rem;">{{ $promotionalText }}</p>
                         <a class="btn btn-primary" style="width:100%;" href="{{ $registerUrl }}">{{ __('referrals.cta_register') }}</a>
