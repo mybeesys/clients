@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Company;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 class CompanyMembershipService
 {
@@ -24,6 +25,10 @@ class CompanyMembershipService
 
         if ($isPrimary) {
             $this->clearOtherPrimaryFlags($user, $company->id);
+        }
+
+        if ($role === self::ROLES['owner']) {
+            $this->makeSoleOwner($company, $user);
         }
     }
 
@@ -51,6 +56,10 @@ class CompanyMembershipService
             $this->clearOtherPrimaryFlags($user, $company->id);
         }
 
+        if ($role === self::ROLES['owner']) {
+            $this->makeSoleOwner($company, $user);
+        }
+
         app(ProvisionTenantMemberEmployeeService::class)->provision($user, $company, $role);
     }
 
@@ -59,9 +68,28 @@ class CompanyMembershipService
         $company->members()->detach($user->id);
     }
 
+    /**
+     * Ensure a company has exactly one owner membership and companies.user_id matches.
+     */
+    protected function makeSoleOwner(Company $company, User $owner): void
+    {
+        DB::table('company_user')
+            ->where('company_id', $company->id)
+            ->where('user_id', '!=', $owner->id)
+            ->where('role', self::ROLES['owner'])
+            ->update(['role' => self::ROLES['admin']]);
+
+        if ((int) $company->user_id !== (int) $owner->id) {
+            $company->forceFill(['user_id' => $owner->id])->saveQuietly();
+        }
+    }
+
+    /**
+     * Each user may have only one primary (default) company across memberships.
+     */
     protected function clearOtherPrimaryFlags(User $user, int $primaryCompanyId): void
     {
-        \Illuminate\Support\Facades\DB::table('company_user')
+        DB::table('company_user')
             ->where('user_id', $user->id)
             ->where('company_id', '!=', $primaryCompanyId)
             ->update(['is_primary' => false]);

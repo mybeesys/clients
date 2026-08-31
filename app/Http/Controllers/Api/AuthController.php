@@ -28,7 +28,8 @@ class AuthController extends Controller
         return response()->json([
             'token' => $accessToken->plainTextToken,
             'user_id' => $user->id,
-            'tenant_id' => $user->tenant?->id,
+            // Resolve via default/membership company → tenant (not tenants.user_id).
+            'tenant_id' => $user->defaultTenant()?->id,
         ]);
     }
 
