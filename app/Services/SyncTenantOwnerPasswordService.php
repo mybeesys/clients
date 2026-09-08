@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\User;
+use App\Support\TenantContext;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -41,7 +42,7 @@ class SyncTenantOwnerPasswordService
                 continue;
             }
 
-            $updated = $tenant->run(function () use ($lookupEmail, $updates) {
+            $updated = TenantContext::run($tenant, function () use ($lookupEmail, $updates) {
                 return DB::table('emp_employees')
                     ->where('email', $lookupEmail)
                     ->update($updates);

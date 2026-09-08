@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Company;
 use App\Models\User;
+use App\Support\TenantContext;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -17,7 +18,7 @@ class ProvisionTenantMemberEmployeeService
             return;
         }
 
-        $tenant->run(function () use ($user, $role, $tenant) {
+        TenantContext::run($tenant, function () use ($user, $role, $tenant) {
             $defaultEstId = DB::table('est_establishments')->whereNotNull('parent_id')->first()?->id;
             $emailLocalPart = Str::before($user->email, '@');
 

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Tenant;
 use App\Support\TenantAppAutoloader;
+use App\Support\TenantContext;
 use App\Support\TenantPermissionCatalog;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
@@ -16,7 +17,7 @@ class GrantTenantAdminPermissionsService
     {
         TenantAppAutoloader::register();
 
-        return $tenant->run(function () use ($employeeEmail) {
+        return TenantContext::run($tenant, function () use ($employeeEmail) {
             $catalog = $this->ensurePermissionsCatalog();
 
             return array_merge(

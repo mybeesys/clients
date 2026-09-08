@@ -5,6 +5,7 @@ namespace App\Filament\Resources\CompanyResource\Pages;
 use App\Filament\Resources\CompanyResource;
 use App\Models\User;
 use App\Services\CompanyMembershipService;
+use App\Support\TenantContext;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
@@ -118,6 +119,9 @@ class ManageCompanyMembers extends ManageRelatedRecords
                 ->send();
 
             return;
+        } finally {
+            // Keep the central Filament request off a purged `tenant` connection.
+            TenantContext::ensureCentral();
         }
 
         $this->attachMemberForm->fill([
@@ -264,12 +268,16 @@ class ManageCompanyMembers extends ManageRelatedRecords
                     ->modalHeading(__('main.edit_company_member'))
                     ->modalSubmitActionLabel(__('general.save'))
                     ->using(function (User $record, array $data): void {
-                        app(CompanyMembershipService::class)->updateMembership(
-                            $this->getOwnerRecord(),
-                            $record,
-                            $data['role'],
-                            (bool) ($data['is_primary'] ?? false),
-                        );
+                        try {
+                            app(CompanyMembershipService::class)->updateMembership(
+                                $this->getOwnerRecord(),
+                                $record,
+                                $data['role'],
+                                (bool) ($data['is_primary'] ?? false),
+                            );
+                        } finally {
+                            TenantContext::ensureCentral();
+                        }
                     }),
                 Tables\Actions\DetachAction::make()
                     ->label(__('main.detach_company_member'))
