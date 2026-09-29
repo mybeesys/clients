@@ -58,6 +58,11 @@ class Company extends Model
         return $this->hasOne(Tenant::class);
     }
 
+    public function entitlement()
+    {
+        return $this->hasOne(CompanyEntitlement::class);
+    }
+
     protected static function booted(): void
     {
         static::saved(function (Company $company): void {

@@ -7,6 +7,7 @@ use App\Models\Country;
 use App\Models\Subscription;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\Entitlements\EntitlementProvisioner;
 use App\Services\ReferralService;
 use App\Support\TenantKeyGenerator;
 use Illuminate\Support\Facades\Hash;
@@ -22,10 +23,14 @@ class RegistrationService
         Validator::make($data, [
             'userName' => ['required', 'string', 'min:2', 'max:255', Rule::unique('users', 'name')],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')],
+            'phone_number' => ['required', 'string', 'regex:/^\+9665[0-9]{8}$/'],
             'password' => ['required', 'string', 'max:255', 'confirmed'],
-        ], [], [
+        ], [
+            'phone_number.regex' => __('main.wizard.saudi_phone_invalid'),
+        ], [
             'userName' => __('fields.name'),
             'email' => __('fields.email'),
+            'phone_number' => __('fields.phone_number'),
             'password' => __('fields.password'),
         ])->validate();
 
@@ -48,7 +53,7 @@ class RegistrationService
                 referralCodeValue: $data['referral_code'] ?? session('referral_code'),
                 company: $company,
                 subscriber: $user,
-                planId: isset($data['subscription']['plan_id']) ? (int) $data['subscription']['plan_id'] : null,
+                planId: $company->fresh()?->subscription?->plan_id,
                 request: request(),
             );
 
@@ -85,17 +90,25 @@ class RegistrationService
             'state' => $company['state'] ?? '-',
             'zipcode' => $company['zipcode'] ?? '00000',
             'national_address' => $company['national_address'] ?? null,
-            'phone' => $company['phone'] ?? null,
+            'phone' => $company['phone'] ?? ($data['phone_number'] ?? null),
             'website' => $company['website'] ?? null,
             'ceo_name' => $company['ceo_name'] ?? null,
             'tax_name' => $company['tax_name'] ?? null,
             'logo' => $company['logo'] ?? null,
-            'owner_phone_number' => null,
+            'owner_phone_number' => $data['phone_number'] ?? null,
         ];
     }
 
     protected function createSubscription(Company $company, array $data): void
     {
+        $planConfig = $data['plan_config'] ?? null;
+
+        if (is_array($planConfig) && ! empty($planConfig['modules'])) {
+            app(EntitlementProvisioner::class)->provision($company, $planConfig);
+
+            return;
+        }
+
         $subscription = $data['subscription'] ?? null;
 
         if (empty($subscription['plan_id'])) {

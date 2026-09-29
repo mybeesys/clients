@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Forms\RegistrationWizard;
+use App\Services\Entitlements\CouponApplicator;
 use App\Services\RegistrationService;
 use App\Support\TenantApplicationUrl;
 use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
@@ -12,9 +13,12 @@ use Filament\Forms\Form;
 use Filament\Http\Responses\Auth\Contracts\RegistrationResponse;
 use Filament\Notifications\Notification;
 use Filament\Pages\Auth\Register;
+use Illuminate\Contracts\Support\Htmlable;
 
 class Registration extends Register
 {
+    protected static string $view = 'filament.pages.auth.register';
+
     protected ?string $maxWidth = '7xl';
 
     public function mount(): void
@@ -31,6 +35,31 @@ class Registration extends Register
     public function form(Form $form): Form
     {
         return RegistrationWizard::configure($form);
+    }
+
+    public function hasLogo(): bool
+    {
+        return false;
+    }
+
+    public function getHeading(): string|Htmlable
+    {
+        return '';
+    }
+
+    public function getSubheading(): string|Htmlable|null
+    {
+        return null;
+    }
+
+    /**
+     * Live coupon preview for the plan configurator invoice.
+     *
+     * @return array{ok: bool, message?: string, code?: string, type?: string, value?: float, discount?: float, label?: string}
+     */
+    public function previewPlanCoupon(?string $code = null, float $amount = 0): array
+    {
+        return app(CouponApplicator::class)->preview($code, max(0, $amount));
     }
 
     public function register(): ?RegistrationResponse

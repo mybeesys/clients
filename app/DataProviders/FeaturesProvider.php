@@ -2,12 +2,101 @@
 
 return [
     [
+        'name' => 'platform',
+        'name_en' => 'Core platform',
+        'name_ar' => 'المنصة الأساسية',
+        'description' => 'Products, employees, branches, settings, ledger engine',
+        'description_ar' => 'المنتجات والموظفين والفروع والإعدادات ومحرك القيود',
+        'consumable' => false,
+    ],
+    [
+        'name' => 'cashier_pos',
+        'name_en' => 'Cashier & POS',
+        'name_ar' => 'الكاشير ونقاط البيع',
+        'description' => '',
+        'description_ar' => '',
+        'consumable' => false,
+    ],
+    [
+        'name' => 'electronic_menu',
+        'name_en' => 'Electronic menu',
+        'name_ar' => 'المنيو الإلكتروني',
+        'description' => '',
+        'description_ar' => '',
+        'consumable' => false,
+    ],
+    [
+        'name' => 'digital_screens',
+        'name_en' => 'Digital screens',
+        'name_ar' => 'الشاشات الرقمية',
+        'description' => '',
+        'description_ar' => '',
+        'consumable' => false,
+    ],
+    [
+        'name' => 'inventory',
+        'name_en' => 'Inventory & manufacturing',
+        'name_ar' => 'المخزون والتصنيع',
+        'description' => '',
+        'description_ar' => '',
+        'consumable' => false,
+    ],
+    [
+        'name' => 'sales',
+        'name_en' => 'Sales',
+        'name_ar' => 'المبيعات',
+        'description' => '',
+        'description_ar' => '',
+        'consumable' => false,
+    ],
+    [
+        'name' => 'purchases',
+        'name_en' => 'Purchases',
+        'name_ar' => 'المشتريات',
+        'description' => '',
+        'description_ar' => '',
+        'consumable' => false,
+    ],
+    [
+        'name' => 'accounting',
+        'name_en' => 'Accounting',
+        'name_ar' => 'المحاسبة',
+        'description' => '',
+        'description_ar' => '',
+        'consumable' => false,
+    ],
+    [
+        'name' => 'expenses',
+        'name_en' => 'Expenses',
+        'name_ar' => 'المصروفات',
+        'description' => '',
+        'description_ar' => '',
+        'consumable' => false,
+    ],
+    [
+        'name' => 'franchise',
+        'name_en' => 'Franchise',
+        'name_ar' => 'الامتياز التجاري',
+        'description' => '',
+        'description_ar' => '',
+        'consumable' => false,
+    ],
+    [
+        'name' => 'reports',
+        'name_en' => 'Advanced reports',
+        'name_ar' => 'التقارير المتقدمة',
+        'description' => '',
+        'description_ar' => '',
+        'consumable' => false,
+    ],
+    // Legacy module flags (kept for existing plans)
+    [
         'name' => 'employee_module',
         'name_en' => 'Employees management module',
         'name_ar' => 'وحدة إدارة الموظفين',
         'description' => '',
         'description_ar' => '',
-        'consumable' => false
+        'consumable' => false,
     ],
     [
         'name' => 'establishment_module',
@@ -15,7 +104,7 @@ return [
         'name_ar' => 'وحدة إدارة الأفرع',
         'description' => '',
         'description_ar' => '',
-        'consumable' => false
+        'consumable' => false,
     ],
     [
         'name' => 'product_module',
@@ -23,7 +112,7 @@ return [
         'name_ar' => 'وحدة إدارة المنتجات',
         'description' => '',
         'description_ar' => '',
-        'consumable' => false
+        'consumable' => false,
     ],
     [
         'name' => 'accounting_module',
@@ -31,15 +120,7 @@ return [
         'name_ar' => 'وحدة المحاسبة',
         'description' => '',
         'description_ar' => '',
-        'consumable' => false
-    ],
-    [
-        'name' => 'accounting_module',
-        'name_en' => 'Accounting management module',
-        'name_ar' => 'وحدة المحاسبة',
-        'description' => '',
-        'description_ar' => '',
-        'consumable' => false
+        'consumable' => false,
     ],
     [
         'name' => 'establishment',
@@ -48,7 +129,7 @@ return [
         'description' => '',
         'description_ar' => '',
         'consumable' => true,
-        'quota' => true
+        'quota' => true,
     ],
     [
         'name' => 'employees',
@@ -57,6 +138,6 @@ return [
         'description' => '',
         'description_ar' => '',
         'consumable' => true,
-        'quota' => true
+        'quota' => true,
     ],
 ];

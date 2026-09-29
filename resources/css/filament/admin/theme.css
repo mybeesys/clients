@@ -2,6 +2,207 @@
 
 @config 'tailwind.config.js';
 
+:root {
+    --mybee-accent: #ebb81e;
+    --mybee-accent-soft: #f7e7a8;
+    --mybee-accent-deep: #b88912;
+    --mybee-ink: #1a1a1a;
+    --mybee-muted: #6b7280;
+    --mybee-page: #faf8f2;
+    --mybee-line: rgba(26, 26, 26, 0.08);
+    --mybee-shadow: 0 18px 48px rgba(26, 26, 26, 0.08);
+}
+
+.fi-body,
+.fi-simple-layout {
+    font-family: "Cairo", ui-sans-serif, system-ui, sans-serif !important;
+}
+
+/* Guest / auth canvas — match invite landing */
+.fi-simple-layout {
+    position: relative;
+    background: var(--mybee-page) !important;
+    overflow-x: hidden;
+}
+
+.fi-simple-layout .mybee-auth-honeycomb {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.5;
+    background-color: var(--mybee-page);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='84' viewBox='0 0 96 84'%3E%3Cpath fill='none' stroke='%23ebb81e' stroke-opacity='0.16' stroke-width='1.25' d='M24 2 L72 2 L96 42 L72 82 L24 82 L0 42 Z'/%3E%3Cpath fill='none' stroke='%23ebb81e' stroke-opacity='0.1' stroke-width='1' d='M72 2 L96 42 L72 82 M24 2 L0 42 L24 82'/%3E%3C/svg%3E");
+    background-size: 96px 84px;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 20%, #000 20%, transparent 75%);
+}
+
+.fi-simple-layout .mybee-auth-glow {
+    position: fixed;
+    top: -12%;
+    left: 50%;
+    width: min(920px, 120vw);
+    height: 520px;
+    transform: translateX(-50%);
+    z-index: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse at center, rgba(235, 184, 30, 0.28), transparent 68%);
+}
+
+.fi-simple-main-ctn,
+.fi-simple-main,
+.fi-simple-page {
+    position: relative;
+    z-index: 1;
+}
+
+.fi-simple-main {
+    background:
+        linear-gradient(155deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 250, 235, 0.92) 48%, rgba(255, 255, 255, 0.96) 100%) !important;
+    border: 1px solid rgba(235, 184, 30, 0.22) !important;
+    box-shadow: var(--mybee-shadow) !important;
+    border-radius: 28px !important;
+    --tw-ring-shadow: 0 0 #0000 !important;
+}
+
+.fi-simple-header {
+    gap: 0.35rem;
+}
+
+.fi-simple-header .fi-logo {
+    filter: drop-shadow(0 8px 18px rgba(235, 184, 30, 0.35));
+}
+
+.fi-simple-header-heading {
+    color: var(--mybee-ink) !important;
+    font-weight: 800 !important;
+}
+
+.fi-simple-header-subheading {
+    color: var(--mybee-muted) !important;
+    max-width: 36rem;
+    margin-inline: auto;
+    line-height: 1.65 !important;
+}
+
+.fi-simple-page .fi-btn-primary,
+.fi-simple-main .fi-btn-primary {
+    background: var(--mybee-accent) !important;
+    color: #111 !important;
+    box-shadow: 0 10px 28px rgba(235, 184, 30, 0.38) !important;
+}
+
+.fi-simple-page .fi-btn-primary:hover,
+.fi-simple-main .fi-btn-primary:hover {
+    background: #f0c53a !important;
+    box-shadow: 0 14px 34px rgba(235, 184, 30, 0.48) !important;
+}
+
+.fi-fo-wizard-header-step-icon-ctn.fi-active,
+.fi-fo-wizard-header-step-icon-ctn.fi-completed {
+    background-color: var(--mybee-accent) !important;
+    color: #111 !important;
+}
+
+.fi-simple-page:has(.mybee-auth-topbar) > section > .fi-simple-header {
+    display: none !important;
+}
+
+.mybee-auth-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin: 0 0 1.25rem;
+    padding: 0.15rem 0 1rem;
+    border-bottom: 1px solid rgba(235, 184, 30, 0.22);
+}
+
+.mybee-auth-topbar__start {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    min-width: 0;
+}
+
+.mybee-auth-topbar__logo {
+    height: clamp(64px, 9vw, 88px);
+    width: auto;
+    max-width: min(220px, 42vw);
+    object-fit: contain;
+    border-radius: 14px;
+    filter: drop-shadow(0 8px 18px rgba(235, 184, 30, 0.35));
+    flex-shrink: 0;
+}
+
+.mybee-auth-topbar__titles {
+    min-width: 0;
+}
+
+.mybee-auth-topbar__heading {
+    margin: 0;
+    font-size: clamp(1.05rem, 2.2vw, 1.45rem);
+    font-weight: 800;
+    line-height: 1.25;
+    color: var(--mybee-ink);
+    letter-spacing: -0.02em;
+}
+
+.mybee-auth-topbar__switch {
+    margin: 0.2rem 0 0;
+    font-size: 0.8rem;
+    color: var(--mybee-muted);
+    line-height: 1.4;
+}
+
+.mybee-auth-topbar__switch a,
+.mybee-auth-topbar__switch .fi-link {
+    color: var(--mybee-accent-deep) !important;
+    font-weight: 700;
+}
+
+.mybee-auth-topbar__brand {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    text-align: end;
+    gap: 0.15rem;
+    flex-shrink: 0;
+}
+
+.mybee-auth-topbar__brand-name {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--mybee-accent-deep);
+    letter-spacing: 0.01em;
+    line-height: 1.1;
+}
+
+.mybee-auth-topbar__brand-tagline {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--mybee-muted);
+    max-width: 11.5rem;
+    line-height: 1.45;
+}
+
+@media (max-width: 640px) {
+    .mybee-auth-topbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+
+    .mybee-auth-topbar__brand {
+        align-items: flex-start;
+        text-align: start;
+        padding-inline-start: calc(clamp(64px, 9vw, 88px) + 0.9rem);
+    }
+
+    .mybee-auth-topbar__brand-tagline {
+        max-width: none;
+    }
+}
 
 .fi-sidebar-nav-groups {
     @apply gap-y-4;

@@ -19,9 +19,9 @@ class RegistrationWizard
         return $form
             ->schema([
                 Wizard::make([
-                    static::accountStep(),
+                    PlanConfiguratorWizardStep::make(required: true),
                     static::companyStep(),
-                    SubscriptionWizardStep::make(planRequired: false),
+                    static::accountStep(),
                 ])
                     ->columnSpanFull()
                     ->skippable(false)
@@ -68,6 +68,35 @@ class RegistrationWizard
                             ->required()
                             ->maxLength(255)
                             ->unique(User::class, 'email'),
+                        TextInput::make('phone_number')
+                            ->label(__('fields.phone_number'))
+                            ->tel()
+                            ->required()
+                            ->prefix('+966')
+                            ->placeholder('5XXXXXXXX')
+                            ->maxLength(20)
+                            ->rule('regex:/^(?:\+?966|0)?5[0-9]{8}$/')
+                            ->validationMessages([
+                                'regex' => __('main.wizard.saudi_phone_invalid'),
+                            ])
+                            ->dehydrateStateUsing(function (?string $state): ?string {
+                                if (! filled($state)) {
+                                    return null;
+                                }
+
+                                $digits = preg_replace('/\D+/', '', $state) ?? '';
+
+                                if (str_starts_with($digits, '966')) {
+                                    $digits = substr($digits, 3);
+                                }
+
+                                if (str_starts_with($digits, '0')) {
+                                    $digits = substr($digits, 1);
+                                }
+
+                                return '+966'.$digits;
+                            })
+                            ->columnSpanFull(),
                         TextInput::make('password')
                             ->label(__('fields.password'))
                             ->password()
@@ -96,8 +125,7 @@ class RegistrationWizard
         return Wizard\Step::make('company')
             ->label(__('main.wizard.company_information'))
             ->icon('heroicon-o-building-office-2')
-            ->description(__('main.wizard.company_information_hint_register'))
             ->columns(2)
-            ->schema(CompanyAction::getCompanyWizardSchema('company'));
+            ->schema(CompanyAction::getRegistrationCompanyWizardSchema('company'));
     }
 }

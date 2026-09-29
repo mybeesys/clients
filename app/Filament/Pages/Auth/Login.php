@@ -7,18 +7,35 @@ use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
 use Filament\Facades\Filament;
 use Filament\Http\Responses\Auth\Contracts\LoginResponse;
 use Filament\Models\Contracts\FilamentUser;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
 
 class Login extends \Filament\Pages\Auth\Login
 {
-    //auth function for the company subdomain.
+    protected static string $view = 'filament.pages.auth.login';
+
+    public function hasLogo(): bool
+    {
+        return false;
+    }
+
+    public function getHeading(): string|Htmlable
+    {
+        return '';
+    }
+
+    public function getSubheading(): string|Htmlable|null
+    {
+        return null;
+    }
+
     public function authenticate(): ?LoginResponse
     {
         try {
             $this->rateLimit(5);
         } catch (TooManyRequestsException $exception) {
             $this->getRateLimitedNotification($exception)?->send();
+
             return null;
         }
 
@@ -56,18 +73,4 @@ class Login extends \Filament\Pages\Auth\Login
 
         return app(LoginResponse::class);
     }
-
-    // protected function throwFailureSubscriptionException(): never
-    // {
-    //     throw ValidationException::withMessages([
-    //         'data.email' => __('No active subscription found.'),
-    //     ]);
-    // }
-
-    // protected function throwFailureAdminException(): never
-    // {
-    //     throw ValidationException::withMessages([
-    //         'data.email' => __('This account is not an admin.'),
-    //     ]);
-    // }
 }
