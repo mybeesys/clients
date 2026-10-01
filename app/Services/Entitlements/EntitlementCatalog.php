@@ -190,17 +190,7 @@ class EntitlementCatalog
                     : ($platform['description_en'] ?? $platform['description_ar'] ?? null),
                 'price_month' => (float) ($platform['price_month'] ?? 0),
             ],
-            'recommendations' => collect(config('entitlements.recommendations', []))->map(function (array $rec) use ($localeIsAr) {
-                return [
-                    'key' => $rec['key'],
-                    'name' => $localeIsAr ? ($rec['name_ar'] ?? $rec['name_en']) : ($rec['name_en'] ?? $rec['name_ar']),
-                    'description' => $localeIsAr
-                        ? ($rec['description_ar'] ?? $rec['description_en'] ?? null)
-                        : ($rec['description_en'] ?? $rec['description_ar'] ?? null),
-                    'modules' => array_values($rec['modules'] ?? []),
-                    'quotas' => $rec['quotas'] ?? [],
-                ];
-            })->values()->all(),
+            'recommendations' => $this->recommendationsForFrontend($localeIsAr),
             'quotas' => collect($this->quotas())->map(function (array $quota) use ($localeIsAr) {
                 return [
                     'key' => $quota['key'],
@@ -231,10 +221,62 @@ class EntitlementCatalog
                     'price_month' => (float) ($module['price_month'] ?? 0),
                     'requires' => array_values($module['requires'] ?? []),
                     'requires_any' => $this->moduleRequiresAny($key),
+                    'grants' => array_values($module['grants'] ?? $module['meta']['grants'] ?? []),
+                    'includes' => $this->moduleIncludes($module, $localeIsAr),
                     'icon' => $module['icon'] ?? null,
                 ];
             })->values()->all(),
         ];
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    protected function recommendationsForFrontend(bool $localeIsAr): array
+    {
+        $raw = $this->setting('recommendations', config('entitlements.recommendations', []));
+        if (! is_array($raw) || $raw === []) {
+            $raw = config('entitlements.recommendations', []);
+        }
+
+        return collect($raw)
+            ->filter(fn ($rec) => is_array($rec) && ($rec['active'] ?? true))
+            ->sortBy(fn ($rec) => (int) ($rec['sort_order'] ?? 100))
+            ->map(function (array $rec) use ($localeIsAr) {
+                return [
+                    'key' => $rec['key'],
+                    'name' => $localeIsAr ? ($rec['name_ar'] ?? $rec['name_en']) : ($rec['name_en'] ?? $rec['name_ar']),
+                    'description' => $localeIsAr
+                        ? ($rec['description_ar'] ?? $rec['description_en'] ?? null)
+                        : ($rec['description_en'] ?? $rec['description_ar'] ?? null),
+                    'modules' => array_values($rec['modules'] ?? []),
+                    'quotas' => $rec['quotas'] ?? [],
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @param  array<string, mixed>  $module
+     * @return list<string>
+     */
+    protected function moduleIncludes(array $module, bool $localeIsAr): array
+    {
+        $includes = $module['includes'] ?? $module['meta']['includes'] ?? [];
+        if (! is_array($includes) || $includes === []) {
+            return [];
+        }
+
+        if (isset($includes['ar']) || isset($includes['en'])) {
+            $list = $localeIsAr
+                ? ($includes['ar'] ?? $includes['en'] ?? [])
+                : ($includes['en'] ?? $includes['ar'] ?? []);
+
+            return array_values(array_filter(array_map('strval', is_array($list) ? $list : [])));
+        }
+
+        return array_values(array_filter(array_map('strval', $includes)));
     }
 
     /**

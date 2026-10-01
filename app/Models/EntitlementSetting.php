@@ -24,14 +24,34 @@ class EntitlementSetting extends Model
             return static::query()->pluck('value', 'key')->all();
         });
 
-        return $all[$key] ?? $default;
+        if (! array_key_exists($key, $all)) {
+            return $default;
+        }
+
+        $value = $all[$key];
+
+        if (! is_string($value)) {
+            return $value;
+        }
+
+        $trimmed = trim($value);
+        if ($trimmed !== '' && ($trimmed[0] === '{' || $trimmed[0] === '[')) {
+            $decoded = json_decode($trimmed, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                return $decoded;
+            }
+        }
+
+        return $value;
     }
 
     public static function setValue(string $key, mixed $value): void
     {
         static::query()->updateOrCreate(
             ['key' => $key],
-            ['value' => is_scalar($value) || $value === null ? $value : json_encode($value)]
+            ['value' => is_scalar($value) || $value === null ? $value : json_encode($value, JSON_UNESCAPED_UNICODE)]
         );
+
+        Cache::forget('entitlement_catalog_settings');
     }
 }

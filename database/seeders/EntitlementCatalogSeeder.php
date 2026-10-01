@@ -12,6 +12,7 @@ class EntitlementCatalogSeeder extends Seeder
     {
         EntitlementSetting::setValue('currency', config('entitlements.currency', 'SAR'));
         EntitlementSetting::setValue('yearly_months_charged', (string) config('entitlements.yearly_months_charged', 12));
+        EntitlementSetting::setValue('recommendations', config('entitlements.recommendations', []));
 
         $platform = config('entitlements.platform', []);
         EntitlementProduct::query()->updateOrCreate(
@@ -26,6 +27,7 @@ class EntitlementCatalogSeeder extends Seeder
                 'price_month' => $platform['price_month'] ?? 199,
                 'sort_order' => 0,
                 'active' => true,
+                'meta' => [],
             ]
         );
 
@@ -49,10 +51,20 @@ class EntitlementCatalogSeeder extends Seeder
                         'menu_keys' => $module['menu_keys'] ?? [],
                         'api_prefixes' => $module['api_prefixes'] ?? [],
                         'requires_any' => $module['requires_any'] ?? [],
+                        'grants' => $module['grants'] ?? [],
+                        'includes' => $module['includes'] ?? [],
                     ],
                 ]
             );
             $sort += 10;
+        }
+
+        // Keep legacy keys for old subscriptions but hide them from the builder.
+        foreach (config('entitlements.legacy_modules', []) as $legacyKey) {
+            EntitlementProduct::query()
+                ->where('key', $legacyKey)
+                ->where('type', EntitlementProduct::TYPE_MODULE)
+                ->update(['active' => false]);
         }
 
         foreach (config('entitlements.quotas', []) as $key => $quota) {
@@ -63,6 +75,8 @@ class EntitlementCatalogSeeder extends Seeder
                     'group' => null,
                     'name_en' => $quota['name_en'],
                     'name_ar' => $quota['name_ar'],
+                    'description_en' => $quota['description_en'] ?? null,
+                    'description_ar' => $quota['description_ar'] ?? null,
                     'price_month' => 0,
                     'price_per_extra_month' => $quota['price_per_extra_month'] ?? 0,
                     'included' => $quota['included'] ?? 0,
@@ -71,30 +85,10 @@ class EntitlementCatalogSeeder extends Seeder
                     'linked_module' => $quota['linked_module'] ?? null,
                     'sort_order' => $sort,
                     'active' => true,
+                    'meta' => [],
                 ]
             );
             $sort += 10;
         }
-
-        // Screen devices quota (linked to digital_screens)
-        EntitlementProduct::query()->updateOrCreate(
-            ['key' => 'screen_devices'],
-            [
-                'type' => EntitlementProduct::TYPE_QUOTA,
-                'group' => null,
-                'name_en' => 'Screen devices',
-                'name_ar' => 'أجهزة الشاشات',
-                'description_en' => 'Number of digital screen devices allowed.',
-                'description_ar' => 'عدد أجهزة الشاشات الرقمية المسموح بها.',
-                'price_month' => 0,
-                'price_per_extra_month' => 49,
-                'included' => 1,
-                'min' => 1,
-                'max' => 200,
-                'linked_module' => 'digital_screens',
-                'sort_order' => $sort,
-                'active' => true,
-            ]
-        );
     }
 }

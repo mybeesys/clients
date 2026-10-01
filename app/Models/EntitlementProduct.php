@@ -85,6 +85,8 @@ class EntitlementProduct extends Model
             'max' => $this->max,
             'requires' => array_values($this->requires ?? []),
             'requires_any' => array_values($this->meta['requires_any'] ?? []),
+            'grants' => array_values($this->meta['grants'] ?? []),
+            'includes' => $this->meta['includes'] ?? [],
             'linked_module' => $this->linked_module,
             'icon' => $this->icon,
             'sort_order' => $this->sort_order,
