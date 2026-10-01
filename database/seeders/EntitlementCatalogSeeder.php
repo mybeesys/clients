@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\EntitlementProduct;
 use App\Models\EntitlementSetting;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Cache;
 
 class EntitlementCatalogSeeder extends Seeder
 {
@@ -90,5 +91,8 @@ class EntitlementCatalogSeeder extends Seeder
             );
             $sort += 10;
         }
+
+        Cache::forget('entitlement_catalog_products');
+        Cache::forget('entitlement_catalog_settings');
     }
 }

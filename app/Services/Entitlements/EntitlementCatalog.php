@@ -47,7 +47,17 @@ class EntitlementCatalog
             return $fromDb;
         }
 
-        return (array) config('entitlements.quotas', []);
+        $fromConfig = (array) config('entitlements.quotas', []);
+
+        // Ensure each quota carries its key even if config omitted it.
+        foreach ($fromConfig as $key => &$quota) {
+            if (is_array($quota) && ! isset($quota['key'])) {
+                $quota['key'] = $key;
+            }
+        }
+        unset($quota);
+
+        return $fromConfig;
     }
 
     public function quota(string $key): ?array
@@ -57,7 +67,25 @@ class EntitlementCatalog
 
     public function groups(): array
     {
-        return (array) config('entitlements.groups', []);
+        $groups = (array) config('entitlements.groups', []);
+        if ($groups !== []) {
+            return $groups;
+        }
+
+        // Derive groups from modules when config cache is stale/empty.
+        $derived = [];
+        foreach ($this->modules() as $module) {
+            $groupKey = $module['group'] ?? null;
+            if (! is_string($groupKey) || $groupKey === '' || isset($derived[$groupKey])) {
+                continue;
+            }
+            $derived[$groupKey] = [
+                'name_en' => $groupKey,
+                'name_ar' => $groupKey,
+            ];
+        }
+
+        return $derived;
     }
 
     public function modules(): Collection
@@ -70,7 +98,18 @@ class EntitlementCatalog
             return $fromDb->keyBy('key');
         }
 
-        return collect(config('entitlements.modules', []));
+        // Config is keyed by module slug (cashier_pos, finance_business, …).
+        return collect(config('entitlements.modules', []))
+            ->map(function ($module, $key) {
+                if (! is_array($module)) {
+                    return null;
+                }
+                $module['key'] = $module['key'] ?? $key;
+
+                return $module;
+            })
+            ->filter()
+            ->keyBy('key');
     }
 
     public function module(string $key): array
@@ -191,9 +230,9 @@ class EntitlementCatalog
                 'price_month' => (float) ($platform['price_month'] ?? 0),
             ],
             'recommendations' => $this->recommendationsForFrontend($localeIsAr),
-            'quotas' => collect($this->quotas())->map(function (array $quota) use ($localeIsAr) {
+            'quotas' => collect($this->quotas())->map(function (array $quota, $key) use ($localeIsAr) {
                 return [
-                    'key' => $quota['key'],
+                    'key' => $quota['key'] ?? $key,
                     'name' => $localeIsAr ? ($quota['name_ar'] ?? $quota['name_en']) : ($quota['name_en'] ?? $quota['name_ar']),
                     'min' => (int) ($quota['min'] ?? 1),
                     'max' => (int) ($quota['max'] ?? 100),
@@ -208,19 +247,19 @@ class EntitlementCatalog
                     'name' => $localeIsAr ? ($group['name_ar'] ?? $group['name_en']) : ($group['name_en'] ?? $group['name_ar']),
                 ];
             })->values()->all(),
-            'modules' => $this->modules()->map(function (array $module) use ($localeIsAr) {
-                $key = $module['key'];
+            'modules' => $this->modules()->map(function (array $module, $mapKey) use ($localeIsAr) {
+                $key = $module['key'] ?? $mapKey;
 
                 return [
                     'key' => $key,
-                    'group' => $module['group'],
+                    'group' => $module['group'] ?? 'operations',
                     'name' => $localeIsAr ? ($module['name_ar'] ?? $module['name_en']) : ($module['name_en'] ?? $module['name_ar']),
                     'description' => $localeIsAr
                         ? ($module['description_ar'] ?? $module['description_en'] ?? null)
                         : ($module['description_en'] ?? $module['description_ar'] ?? null),
                     'price_month' => (float) ($module['price_month'] ?? 0),
                     'requires' => array_values($module['requires'] ?? []),
-                    'requires_any' => $this->moduleRequiresAny($key),
+                    'requires_any' => $this->moduleRequiresAny((string) $key),
                     'grants' => array_values($module['grants'] ?? $module['meta']['grants'] ?? []),
                     'includes' => $this->moduleIncludes($module, $localeIsAr),
                     'icon' => $module['icon'] ?? null,
@@ -295,6 +334,12 @@ class EntitlementCatalog
                 ->get()
                 ->map(fn (EntitlementProduct $product) => $product->toCatalogArray());
         });
+    }
+
+    public function forgetCaches(): void
+    {
+        Cache::forget('entitlement_catalog_products');
+        Cache::forget('entitlement_catalog_settings');
     }
 
     protected function setting(string $key, mixed $default = null): mixed
