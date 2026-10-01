@@ -7,6 +7,7 @@ use App\Models\Country;
 use App\Models\Subscription;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\Entitlements\EntitlementProvisioner;
 use App\Support\TenantKeyGenerator;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -133,6 +134,14 @@ class CompanyOnboardingService
 
     protected function createSubscription(Company $company, array $data): void
     {
+        $planConfig = $data['plan_config'] ?? null;
+
+        if (is_array($planConfig) && ! empty($planConfig['modules'])) {
+            app(EntitlementProvisioner::class)->provision($company, $planConfig);
+
+            return;
+        }
+
         $subscription = $data['subscription'] ?? null;
 
         if (empty($subscription['plan_id'])) {

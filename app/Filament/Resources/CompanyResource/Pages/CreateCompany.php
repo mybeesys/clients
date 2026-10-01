@@ -6,6 +6,7 @@ use App\Filament\Forms\CompanyOnboardingWizard;
 use App\Filament\Resources\CompanyResource;
 use App\Models\Company;
 use App\Services\CompanyOnboardingService;
+use App\Services\Entitlements\CouponApplicator;
 use App\Support\TenantApplicationUrl;
 use Filament\Forms\Form;
 use Filament\Notifications\Actions\Action as NotificationAction;
@@ -22,6 +23,16 @@ class CreateCompany extends CreateRecord
     public function form(Form $form): Form
     {
         return CompanyOnboardingWizard::configure($form);
+    }
+
+    /**
+     * Live coupon preview for the plan configurator invoice.
+     *
+     * @return array{ok: bool, message?: string, code?: string, type?: string, value?: float, discount?: float, label?: string}
+     */
+    public function previewPlanCoupon(?string $code = null, float $amount = 0): array
+    {
+        return app(CouponApplicator::class)->preview($code, max(0, $amount));
     }
 
     protected function getFormActions(): array

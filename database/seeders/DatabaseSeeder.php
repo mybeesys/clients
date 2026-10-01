@@ -82,5 +82,7 @@ class DatabaseSeeder extends Seeder
                 ]
             );
         }
+
+        $this->call(EntitlementCatalogSeeder::class);
     }
 }

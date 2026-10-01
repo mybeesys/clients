@@ -21,9 +21,9 @@ class CompanyOnboardingWizard
         return $form
             ->schema([
                 Wizard::make([
+                    PlanConfiguratorWizardStep::make(required: true),
                     static::companyStep(),
                     static::userStep(),
-                    SubscriptionWizardStep::make(),
                 ])
                     ->columnSpanFull()
                     ->skippable(false)

@@ -3,11 +3,10 @@
 use App\Http\Controllers\Internal\GrantTenantAdminPermissionsController;
 use App\Http\Controllers\InviteLandingController;
 use App\Http\Controllers\RegistrationThankYouController;
+use App\Http\Controllers\SubscribeHandoffController;
 use App\Http\Controllers\SubscriptionController;
-use App\Http\Middleware\EnsureSubscription;
 use App\Http\Middleware\LocalizationMiddleware;
-use App\Models\Feature;
-use App\Models\Plan;
+use App\Livewire\ManageSubscription;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -31,17 +30,14 @@ Route::get('/invite/{code}', InviteLandingController::class)
     ->middleware(LocalizationMiddleware::class)
     ->name('referrals.landing');
 
-Route::get('/subscribe', function () {
-    $plans = Plan::where('active', true)->get();
-    $features = Feature::whereHas('feature_plans')->get();
-    return view('subscriptions.subscribe', compact('plans', 'features'));
-})->middleware(LocalizationMiddleware::class)->middleware('auth')->name('subscribe');
+Route::get('/subscribe/handoff/{token}', SubscribeHandoffController::class)
+    ->middleware(LocalizationMiddleware::class)
+    ->where('token', '[A-Za-z0-9]{64}')
+    ->name('subscribe.handoff');
 
-Route::get('/subscribe2', function () {
-    $plans = Plan::where('active', true)->get();
-    $features = Feature::whereHas('feature_plans')->get();
-    return view('subscriptions.subscribe2', compact('plans', 'features'));
-})->middleware('auth')->name('subscribe2');
+Route::get('/subscribe', ManageSubscription::class)
+    ->middleware([LocalizationMiddleware::class, 'auth'])
+    ->name('subscribe');
 
 Route::post('/plan/subscribe', [SubscriptionController::class, 'store'])->middleware('auth');
 Route::post('/switch-plan', [SubscriptionController::class, 'switchPlan'])->middleware('auth');

@@ -11,11 +11,14 @@ use App\Support\TenantKeyGenerator;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Get;
 use Filament\Forms\Set;
+use Illuminate\Support\HtmlString;
 use Stancl\Tenancy\Database\Models\Domain;
 
 class CompanyAction
@@ -36,6 +39,81 @@ class CompanyAction
     protected static function fieldName(string $name, string $prefix = ''): string
     {
         return $prefix !== '' ? "{$prefix}.{$name}" : $name;
+    }
+
+    /**
+     * Registration company step: Arabic name, English name (+ live URL), tax number only.
+     *
+     * @return array<int, \Filament\Forms\Components\Component>
+     */
+    public static function getRegistrationCompanyWizardSchema(string $prefix = 'company'): array
+    {
+        $f = fn (string $name) => static::fieldName($name, $prefix);
+        $baseHost = static::tenantBaseHost();
+
+        return [
+            Section::make(__('main.wizard.company_information'))
+                ->columns(2)
+                ->schema([
+                    TextInput::make($f('name_ar'))
+                        ->label(__('fields.name_ar'))
+                        ->required()
+                        ->unique('companies', 'name')
+                        ->maxLength(255)
+                        ->autofocus(),
+                    TextInput::make($f('name_en'))
+                        ->label(__('fields.name_en'))
+                        ->required()
+                        ->maxLength(255)
+                        ->live(debounce: 250)
+                        ->helperText(__('main.wizard.name_en_domain_hint'))
+                        ->afterStateUpdated(fn (Set $set, ?string $state) => $set(
+                            $f('tenant_key'),
+                            TenantKeyGenerator::fromEnglishName($state)
+                        )),
+                    Placeholder::make('company_url_preview')
+                        ->label('')
+                        ->columnSpanFull()
+                        ->content(function (Get $get) use ($f, $baseHost): HtmlString {
+                            $slug = TenantKeyGenerator::fromEnglishName($get($f('name_en')));
+                            if ($slug === 'tenant' && blank($get($f('name_en')))) {
+                                $slug = 'company-name';
+                            }
+
+                            $url = 'https://'.$slug.'.'.$baseHost;
+                            $label = e(__('main.wizard.company_url_preview_label'));
+                            $hint = e(__('main.wizard.company_url_preview_hint'));
+                            $slugEsc = e($slug);
+                            $hostEsc = e($baseHost);
+
+                            return new HtmlString(<<<HTML
+                                <div class="company-url-preview" style="margin-top:-.15rem;margin-bottom:.35rem;padding:.9rem 1rem;border-radius:1rem;border:1px solid rgba(235,184,30,.28);background:linear-gradient(135deg,rgba(247,231,168,.45),rgba(255,255,255,.95));font-family:Cairo,system-ui,sans-serif">
+                                    <p style="margin:0;font-size:.75rem;font-weight:700;color:#b88912;letter-spacing:.02em">{$label}</p>
+                                    <p style="margin:.4rem 0 0;font-size:.95rem;font-weight:800;color:#1a1a1a;word-break:break-all;direction:ltr;text-align:left">
+                                        https://<span style="color:#b88912;background:rgba(235,184,30,.18);padding:.1rem .4rem;border-radius:.4rem">{$slugEsc}</span>.{$hostEsc}
+                                    </p>
+                                    <p style="margin:.45rem 0 0;font-size:.78rem;color:#6b7280;line-height:1.55">{$hint}</p>
+                                </div>
+                            HTML);
+                        }),
+                    TextInput::make($f('tax_number'))
+                        ->numeric()
+                        ->label(__('fields.tax_number'))
+                        ->required()
+                        ->maxLength(15)
+                        ->columnSpanFull(),
+                    Hidden::make($f('tenant_key'))->dehydrated(),
+                    Hidden::make($f('business_type'))->default('general')->dehydrated(),
+                ]),
+        ];
+    }
+
+    public static function tenantBaseHost(): string
+    {
+        $host = str_replace(['http://', 'https://'], '', (string) config('app.url'));
+        $host = rtrim($host, '/');
+
+        return $host !== '' ? $host : 'mybeesystem.net';
     }
 
     /**
