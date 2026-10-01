@@ -14,6 +14,31 @@ class EntitlementsCatalogStatusCommand extends Command
 
     public function handle(EntitlementCatalog $catalog): int
     {
+        $configPath = config_path('entitlements.php');
+        $directModules = 0;
+        $directError = null;
+
+        if (! is_file($configPath)) {
+            $directError = 'FILE MISSING';
+        } else {
+            try {
+                $raw = require $configPath;
+                $directModules = is_array($raw) ? count($raw['modules'] ?? []) : -1;
+            } catch (\Throwable $e) {
+                $directError = $e->getMessage();
+            }
+        }
+
+        $this->table(['Check', 'Value'], [
+            ['config_path', $configPath],
+            ['file_exists', is_file($configPath) ? 'yes' : 'NO'],
+            ['file_bytes', is_file($configPath) ? (string) filesize($configPath) : '0'],
+            ['direct_include_modules', $directError ? "ERROR: {$directError}" : (string) $directModules],
+            ['laravel_config_modules', (string) count(config('entitlements.modules', []))],
+            ['config_cached', app()->configurationIsCached() ? 'YES' : 'no'],
+            ['bootstrap_config_cache', is_file(base_path('bootstrap/cache/config.php')) ? 'EXISTS' : 'absent'],
+        ]);
+
         $byType = EntitlementProduct::query()
             ->selectRaw('type, COUNT(*) as aggregate, SUM(active) as active_count')
             ->groupBy('type')
@@ -40,6 +65,10 @@ class EntitlementsCatalogStatusCommand extends Command
             ['frontend.groups', count($frontend['groups'] ?? [])],
             ['frontend.recommendations', count($frontend['recommendations'] ?? [])],
         ]);
+
+        if ($directModules > 0 && count(config('entitlements.modules', [])) === 0) {
+            $this->error('File has modules but Laravel config() is empty — remove bootstrap/cache/config.php and reload PHP-FPM.');
+        }
 
         if (count($frontend['modules'] ?? []) === 0) {
             $this->error('Frontend modules are empty — subscribe builder will look blank.');
