@@ -5,15 +5,19 @@ namespace Database\Seeders;
 use App\Models\EntitlementProduct;
 use App\Models\EntitlementSetting;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Config;
 
 class EntitlementCatalogSeeder extends Seeder
 {
     public function run(): void
     {
-        // Ensure we seed from the file config, not a stale config:cache payload.
-        Artisan::call('config:clear');
+        // Always seed from the PHP file, never from a stale config:cache payload.
+        $entitlements = require config_path('entitlements.php');
+        if (! is_array($entitlements)) {
+            throw new \RuntimeException('config/entitlements.php did not return an array.');
+        }
+        Config::set('entitlements', $entitlements);
 
         EntitlementSetting::setValue('currency', config('entitlements.currency', 'SAR'));
         EntitlementSetting::setValue('yearly_months_charged', (string) config('entitlements.yearly_months_charged', 12));
@@ -37,7 +41,9 @@ class EntitlementCatalogSeeder extends Seeder
         );
 
         $sort = 10;
+        $moduleKeys = [];
         foreach (config('entitlements.modules', []) as $key => $module) {
+            $moduleKeys[] = $key;
             EntitlementProduct::query()->updateOrCreate(
                 ['key' => $key],
                 [
@@ -64,7 +70,6 @@ class EntitlementCatalogSeeder extends Seeder
             $sort += 10;
         }
 
-        // Keep legacy keys for old subscriptions but hide them from the builder.
         foreach (config('entitlements.legacy_modules', []) as $legacyKey) {
             EntitlementProduct::query()
                 ->where('key', $legacyKey)
@@ -98,5 +103,21 @@ class EntitlementCatalogSeeder extends Seeder
 
         Cache::forget('entitlement_catalog_products');
         Cache::forget('entitlement_catalog_settings');
+
+        $activeModules = EntitlementProduct::query()
+            ->where('type', EntitlementProduct::TYPE_MODULE)
+            ->where('active', true)
+            ->count();
+        $activeQuotas = EntitlementProduct::query()
+            ->where('type', EntitlementProduct::TYPE_QUOTA)
+            ->where('active', true)
+            ->count();
+
+        $this->command?->info(sprintf(
+            'Entitlement catalog seeded (config modules=%d, db active modules=%d, db active quotas=%d).',
+            count($moduleKeys),
+            $activeModules,
+            $activeQuotas
+        ));
     }
 }
