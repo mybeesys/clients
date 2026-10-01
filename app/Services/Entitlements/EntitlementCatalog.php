@@ -38,18 +38,7 @@ class EntitlementCatalog
      */
     public function quotas(): array
     {
-        $fromDb = $this->products()
-            ->where('type', EntitlementProduct::TYPE_QUOTA)
-            ->keyBy('key')
-            ->all();
-
-        if ($fromDb !== []) {
-            return $fromDb;
-        }
-
         $fromConfig = (array) config('entitlements.quotas', []);
-
-        // Ensure each quota carries its key even if config omitted it.
         foreach ($fromConfig as $key => &$quota) {
             if (is_array($quota) && ! isset($quota['key'])) {
                 $quota['key'] = $key;
@@ -57,7 +46,16 @@ class EntitlementCatalog
         }
         unset($quota);
 
-        return $fromConfig;
+        $fromDb = $this->products()
+            ->where('type', EntitlementProduct::TYPE_QUOTA)
+            ->keyBy('key')
+            ->all();
+
+        if ($fromDb === []) {
+            return $fromConfig;
+        }
+
+        return array_replace($fromConfig, $fromDb);
     }
 
     public function quota(string $key): ?array
@@ -90,16 +88,7 @@ class EntitlementCatalog
 
     public function modules(): Collection
     {
-        $fromDb = $this->products()
-            ->where('type', EntitlementProduct::TYPE_MODULE)
-            ->values();
-
-        if ($fromDb->isNotEmpty()) {
-            return $fromDb->keyBy('key');
-        }
-
-        // Config is keyed by module slug (cashier_pos, finance_business, …).
-        return collect(config('entitlements.modules', []))
+        $fromConfig = collect(config('entitlements.modules', []))
             ->map(function ($module, $key) {
                 if (! is_array($module)) {
                     return null;
@@ -110,6 +99,18 @@ class EntitlementCatalog
             })
             ->filter()
             ->keyBy('key');
+
+        $fromDb = $this->products()
+            ->where('type', EntitlementProduct::TYPE_MODULE)
+            ->keyBy('key');
+
+        // Prefer DB rows when present, but keep any config modules missing from DB
+        // (e.g. after a partial seed that only wrote the platform row).
+        if ($fromDb->isEmpty()) {
+            return $fromConfig;
+        }
+
+        return $fromConfig->merge($fromDb);
     }
 
     public function module(string $key): array

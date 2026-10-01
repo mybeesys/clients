@@ -542,14 +542,19 @@
             </div>
         @endif
 
-        <div style="{{ $mode === 'customize' ? '' : 'display:none' }}">
+        @if ($mode === 'customize')
             <div class="ms-actions" style="margin-top:0.35rem;margin-bottom:0.35rem;">
                 <button type="button" class="ms-btn ms-btn-secondary" wire:click="showChoose" @disabled($saving)>
                     @lang('main.subscribe.back')
                 </button>
             </div>
 
-            <div class="ms-customize" wire:ignore>
+            {{-- Mount only in customize mode so catalog is fresh; wire:ignore keeps Alpine state on coupon preview re-renders. --}}
+            <div
+                class="ms-customize"
+                wire:ignore
+                wire:key="plan-config-{{ count($catalog['modules'] ?? []) }}-{{ count($catalog['quotas'] ?? []) }}-{{ count($catalog['recommendations'] ?? []) }}"
+            >
                 @include('filament.forms.plan-configurator', [
                     'catalog' => $catalog,
                     'required' => true,
@@ -568,6 +573,6 @@
                     <span wire:loading wire:target="saveNewPackage">@lang('main.wizard.saving')</span>
                 </button>
             </div>
-        </div>
+        @endif
     </div>
 </div>

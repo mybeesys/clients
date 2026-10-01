@@ -5,12 +5,16 @@ namespace Database\Seeders;
 use App\Models\EntitlementProduct;
 use App\Models\EntitlementSetting;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 
 class EntitlementCatalogSeeder extends Seeder
 {
     public function run(): void
     {
+        // Ensure we seed from the file config, not a stale config:cache payload.
+        Artisan::call('config:clear');
+
         EntitlementSetting::setValue('currency', config('entitlements.currency', 'SAR'));
         EntitlementSetting::setValue('yearly_months_charged', (string) config('entitlements.yearly_months_charged', 12));
         EntitlementSetting::setValue('recommendations', config('entitlements.recommendations', []));
