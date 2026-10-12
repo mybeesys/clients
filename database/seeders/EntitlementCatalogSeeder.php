@@ -20,7 +20,7 @@ class EntitlementCatalogSeeder extends Seeder
         Config::set('entitlements', $entitlements);
 
         EntitlementSetting::setValue('currency', config('entitlements.currency', 'SAR'));
-        EntitlementSetting::setValue('yearly_months_charged', (string) config('entitlements.yearly_months_charged', 12));
+        EntitlementSetting::setValue('yearly_months_charged', (string) config('entitlements.yearly_months_charged', 10));
         EntitlementSetting::setValue('recommendations', config('entitlements.recommendations', []));
 
         $platform = config('entitlements.platform', []);
@@ -44,29 +44,31 @@ class EntitlementCatalogSeeder extends Seeder
         $moduleKeys = [];
         foreach (config('entitlements.modules', []) as $key => $module) {
             $moduleKeys[] = $key;
-            EntitlementProduct::query()->updateOrCreate(
-                ['key' => $key],
-                [
-                    'type' => EntitlementProduct::TYPE_MODULE,
-                    'group' => $module['group'] ?? null,
-                    'name_en' => $module['name_en'],
-                    'name_ar' => $module['name_ar'],
-                    'description_en' => $module['description_en'] ?? null,
-                    'description_ar' => $module['description_ar'] ?? null,
-                    'price_month' => $module['price_month'] ?? 0,
-                    'requires' => $module['requires'] ?? [],
-                    'icon' => $module['icon'] ?? null,
-                    'sort_order' => $sort,
-                    'active' => true,
-                    'meta' => [
-                        'menu_keys' => $module['menu_keys'] ?? [],
-                        'api_prefixes' => $module['api_prefixes'] ?? [],
-                        'requires_any' => $module['requires_any'] ?? [],
-                        'grants' => $module['grants'] ?? [],
-                        'includes' => $module['includes'] ?? [],
-                    ],
-                ]
-            );
+            $product = EntitlementProduct::query()->firstOrNew(['key' => $key]);
+            $product->fill([
+                'type' => EntitlementProduct::TYPE_MODULE,
+                'group' => $module['group'] ?? null,
+                'name_en' => $module['name_en'],
+                'name_ar' => $module['name_ar'],
+                'description_en' => $module['description_en'] ?? null,
+                'description_ar' => $module['description_ar'] ?? null,
+                'price_month' => $module['price_month'] ?? 0,
+                'requires' => $module['requires'] ?? [],
+                'icon' => $module['icon'] ?? null,
+                'sort_order' => $sort,
+                'active' => true,
+                'meta' => [
+                    'menu_keys' => $module['menu_keys'] ?? [],
+                    'api_prefixes' => $module['api_prefixes'] ?? [],
+                    'requires_any' => $module['requires_any'] ?? [],
+                    'grants' => $module['grants'] ?? [],
+                    'includes' => $module['includes'] ?? [],
+                ],
+            ]);
+            if ($product->included === null) {
+                $product->included = (int) ($module['included_employees'] ?? $module['included'] ?? 1);
+            }
+            $product->save();
             $sort += 10;
         }
 

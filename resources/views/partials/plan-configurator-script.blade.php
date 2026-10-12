@@ -5,7 +5,7 @@
             catalog,
             labels,
             wirePath: options.wirePath || 'data.plan_config',
-            period: initial.period || 'Month',
+            period: initial.period || 'Year',
             modules: Array.isArray(initial.modules) ? [...initial.modules] : [],
             activeRecommendation: null,
             employees: initial.employees ?? catalog?.quotas?.find(q => q.key === 'employees')?.included ?? 5,
@@ -19,6 +19,7 @@
             coupon_ok: false,
             coupon_loading: false,
             init() {
+                this.employees = this.clampEmployees(this.employees);
                 this.syncToWire();
                 this.$watch('modules', () => { this.refreshCouponDiscount(); this.syncToWire(); });
                 this.$watch('employees', () => { this.refreshCouponDiscount(); this.syncToWire(); });
@@ -30,6 +31,7 @@
                 }
             },
             applyRecommendation(rec) {
+                const extras = Math.max(0, this.employees - this.includedEmployees());
                 const available = new Set((this.catalog.modules || []).map(m => m.key));
                 const selected = [];
                 (rec.modules || []).forEach(key => {
@@ -45,18 +47,26 @@
 
                 const quotas = rec.quotas || {};
                 Object.keys(quotas).forEach(key => {
+                    if (key === 'employees') return;
                     const def = (this.catalog.quotas || []).find(q => q.key === key);
                     if (!def) return;
                     const value = Math.min(def.max, Math.max(def.min, Number(quotas[key])));
                     this.setQuotaValue(key, value);
                 });
+                if (quotas.employees != null) {
+                    this.employees = this.clampEmployees(Number(quotas.employees));
+                } else {
+                    this.employees = this.clampEmployees(this.includedEmployees() + extras);
+                }
             },
             clearRecommendation() {
                 this.activeRecommendation = null;
                 this.modules = [];
                 (this.catalog.quotas || []).forEach(q => {
+                    if (q.key === 'employees') return;
                     this.setQuotaValue(q.key, q.included);
                 });
+                this.employees = this.clampEmployees(this.includedEmployees());
             },
             modulesFor(groupKey) {
                 return (this.catalog.modules || []).filter(m => m.group === groupKey);
@@ -72,6 +82,44 @@
                 if (key === 'establishments') return this.establishments;
                 if (key === 'screen_devices') return this.screen_devices;
                 return 0;
+            },
+            quotaIncluded(quota) {
+                if (quota?.key === 'employees') return this.includedEmployees();
+                return Number(quota?.included ?? 0);
+            },
+            resolvedModules() {
+                const byKey = new Map((this.catalog.modules || []).map(m => [m.key, m]));
+                const resolved = [];
+                const queue = [...(this.modules || [])];
+                while (queue.length) {
+                    const key = queue.shift();
+                    if (!byKey.has(key) || resolved.includes(key)) continue;
+                    resolved.push(key);
+                    (byKey.get(key).requires || []).forEach(r => queue.push(r));
+                }
+                return resolved;
+            },
+            includedEmployees() {
+                const quota = (this.catalog.quotas || []).find(q => q.key === 'employees') || {};
+                const base = Number(quota.included ?? 0);
+                const min = Number(quota.min ?? 0);
+                let seats = 0;
+                const selected = new Set(this.resolvedModules());
+                (this.catalog.modules || []).forEach(mod => {
+                    if (!selected.has(mod.key)) return;
+                    seats += Number(mod.included_employees == null ? 1 : mod.included_employees);
+                });
+                return Math.max(min, base + seats);
+            },
+            clampEmployees(value) {
+                const quota = (this.catalog.quotas || []).find(q => q.key === 'employees') || {};
+                const max = Number(quota.max ?? 9999);
+                const floor = Math.max(Number(quota.min ?? 0), this.includedEmployees());
+                const n = Number(value || 0);
+                return Math.min(max, Math.max(floor, n));
+            },
+            employeeSeatLabel(count) {
+                return String(this.labels.module_employees || ':count').replace(':count', String(Number(count || 0)));
             },
             setQuotaValue(key, value) {
                 if (key === 'employees') this.employees = value;
@@ -101,6 +149,7 @@
             },
             toggle(key) {
                 this.activeRecommendation = null;
+                const extras = Math.max(0, this.employees - this.includedEmployees());
                 if (this.isSelected(key)) {
                     this.modules = this.modules.filter(k => k !== key);
                     this.modules = this.modules.filter(k => {
@@ -118,20 +167,63 @@
                     (mod?.requires || []).forEach(r => next.add(r));
                     this.modules = Array.from(next);
                 }
+                this.employees = this.clampEmployees(this.includedEmployees() + extras);
             },
             bump(key, delta) {
                 this.activeRecommendation = null;
                 const quota = (this.catalog.quotas || []).find(q => q.key === key);
                 if (!quota) return;
                 const current = this.quotaValue(key);
-                const next = Math.min(quota.max, Math.max(quota.min, current + delta));
+                const min = key === 'employees'
+                    ? Math.max(Number(quota.min ?? 0), this.includedEmployees())
+                    : Number(quota.min ?? 0);
+                const next = Math.min(Number(quota.max), Math.max(min, current + delta));
                 this.setQuotaValue(key, next);
             },
             setPeriod(period) {
                 this.period = period;
             },
+            yearlyMonthsCharged() {
+                return Number(this.catalog.yearly_months_charged || 10);
+            },
+            yearlyGifted() {
+                const gifted = this.catalog.yearly_months_gifted;
+                if (gifted == null) {
+                    return Math.max(0, 12 - this.yearlyMonthsCharged());
+                }
+
+                return Math.max(0, Number(gifted));
+            },
+            yearlyListValue() {
+                return this.monthlyTotal * 12;
+            },
+            yearlyGiftAmount() {
+                return this.monthlyTotal * this.yearlyGifted();
+            },
+            isYearlyDeal() {
+                return this.period === 'Year' && this.yearlyGifted() > 0;
+            },
+            effectiveMonthly(amount) {
+                const monthly = Number(amount || 0);
+                if (! this.isYearlyDeal()) {
+                    return monthly;
+                }
+
+                return monthly * this.yearlyMonthsCharged() / 12;
+            },
             format(value) {
                 return Math.round(Number(value || 0)).toLocaleString();
+            },
+            formatDeal(value) {
+                return Number(value || 0).toLocaleString(undefined, {
+                    minimumFractionDigits: 1,
+                    maximumFractionDigits: 1,
+                });
+            },
+            displayMonthly(amount) {
+                return this.isYearlyDeal()
+                    ? this.formatDeal(this.effectiveMonthly(amount))
+                    : this.format(amount);
             },
             get baseLineItems() {
                 const items = [];
@@ -149,7 +241,7 @@
                 });
                 this.visibleQuotas.forEach(quota => {
                     const count = this.quotaValue(quota.key);
-                    const extra = Math.max(0, count - quota.included);
+                    const extra = Math.max(0, count - this.quotaIncluded(quota));
                     if (extra > 0) {
                         items.push({
                             key: quota.key + '_extra',
@@ -162,14 +254,18 @@
                 return items;
             },
             get lineItems() {
-                const months = this.period === 'Year' ? (this.catalog.yearly_months_charged || 12) : 1;
+                const months = this.period === 'Year' ? this.yearlyMonthsCharged() : 1;
                 return this.baseLineItems.map(line => {
                     const monthly = Number(line.total || 0);
                     return {
                         ...line,
                         total: monthly * months,
                         meta: this.period === 'Year'
-                            ? `${this.format(monthly)} × ${months}`
+                            ? (
+                                this.isYearlyDeal()
+                                    ? `${this.formatDeal(this.effectiveMonthly(monthly))} / ${this.labels.per_month} · ${this.labels.yearly_was} ${this.format(monthly)}`
+                                    : `${this.format(monthly)} × ${months}`
+                            )
                             : `/ ${this.labels.per_month}`,
                     };
                 });
@@ -179,7 +275,7 @@
             },
             get periodSubtotal() {
                 if (this.period === 'Year') {
-                    return this.monthlyTotal * (this.catalog.yearly_months_charged || 12);
+                    return this.monthlyTotal * this.yearlyMonthsCharged();
                 }
                 return this.monthlyTotal;
             },

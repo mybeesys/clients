@@ -14,8 +14,8 @@ return [
 
     'currency' => 'SAR',
 
-    /** Annual billing charges a full year (12× monthly). Use coupons for discounts. */
-    'yearly_months_charged' => 12,
+    /** Annual billing: charge this many months, grant a full 12-month term (10 = two months free). */
+    'yearly_months_charged' => 10,
 
     'platform' => [
         'key' => 'platform',
@@ -64,6 +64,8 @@ return [
      * requires_any: at least one of these must be selected.
      * grants: legacy/internal keys unlocked when this module is purchased
      *         (used by tenant EntitlementGate for menu/route maps).
+     * included_employees: seats bundled with the module (default 1). Added on top of
+     *         the platform employees quota. Admins can change this per module.
      * includes: human-readable contents shown on the subscribe cards.
      */
     'modules' => [

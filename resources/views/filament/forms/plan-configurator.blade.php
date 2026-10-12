@@ -2,7 +2,8 @@
     $catalog = $catalog ?? [];
     $required = $required ?? true;
     $currency = $catalog['currency'] ?? 'SAR';
-    $yearlyMonths = (int) ($catalog['yearly_months_charged'] ?? 12);
+    $yearlyMonths = (int) ($catalog['yearly_months_charged'] ?? 10);
+    $yearlyGifted = (int) ($catalog['yearly_months_gifted'] ?? max(0, 12 - $yearlyMonths));
     $wirePath = $wirePath ?? 'data.plan_config';
     $initial = is_array($initial ?? null) ? $initial : [];
 @endphp
@@ -29,12 +30,23 @@
         'invoice_discount' => __('main.wizard.plan_invoice_discount'),
         'invoice_period_month' => __('general.monthly'),
         'invoice_period_year' => __('general.annual'),
-        'yearly_note' => __('main.wizard.plan_yearly_note', ['months' => $yearlyMonths]),
+        'yearly_note' => __('main.wizard.plan_yearly_note', ['months' => $yearlyMonths, 'gifted' => $yearlyGifted]),
+        'yearly_badge' => __('main.wizard.plan_yearly_badge'),
+        'yearly_hero' => __('main.wizard.plan_yearly_hero'),
+        'yearly_value' => __('main.wizard.plan_yearly_value'),
+        'yearly_gift' => __('main.wizard.plan_yearly_gift'),
+        'yearly_price_gift' => __('main.wizard.plan_yearly_price_gift'),
+        'yearly_was' => __('main.wizard.plan_yearly_was'),
+        'yearly_effective' => __('main.wizard.plan_yearly_effective'),
+        'yearly_effective_hint' => __('main.wizard.plan_yearly_effective_hint'),
+        'gift_banner_title' => __('main.wizard.plan_gift_banner_title'),
+        'gift_banner_body' => __('main.wizard.plan_gift_banner_body'),
         'modules_hint' => __('main.wizard.plan_modules_hint'),
         'quotas_title' => __('main.wizard.plan_quotas_title'),
         'platform_badge' => __('main.wizard.plan_platform_badge'),
         'requires' => __('main.wizard.plan_requires'),
         'includes' => __('main.wizard.plan_includes'),
+        'module_employees' => __('main.wizard.plan_module_employees'),
         'works_with' => __('main.wizard.plan_works_with'),
         'empty_modules' => __('main.wizard.plan_modules_required'),
         'select_at_least' => __('main.wizard.plan_select_at_least'),
@@ -70,6 +82,10 @@
             --pc-hex: polygon(25% 6%, 75% 6%, 100% 50%, 75% 94%, 25% 94%, 0 50%);
             font-family: "Cairo", system-ui, sans-serif;
             position: relative;
+        }
+
+        .plan-configurator [x-cloak] {
+            display: none !important;
         }
 
         .dark .plan-configurator {
@@ -138,10 +154,17 @@
             max-width: 36rem;
         }
 
+        .pc-period-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.35rem;
+        }
+
         .pc-period {
             display: inline-flex;
-            padding: 0.22rem;
-            border-radius: 0.85rem;
+            padding: 0.2rem;
+            border-radius: 0.95rem;
             background: var(--pc-soft);
             border: 1px solid var(--pc-line);
         }
@@ -150,19 +173,149 @@
             border: 0;
             background: transparent;
             color: var(--pc-muted);
-            font-weight: 700;
-            font-size: 0.78rem;
-            padding: 0.48rem 0.9rem;
-            border-radius: 0.7rem;
+            font-weight: 800;
+            font-size: 0.95rem;
+            padding: 0.58rem 1.05rem;
+            border-radius: 0.8rem;
             cursor: pointer;
             transition: 0.2s ease;
             font-family: inherit;
+            display: inline-flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 0.4rem;
+            line-height: 1;
+            white-space: nowrap;
         }
 
         .pc-period button.is-active {
             background: linear-gradient(135deg, #f0c43a, var(--pc-accent));
             color: #111;
             box-shadow: 0 8px 18px rgba(184, 137, 18, 0.25);
+        }
+
+        .pc-period-gift {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.28rem;
+            font-size: 0.82rem;
+            font-style: normal;
+            font-weight: 800;
+            letter-spacing: 0;
+            opacity: 0.95;
+            white-space: nowrap;
+        }
+
+        .pc-period-gift svg {
+            width: 1.05rem;
+            height: 1.05rem;
+            flex-shrink: 0;
+        }
+
+        .pc-period-gift em {
+            font-style: normal;
+        }
+
+        .pc-period button.is-active .pc-period-gift {
+            opacity: 1;
+        }
+
+        .pc-period-hint {
+            margin: 0;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--pc-accent-2);
+            max-width: 17rem;
+            text-align: end;
+            line-height: 1.4;
+        }
+
+        .pc-gift-banner {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin: 0 0 0.95rem;
+            padding: 0.85rem 1rem;
+            border-radius: 1.05rem;
+            background:
+                linear-gradient(120deg, rgba(22, 163, 74, 0.12), rgba(235, 184, 30, 0.16) 55%, transparent);
+            border: 1px solid rgba(22, 163, 74, 0.22);
+            box-shadow: 0 10px 24px rgba(22, 163, 74, 0.06);
+        }
+
+        .pc-gift-icon {
+            flex-shrink: 0;
+            width: 2.35rem;
+            height: 2.35rem;
+            border-radius: 0.85rem;
+            display: grid;
+            place-items: center;
+            background: #166534;
+            color: #ecfdf3;
+            box-shadow: 0 8px 16px rgba(22, 101, 52, 0.22);
+        }
+
+        .pc-gift-banner h4 {
+            margin: 0;
+            font-size: 0.92rem;
+            font-weight: 800;
+            color: #166534;
+        }
+
+        .pc-gift-banner p {
+            margin: 0.2rem 0 0;
+            font-size: 0.78rem;
+            line-height: 1.55;
+            color: var(--pc-ink);
+            font-weight: 600;
+        }
+
+        .pc-price-tag {
+            flex-shrink: 0;
+            font-weight: 800;
+            color: var(--pc-ink);
+            font-size: 0.88rem;
+            text-align: end;
+        }
+
+        .pc-price-tag.is-deal {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.06rem;
+        }
+
+        .pc-price-row {
+            display: inline-flex;
+            align-items: baseline;
+            gap: 0.28rem;
+            white-space: nowrap;
+            line-height: 1;
+        }
+
+        .pc-price-was {
+            text-decoration: line-through;
+            text-decoration-thickness: 1.5px;
+            color: var(--pc-muted);
+            font-size: 0.7rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .pc-price-now {
+            color: #15803d;
+            font-size: 1.12rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .pc-price-row small {
+            color: var(--pc-muted);
+            font-weight: 700;
+            font-size: 0.68rem;
+            line-height: 1;
         }
 
         .pc-platform {
@@ -262,7 +415,7 @@
             border: 1.5px solid var(--pc-line);
             background: var(--pc-surface);
             border-radius: 1rem;
-            padding: 0.9rem 0.95rem;
+            padding: 0.9rem 0.95rem 1.85rem;
             cursor: pointer;
             transition: border-color 0.22s ease, transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
             width: 100%;
@@ -311,7 +464,6 @@
             font-size: 0.92rem;
             font-weight: 800;
             color: var(--pc-ink);
-            padding-inline-end: 1.4rem;
         }
 
         .pc-module p {
@@ -322,23 +474,10 @@
             min-height: 0;
         }
 
-        .pc-price-tag {
-            flex-shrink: 0;
-            font-weight: 800;
-            color: var(--pc-ink);
-            font-size: 0.88rem;
-            white-space: nowrap;
-        }
-
-        .pc-price-tag small {
-            color: var(--pc-muted);
-            font-weight: 600;
-            font-size: 0.7rem;
-        }
-
         .pc-check {
             position: absolute;
-            top: 0.7rem;
+            top: auto;
+            bottom: 0.65rem;
             inset-inline-end: 0.7rem;
             width: 1.35rem;
             height: 1.5rem;
@@ -682,6 +821,42 @@
             line-height: 1.45;
         }
 
+        .pc-year-offer {
+            margin: 0.55rem 0 0.2rem;
+            padding: 0.6rem 0.7rem;
+            border-radius: 0.75rem;
+            background: linear-gradient(135deg, rgba(22, 163, 74, 0.1), rgba(234, 179, 8, 0.12));
+            border: 1px solid rgba(22, 163, 74, 0.2);
+        }
+
+        .pc-eq-line {
+            margin-top: 0.45rem;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.12rem;
+        }
+
+        .pc-eq-line em {
+            font-style: normal;
+            font-size: 0.68rem;
+            color: var(--pc-muted);
+            font-weight: 600;
+        }
+
+        .pc-year-offer div {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.75rem;
+            font-size: 0.74rem;
+            font-weight: 700;
+            padding: 0.12rem 0;
+        }
+
+        .pc-year-offer .is-gift {
+            color: #15803d;
+        }
+
         .pc-empty {
             margin-top: 0.65rem;
             padding: 0.6rem 0.7rem;
@@ -979,9 +1154,33 @@
             <h3>{{ __('main.wizard.plan_choose_title') }}</h3>
             <p>{{ __('main.wizard.plan_information_hint') }}</p>
         </div>
-        <div class="pc-period" role="group" aria-label="{{ __('general.monthly') }} / {{ __('general.annual') }}">
-            <button type="button" :class="{ 'is-active': period === 'Month' }" x-on:click="setPeriod('Month')" x-text="labels.monthly"></button>
-            <button type="button" :class="{ 'is-active': period === 'Year' }" x-on:click="setPeriod('Year')" x-text="labels.annual"></button>
+        <div class="pc-period-wrap">
+            <div class="pc-period" role="group" aria-label="{{ __('general.monthly') }} / {{ __('general.annual') }}">
+                <button type="button" :class="{ 'is-active': period === 'Year' }" x-on:click="setPeriod('Year')">
+                    <span x-text="labels.annual"></span>
+                    <span class="pc-period-gift" x-show="yearlyGifted() > 0">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path d="M9.375 3a1.875 1.875 0 0 0 0 3.75h1.875v4.5H3.375A1.125 1.125 0 0 1 2.25 10.125V9.75c0-1.036.84-1.875 1.875-1.875h4.5A1.875 1.875 0 0 1 9.375 3Z" />
+                            <path d="M12.75 6.75h1.875a1.875 1.875 0 1 0-1.875-1.875V6.75ZM12.75 8.25v4.5h7.875c.621 0 1.125-.504 1.125-1.125V9.75a1.875 1.875 0 0 0-1.875-1.875h-7.125ZM12.75 15v6.75h6.375A1.875 1.875 0 0 0 21 19.875V15H12.75ZM11.25 21.75V15H3v4.875c0 1.036.84 1.875 1.875 1.875H11.25Z" />
+                        </svg>
+                        <em x-text="labels.yearly_badge"></em>
+                    </span>
+                </button>
+                <button type="button" :class="{ 'is-active': period === 'Month' }" x-on:click="setPeriod('Month')" x-text="labels.monthly"></button>
+            </div>
+        </div>
+    </div>
+
+    <div class="pc-gift-banner" x-show="isYearlyDeal()" x-cloak>
+        <span class="pc-gift-icon" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+                <path d="M9.375 3a1.875 1.875 0 0 0 0 3.75h1.875v4.5H3.375A1.125 1.125 0 0 1 2.25 10.125V9.75c0-1.036.84-1.875 1.875-1.875h4.5A1.875 1.875 0 0 1 9.375 3Z" />
+                <path d="M12.75 6.75h1.875a1.875 1.875 0 1 0-1.875-1.875V6.75ZM12.75 8.25v4.5h7.875c.621 0 1.125-.504 1.125-1.125V9.75a1.875 1.875 0 0 0-1.875-1.875h-7.125ZM12.75 15v6.75h6.375A1.875 1.875 0 0 0 21 19.875V15H12.75ZM11.25 21.75V15H3v4.875c0 1.036.84 1.875 1.875 1.875H11.25Z" />
+            </svg>
+        </span>
+        <div>
+            <h4 x-text="labels.gift_banner_title"></h4>
+            <p x-text="labels.gift_banner_body"></p>
         </div>
     </div>
 
@@ -1025,9 +1224,12 @@
                 <div style="flex:1">
                     <div class="pc-module-top">
                         <h4 x-text="catalog.platform.name"></h4>
-                        <div class="pc-price-tag">
-                            <span x-text="format(catalog.platform.price_month)"></span>
-                            <small> / <span x-text="labels.per_month"></span></small>
+                        <div class="pc-price-tag" :class="{ 'is-deal': isYearlyDeal() }">
+                            <span class="pc-price-was" x-show="isYearlyDeal()" x-text="format(catalog.platform.price_month)"></span>
+                            <span class="pc-price-row">
+                                <span :class="isYearlyDeal() ? 'pc-price-now' : ''" x-text="displayMonthly(catalog.platform.price_month)"></span>
+                                <small x-text="' / ' + labels.per_month"></small>
+                            </span>
                         </div>
                     </div>
                     <p x-text="catalog.platform.description"></p>
@@ -1052,17 +1254,21 @@
                                 </span>
                                 <div class="pc-module-top">
                                     <h5 x-text="mod.name"></h5>
-                                    <div class="pc-price-tag">
-                                        <span x-text="format(mod.price_month)"></span>
-                                        <small> / <span x-text="labels.per_month"></span></small>
+                                    <div class="pc-price-tag" :class="{ 'is-deal': isYearlyDeal() }">
+                                        <span class="pc-price-was" x-show="isYearlyDeal()" x-text="format(mod.price_month)"></span>
+                                        <span class="pc-price-row">
+                                            <span :class="isYearlyDeal() ? 'pc-price-now' : ''" x-text="displayMonthly(mod.price_month)"></span>
+                                            <small x-text="' / ' + labels.per_month"></small>
+                                        </span>
                                     </div>
                                 </div>
                                 <p x-text="mod.description"></p>
-                                <template x-if="mod.includes?.length">
+                                <template x-if="Number(mod.included_employees) > 0 || mod.includes?.length">
                                     <div>
                                         <div class="pc-includes-label" x-text="labels.includes"></div>
                                         <ul class="pc-includes">
-                                            <template x-for="(item, idx) in mod.includes" :key="mod.key + '-inc-' + idx">
+                                            <li x-show="Number(mod.included_employees) > 0" x-text="employeeSeatLabel(mod.included_employees)"></li>
+                                            <template x-for="(item, idx) in (mod.includes || [])" :key="mod.key + '-inc-' + idx">
                                                 <li x-text="item"></li>
                                             </template>
                                         </ul>
@@ -1083,9 +1289,14 @@
                         <div>
                             <div style="font-weight:800;color:var(--pc-ink)" x-text="quota.name"></div>
                             <div class="pc-quota-meta">
-                                <span x-text="quota.included + ' ' + labels.included"></span>
+                                <span x-text="quotaIncluded(quota) + ' ' + labels.included"></span>
                                 ·
-                                <span x-text="format(quota.price_per_extra_month) + ' / +1'"></span>
+                                <span x-show="!isYearlyDeal()" x-text="format(quota.price_per_extra_month) + ' / +1'"></span>
+                                <span x-show="isYearlyDeal()">
+                                    <span class="pc-price-was" x-text="format(quota.price_per_extra_month)"></span>
+                                    <span class="pc-price-now" style="font-size:0.82rem" x-text="formatDeal(effectiveMonthly(quota.price_per_extra_month))"></span>
+                                    / +1
+                                </span>
                             </div>
                         </div>
                         <div class="pc-stepper">
@@ -1126,6 +1337,17 @@
                     </template>
                 </div>
 
+                <div class="pc-year-offer" x-show="period === 'Year' && yearlyGifted() > 0">
+                    <div>
+                        <span x-text="labels.yearly_value"></span>
+                        <strong x-text="format(yearlyListValue())"></strong>
+                    </div>
+                    <div class="is-gift">
+                        <span x-text="labels.yearly_gift"></span>
+                        <strong x-text="'−' + format(yearlyGiftAmount())"></strong>
+                    </div>
+                </div>
+
                 <div class="pc-invoice-totals">
                     <div class="pc-total-row">
                         <span x-text="labels.invoice_subtotal"></span>
@@ -1143,6 +1365,16 @@
                         <span x-text="format(periodTotal)"></span>
                         <small x-text="labels.sar"></small>
                     </strong>
+                </div>
+                <div class="pc-eq-line" x-show="isYearlyDeal() && monthlyTotal > 0">
+                    <span class="pc-price-was" x-text="format(monthlyTotal) + ' / ' + labels.per_month"></span>
+                    <strong class="pc-price-now" style="font-size:0.95rem">
+                        <span x-text="labels.yearly_effective"></span>
+                        <span x-text="formatDeal(effectiveMonthly(monthlyTotal))"></span>
+                        /
+                        <span x-text="labels.per_month"></span>
+                    </strong>
+                    <em x-text="labels.yearly_effective_hint"></em>
                 </div>
 
                 <div class="pc-coupon">

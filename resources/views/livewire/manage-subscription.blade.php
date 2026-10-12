@@ -310,6 +310,96 @@
         .ms-kv:first-of-type { border-top: 0; }
         .ms-kv span { color: var(--ms-muted); }
         .ms-kv strong { font-weight: 800; }
+        .ms-kv.is-gift strong { color: #15803d; }
+
+        .ms-gift-banner {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.7rem;
+            margin-top: 0.75rem;
+            padding: 0.8rem 0.9rem;
+            border-radius: 0.95rem;
+            background: linear-gradient(120deg, rgba(22, 163, 74, 0.12), rgba(235, 184, 30, 0.14));
+            border: 1px solid rgba(22, 163, 74, 0.2);
+        }
+
+        .ms-gift-banner strong {
+            display: block;
+            color: #166534;
+            font-size: 0.88rem;
+        }
+
+        .ms-gift-banner span {
+            display: block;
+            margin-top: 0.2rem;
+            font-size: 0.78rem;
+            font-weight: 600;
+            line-height: 1.5;
+            color: var(--ms-ink);
+        }
+
+        .ms-price-was {
+            text-decoration: line-through;
+            color: var(--ms-muted);
+            font-weight: 700;
+        }
+
+        .ms-price-now {
+            color: #15803d;
+            font-weight: 800;
+        }
+
+        .ms-period {
+            display: inline-flex;
+            margin-top: 0.85rem;
+            padding: 0.2rem;
+            border-radius: 0.95rem;
+            background: var(--ms-soft);
+            border: 1px solid var(--ms-line);
+        }
+
+        .ms-period button {
+            border: 0;
+            background: transparent;
+            color: var(--ms-muted);
+            font-weight: 800;
+            font-size: 0.95rem;
+            padding: 0.58rem 1.05rem;
+            border-radius: 0.8rem;
+            cursor: pointer;
+            font-family: inherit;
+            display: inline-flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 0.4rem;
+            line-height: 1;
+            white-space: nowrap;
+        }
+
+        .ms-period button.is-active {
+            background: linear-gradient(135deg, #f0c43a, var(--ms-accent));
+            color: #111;
+            box-shadow: 0 8px 18px rgba(184, 137, 18, 0.25);
+        }
+
+        .ms-period-gift {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.28rem;
+            font-size: 0.82rem;
+            font-style: normal;
+            font-weight: 800;
+        }
+
+        .ms-period-gift svg {
+            width: 1.05rem;
+            height: 1.05rem;
+            flex-shrink: 0;
+        }
+
+        .ms-period-gift em {
+            font-style: normal;
+        }
 
         .ms-modules {
             display: flex;
@@ -404,6 +494,27 @@
             font-size: 0.85rem;
         }
 
+        .ms-flash {
+            margin: 0 0 1rem;
+            padding: 0.85rem 1rem;
+            border-radius: 0.9rem;
+            font-weight: 700;
+            font-size: 0.88rem;
+            line-height: 1.45;
+        }
+
+        .ms-flash.is-ok {
+            background: #ecfdf3;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .ms-flash.is-bad {
+            background: #fff7ed;
+            color: #9a3412;
+            border: 1px solid #fed7aa;
+        }
+
         .ms-note {
             margin-top: 0.65rem;
             color: var(--ms-muted);
@@ -453,6 +564,13 @@
             <h1>@lang('main.subscribe.title')</h1>
             <p>@lang('main.subscribe.subtitle', ['company' => $company?->name ?? ''])</p>
         </div>
+
+        @if (session('status'))
+            <div class="ms-flash is-ok">{{ session('status') }}</div>
+        @endif
+        @if (session('error'))
+            <div class="ms-flash is-bad">{{ session('error') }}</div>
+        @endif
 
         @if ($mode === 'choose')
             <div class="ms-grid">
@@ -509,8 +627,67 @@
                 <h3>@lang('main.subscribe.renew_title')</h3>
                 <p class="ms-note" style="margin-top:0;">@lang('main.subscribe.renew_confirm_hint')</p>
 
+                <div class="ms-period" role="group" aria-label="{{ __('general.monthly') }} / {{ __('general.annual') }}">
+                    <button
+                        type="button"
+                        class="{{ $renew_period === 'Year' ? 'is-active' : '' }}"
+                        wire:click="$set('renew_period', 'Year')"
+                    >
+                        <span>@lang('general.annual')</span>
+                        @if ($yearlyMonthsGifted > 0)
+                            <span class="ms-period-gift">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                    <path d="M9.375 3a1.875 1.875 0 0 0 0 3.75h1.875v4.5H3.375A1.125 1.125 0 0 1 2.25 10.125V9.75c0-1.036.84-1.875 1.875-1.875h4.5A1.875 1.875 0 0 1 9.375 3Z" />
+                                    <path d="M12.75 6.75h1.875a1.875 1.875 0 1 0-1.875-1.875V6.75ZM12.75 8.25v4.5h7.875c.621 0 1.125-.504 1.125-1.125V9.75a1.875 1.875 0 0 0-1.875-1.875h-7.125ZM12.75 15v6.75h6.375A1.875 1.875 0 0 0 21 19.875V15H12.75ZM11.25 21.75V15H3v4.875c0 1.036.84 1.875 1.875 1.875H11.25Z" />
+                                </svg>
+                                <em>@lang('main.wizard.plan_yearly_badge')</em>
+                            </span>
+                        @endif
+                    </button>
+                    <button
+                        type="button"
+                        class="{{ $renew_period === 'Month' ? 'is-active' : '' }}"
+                        wire:click="$set('renew_period', 'Month')"
+                    >
+                        @lang('general.monthly')
+                    </button>
+                </div>
+
+                @if ($renew_period === 'Year' && $yearlyMonthsGifted > 0)
+                    <div class="ms-gift-banner">
+                        <div>
+                            <strong>@lang('main.wizard.plan_gift_banner_title')</strong>
+                            <span>@lang('main.wizard.plan_gift_banner_body')</span>
+                        </div>
+                    </div>
+                @endif
+
                 @if ($renewQuote)
-                    <div class="ms-kv" style="margin-top:0.85rem;">
+                    @php
+                        $renewMonthly = (float) ($renewQuote['monthly_subtotal'] ?? 0);
+                        $renewEffective = $yearlyMonthsCharged > 0
+                            ? $renewMonthly * $yearlyMonthsCharged / 12
+                            : $renewMonthly;
+                    @endphp
+                    @if ($renew_period === 'Year' && $yearlyMonthsGifted > 0)
+                        <div class="ms-kv" style="margin-top:0.85rem;">
+                            <span>@lang('main.wizard.plan_yearly_value')</span>
+                            <strong>{{ number_format($renewMonthly * 12, 0) }} {{ __('general.sar') }}</strong>
+                        </div>
+                        <div class="ms-kv is-gift">
+                            <span>@lang('main.wizard.plan_yearly_gift')</span>
+                            <strong>− {{ number_format($renewMonthly * $yearlyMonthsGifted, 0) }} {{ __('general.sar') }}</strong>
+                        </div>
+                        <div class="ms-kv is-gift">
+                            <span>@lang('main.wizard.plan_yearly_effective')</span>
+                            <strong>
+                                <span class="ms-price-was">{{ number_format($renewMonthly, 0) }}</span>
+                                <span class="ms-price-now">{{ number_format($renewEffective, 1) }}</span>
+                                {{ __('general.sar') }} / {{ __('main.wizard.plan_per_month') }}
+                            </strong>
+                        </div>
+                    @endif
+                    <div class="ms-kv" @if ($renew_period !== 'Year' || $yearlyMonthsGifted <= 0) style="margin-top:0.85rem;" @endif>
                         <span>@lang('main.subscribe.renewal_total')</span>
                         <strong>{{ number_format((float) $renewQuote['period_total'], 0) }} {{ __('general.sar') }}</strong>
                     </div>

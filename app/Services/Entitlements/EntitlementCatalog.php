@@ -18,7 +18,14 @@ class EntitlementCatalog
 
     public function yearlyMonthsCharged(): int
     {
-        return (int) $this->setting('yearly_months_charged', config('entitlements.yearly_months_charged', 12));
+        $months = (int) $this->setting('yearly_months_charged', config('entitlements.yearly_months_charged', 10));
+
+        return max(1, min(12, $months));
+    }
+
+    public function yearlyMonthsGifted(): int
+    {
+        return max(0, 12 - $this->yearlyMonthsCharged());
     }
 
     public function platform(): array
@@ -220,6 +227,7 @@ class EntitlementCatalog
         return [
             'currency' => $this->currency(),
             'yearly_months_charged' => $this->yearlyMonthsCharged(),
+            'yearly_months_gifted' => $this->yearlyMonthsGifted(),
             'platform' => [
                 'key' => $platform['key'] ?? 'platform',
                 'name' => $localeIsAr
@@ -263,6 +271,7 @@ class EntitlementCatalog
                     'requires_any' => $this->moduleRequiresAny((string) $key),
                     'grants' => array_values($module['grants'] ?? $module['meta']['grants'] ?? []),
                     'includes' => $this->moduleIncludes($module, $localeIsAr),
+                    'included_employees' => $this->seatsFromModuleArray($module),
                     'icon' => $module['icon'] ?? null,
                 ];
             })->values()->all(),
@@ -320,6 +329,22 @@ class EntitlementCatalog
     }
 
     /**
+     * @param  array<string, mixed>  $module
+     */
+    protected function seatsFromModuleArray(array $module): int
+    {
+        if (array_key_exists('included_employees', $module) && $module['included_employees'] !== null) {
+            return max(0, (int) $module['included_employees']);
+        }
+
+        if (array_key_exists('included', $module) && $module['included'] !== null) {
+            return max(0, (int) $module['included']);
+        }
+
+        return 1;
+    }
+
+    /**
      * @return Collection<int, array>
      */
     protected function products(): Collection
@@ -335,6 +360,38 @@ class EntitlementCatalog
                 ->get()
                 ->map(fn (EntitlementProduct $product) => $product->toCatalogArray());
         });
+    }
+
+    /**
+     * Platform employee allowance plus seats bundled with the selected modules.
+     *
+     * @param  list<string>  $moduleKeys
+     */
+    public function includedEmployees(array $moduleKeys): int
+    {
+        $quota = $this->quota('employees') ?? [];
+        $base = (int) ($quota['included'] ?? 0);
+        $min = (int) ($quota['min'] ?? 0);
+        $fromModules = 0;
+
+        foreach ($this->resolveDependencies($moduleKeys) as $key) {
+            if (! $this->hasModule($key)) {
+                continue;
+            }
+
+            $fromModules += $this->moduleIncludedEmployees($key);
+        }
+
+        return max($min, $base + $fromModules);
+    }
+
+    public function moduleIncludedEmployees(string $key): int
+    {
+        if (! $this->hasModule($key)) {
+            return 0;
+        }
+
+        return $this->seatsFromModuleArray($this->module($key));
     }
 
     public function forgetCaches(): void

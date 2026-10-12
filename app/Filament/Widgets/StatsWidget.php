@@ -14,6 +14,8 @@ use LucasDotVin\Soulbscription\Models\Subscription;
 class StatsWidget extends BaseWidget
 {
     use HasWidgetShield;
+
+    protected static bool $isDiscovered = false;
     
     public function getHeading(): string
     {

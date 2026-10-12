@@ -118,10 +118,19 @@ class EntitlementProductResource extends Resource
                             ->prefix(__('general.sar'))
                             ->visible(fn (Get $get): bool => $get('type') === EntitlementProduct::TYPE_QUOTA),
                         TextInput::make('included')
-                            ->label(__('main.entitlement_included'))
+                            ->label(fn (Get $get): string => $get('type') === EntitlementProduct::TYPE_MODULE
+                                ? __('main.entitlement_module_employees')
+                                : __('main.entitlement_included'))
+                            ->helperText(fn (Get $get): ?string => $get('type') === EntitlementProduct::TYPE_MODULE
+                                ? __('main.entitlement_module_employees_hint')
+                                : null)
                             ->numeric()
                             ->minValue(0)
-                            ->visible(fn (Get $get): bool => $get('type') === EntitlementProduct::TYPE_QUOTA),
+                            ->default(1)
+                            ->visible(fn (Get $get): bool => in_array($get('type'), [
+                                EntitlementProduct::TYPE_QUOTA,
+                                EntitlementProduct::TYPE_MODULE,
+                            ], true)),
                         TextInput::make('min')
                             ->label(__('main.entitlement_min'))
                             ->numeric()
@@ -255,6 +264,13 @@ class EntitlementProductResource extends Resource
                     }),
                 Tables\Columns\TextColumn::make('included')
                     ->label(__('main.entitlement_included'))
+                    ->formatStateUsing(function ($state, EntitlementProduct $record): string {
+                        if ($record->type === EntitlementProduct::TYPE_MODULE) {
+                            return (string) ((int) ($state ?? 1));
+                        }
+
+                        return $state === null ? '—' : (string) $state;
+                    })
                     ->placeholder('—'),
                 Tables\Columns\TextColumn::make('linked_module')
                     ->label(__('main.entitlement_linked_module'))

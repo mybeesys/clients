@@ -101,7 +101,7 @@ class EntitlementProvisioner
      * Renew the company's current entitlement package for another period.
      * Remaining time is preserved by extending from the later of now / current expiry.
      *
-     * @param  array{coupon_code?: string|null}  $overrides
+     * @param  array{coupon_code?: string|null, period?: string}  $overrides
      */
     public function renew(Company $company, array $overrides = []): CompanyEntitlement
     {
@@ -123,7 +123,7 @@ class EntitlementProvisioner
             }
         }
 
-        $period = $entitlement->period === 'Year' ? 'Year' : 'Month';
+        $period = ($overrides['period'] ?? $entitlement->period) === 'Year' ? 'Year' : 'Month';
 
         return $this->provision($company, [
             'period' => $period,

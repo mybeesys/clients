@@ -10,6 +10,8 @@ class PaymentSubscription extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected $guarded = [];
+
     public function subscription()
     {
         return $this->belongsTo(Subscription::class);

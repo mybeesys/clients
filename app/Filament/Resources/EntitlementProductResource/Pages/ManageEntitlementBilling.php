@@ -46,7 +46,7 @@ class ManageEntitlementBilling extends Page implements HasForms
 
         $this->form->fill([
             'currency' => (string) EntitlementSetting::getValue('currency', 'SAR'),
-            'yearly_months_charged' => (int) EntitlementSetting::getValue('yearly_months_charged', 12),
+            'yearly_months_charged' => (int) EntitlementSetting::getValue('yearly_months_charged', 10),
         ]);
     }
 

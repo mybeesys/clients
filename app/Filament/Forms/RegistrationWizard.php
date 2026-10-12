@@ -19,7 +19,14 @@ class RegistrationWizard
         return $form
             ->schema([
                 Wizard::make([
-                    PlanConfiguratorWizardStep::make(required: true),
+                    PlanConfiguratorWizardStep::make(
+                        required: true,
+                        afterValidation: function ($livewire) {
+                            if (method_exists($livewire, 'startRegistrationPayment')) {
+                                $livewire->startRegistrationPayment();
+                            }
+                        },
+                    ),
                     static::companyStep(),
                     static::accountStep(),
                 ])

@@ -7,11 +7,16 @@ use App\Services\Entitlements\CouponApplicator;
 use App\Services\Entitlements\EntitlementCatalog;
 use App\Services\Entitlements\EntitlementPricer;
 use App\Services\Entitlements\EntitlementProvisioner;
+use App\Services\HyperPay\HyperPayCheckoutService;
+use App\Services\HyperPay\HyperPayConfig;
 use App\Support\TenantApplicationUrl;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use InvalidArgumentException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use RuntimeException;
 
 #[Layout('layouts.subscribe')]
 class ManageSubscription extends Component
@@ -22,6 +27,8 @@ class ManageSubscription extends Component
     public array $plan_config = [];
 
     public ?string $renew_coupon = null;
+
+    public string $renew_period = 'Year';
 
     public bool $saving = false;
 
@@ -35,11 +42,13 @@ class ManageSubscription extends Component
 
         $entitlement = $company->entitlement;
         $catalog = app(EntitlementCatalog::class);
+        $modules = $entitlement?->modules ?: [];
+        $includedEmployees = $catalog->includedEmployees($modules);
 
         $this->plan_config = [
-            'period' => $entitlement?->period ?: 'Month',
-            'modules' => $entitlement?->modules ?: [],
-            'employees' => (int) ($entitlement?->employees_quota ?: ($catalog->quota('employees')['included'] ?? 5)),
+            'period' => 'Year',
+            'modules' => $modules,
+            'employees' => max($includedEmployees, (int) ($entitlement?->employees_quota ?: $includedEmployees)),
             'establishments' => (int) ($entitlement?->establishments_quota ?: ($catalog->quota('establishments')['included'] ?? 1)),
             'screen_devices' => (int) ($entitlement?->screen_devices_quota ?: ($catalog->quota('screen_devices')['included'] ?? 1)),
             'coupon_code' => null,
@@ -55,6 +64,7 @@ class ManageSubscription extends Component
         }
 
         $this->mode = 'renew';
+        $this->renew_period = 'Year';
         $this->resetErrorBag();
     }
 
@@ -86,11 +96,23 @@ class ManageSubscription extends Component
             $company = $this->company();
             abort_unless($company, 403);
 
-            app(EntitlementProvisioner::class)->renew($company, [
-                'coupon_code' => filled($this->renew_coupon) ? $this->renew_coupon : null,
-            ]);
+            $entitlement = $company->entitlement;
+            if (! $entitlement) {
+                throw ValidationException::withMessages([
+                    'renew' => __('main.subscribe.renew_requires_custom_package'),
+                ]);
+            }
 
-            return $this->redirectToTenant($company);
+            $planConfig = [
+                'period' => $this->renew_period === 'Month' ? 'Month' : 'Year',
+                'modules' => $entitlement->modules ?? [],
+                'employees' => (int) $entitlement->employees_quota,
+                'establishments' => (int) $entitlement->establishments_quota,
+                'screen_devices' => (int) $entitlement->screen_devices_quota,
+                'coupon_code' => filled($this->renew_coupon) ? $this->renew_coupon : null,
+            ];
+
+            return $this->startCardCheckout($company, $planConfig, 'renew', 'renew');
         } catch (ValidationException $e) {
             $this->saving = false;
             throw $e;
@@ -118,9 +140,7 @@ class ManageSubscription extends Component
                 ]);
             }
 
-            app(EntitlementProvisioner::class)->replace($company, $config);
-
-            return $this->redirectToTenant($company);
+            return $this->startCardCheckout($company, $config, 'replace', 'plan_config');
         } catch (ValidationException $e) {
             $this->saving = false;
             throw $e;
@@ -144,7 +164,7 @@ class ManageSubscription extends Component
         if ($entitlement) {
             try {
                 $renewQuote = app(EntitlementPricer::class)->quote([
-                    'period' => $entitlement->period,
+                    'period' => $this->renew_period === 'Month' ? 'Month' : 'Year',
                     'modules' => $entitlement->modules ?? [],
                     'employees' => (int) $entitlement->employees_quota,
                     'establishments' => (int) $entitlement->establishments_quota,
@@ -180,6 +200,8 @@ class ManageSubscription extends Component
             'moduleLabels' => $moduleLabels,
             'tenantUrl' => $company ? TenantApplicationUrl::forCompany($company) : null,
             'hasCustomPackage' => (bool) $entitlement,
+            'yearlyMonthsCharged' => $catalog->yearlyMonthsCharged(),
+            'yearlyMonthsGifted' => $catalog->yearlyMonthsGifted(),
         ]);
     }
 
@@ -189,6 +211,59 @@ class ManageSubscription extends Component
         $user = Auth::user();
 
         return $user?->defaultCompany() ?? $user?->company;
+    }
+
+    /**
+     * @param  array<string, mixed>  $planConfig
+     */
+    protected function startCardCheckout(Company $company, array $planConfig, string $intent, string $errorBag): mixed
+    {
+        $quote = app(EntitlementPricer::class)->quote($planConfig);
+
+        if ((float) ($quote['period_total'] ?? 0) <= 0) {
+            if ($intent === 'renew') {
+                app(EntitlementProvisioner::class)->renew($company, [
+                    'coupon_code' => $planConfig['coupon_code'] ?? null,
+                    'period' => ($planConfig['period'] ?? 'Year') === 'Month' ? 'Month' : 'Year',
+                ]);
+            } else {
+                app(EntitlementProvisioner::class)->replace($company, $planConfig);
+            }
+
+            return $this->redirectToTenant($company);
+        }
+
+        if (! HyperPayConfig::instance()->isConfigured()) {
+            $this->saving = false;
+            $this->addError($errorBag, __('fields.hyperpay_not_configured'));
+
+            return null;
+        }
+
+        $token = Str::random(40);
+
+        try {
+            $payment = HyperPayCheckoutService::instance()->startSubscription(
+                $company,
+                $planConfig,
+                $quote,
+                HyperPayCheckoutService::billingFromCompany($company, Auth::user()),
+                $intent,
+                $token,
+            );
+        } catch (InvalidArgumentException|RuntimeException $exception) {
+            $this->saving = false;
+            $this->addError($errorBag, $exception->getMessage());
+
+            return null;
+        }
+
+        session([
+            'hyperpay.checkout_uid' => $payment->uid,
+            'hyperpay.checkout_token' => $token,
+        ]);
+
+        return $this->redirect(route('hyperpay.checkout', ['uid' => $payment->uid]), navigate: false);
     }
 
     protected function redirectToTenant(Company $company): mixed

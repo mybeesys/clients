@@ -81,6 +81,9 @@ class EntitlementProduct extends Model
                 ? (float) $this->price_per_extra_month
                 : null,
             'included' => $this->included,
+            'included_employees' => $this->type === self::TYPE_MODULE
+                ? (int) ($this->included ?? 1)
+                : null,
             'min' => $this->min,
             'max' => $this->max,
             'requires' => array_values($this->requires ?? []),

@@ -24,6 +24,7 @@ class EntitlementPricer
      *     period: string,
      *     modules: list<string>,
      *     employees: int,
+     *     included_employees: int,
      *     establishments: int,
      *     screen_devices: int,
      *     currency: string,
@@ -55,7 +56,8 @@ class EntitlementPricer
             ]);
         }
 
-        $employees = $this->clampQuota('employees', (int) ($input['employees'] ?? 0));
+        $includedEmployees = $this->catalog->includedEmployees($modules);
+        $employees = $this->clampEmployees((int) ($input['employees'] ?? 0), $includedEmployees);
         $establishments = $this->clampQuota('establishments', (int) ($input['establishments'] ?? 0));
 
         $screenDevices = 0;
@@ -97,7 +99,8 @@ class EntitlementPricer
             $lineItems,
             'employees',
             $employees,
-            fn (int $extra) => __('main.wizard.plan_extra_employees', ['count' => $extra])
+            fn (int $extra) => __('main.wizard.plan_extra_employees', ['count' => $extra]),
+            $includedEmployees,
         );
         $monthly += $this->appendExtraQuota(
             $lineItems,
@@ -148,6 +151,7 @@ class EntitlementPricer
             'period' => $period,
             'modules' => $modules,
             'employees' => $employees,
+            'included_employees' => $includedEmployees,
             'establishments' => $establishments,
             'screen_devices' => $screenDevices,
             'currency' => $this->catalog->currency(),
@@ -181,11 +185,24 @@ class EntitlementPricer
         return max($min, min($max, $value));
     }
 
+    protected function clampEmployees(int $value, int $included): int
+    {
+        $quota = $this->catalog->quota('employees');
+        $max = (int) ($quota['max'] ?? 9999);
+        $floor = max((int) ($quota['min'] ?? 0), $included);
+
+        if ($value <= 0) {
+            $value = $floor;
+        }
+
+        return max($floor, min($max, $value));
+    }
+
     /**
      * @param  list<array{key: string, label: string, quantity: int, unit_price: float, total: float, type: string}>  $lineItems
      * @param  callable(int): string  $label
      */
-    protected function appendExtraQuota(array &$lineItems, string $key, int $count, callable $label): float
+    protected function appendExtraQuota(array &$lineItems, string $key, int $count, callable $label, ?int $included = null): float
     {
         $quota = $this->catalog->quota($key);
 
@@ -193,7 +210,7 @@ class EntitlementPricer
             return 0;
         }
 
-        $extra = max(0, $count - (int) ($quota['included'] ?? 0));
+        $extra = max(0, $count - (int) ($included ?? $quota['included'] ?? 0));
 
         if ($extra <= 0) {
             return 0;

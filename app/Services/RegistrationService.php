@@ -4,9 +4,12 @@ namespace App\Services;
 
 use App\Models\Company;
 use App\Models\Country;
+use App\Models\HyperPayPayment;
+use App\Models\PaymentSubscription;
 use App\Models\Subscription;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\Entitlements\EntitlementPricer;
 use App\Services\Entitlements\EntitlementProvisioner;
 use App\Services\ReferralService;
 use App\Support\TenantKeyGenerator;
@@ -35,6 +38,7 @@ class RegistrationService
         ])->validate();
 
         $payload = $this->mapCompanyPayload($data);
+        $payment = $this->requirePaidPlanIfNeeded($data);
 
         $user = User::create([
             'name' => $data['userName'],
@@ -48,6 +52,7 @@ class RegistrationService
             $company = (new CompanyAction($user))->storeCompany($payload);
 
             $this->createSubscription($company, $data);
+            $this->attachCardPayment($company, $payment);
 
             app(ReferralService::class)->handleRegistrationConversion(
                 referralCodeValue: $data['referral_code'] ?? session('referral_code'),
@@ -139,5 +144,65 @@ class RegistrationService
         }
 
         $user->forceDelete();
+    }
+
+    protected function requirePaidPlanIfNeeded(array $data): ?HyperPayPayment
+    {
+        $planConfig = $data['plan_config'] ?? null;
+
+        if (! is_array($planConfig) || empty($planConfig['modules'])) {
+            return null;
+        }
+
+        $quote = app(EntitlementPricer::class)->quote($planConfig);
+
+        if ((float) ($quote['period_total'] ?? 0) <= 0) {
+            return null;
+        }
+
+        $uid = (string) session('registration.payment_uid', '');
+        $payment = HyperPayPayment::query()
+            ->where('uid', $uid)
+            ->where('status', HyperPayPayment::STATUS_PAID)
+            ->whereNull('company_id')
+            ->first();
+
+        if (! $payment || ! $payment->matchesPlanConfig($planConfig)) {
+            throw ValidationException::withMessages([
+                'plan_config' => __('main.wizard.payment_required'),
+            ]);
+        }
+
+        return $payment;
+    }
+
+    protected function attachCardPayment(Company $company, ?HyperPayPayment $payment): void
+    {
+        if (! $payment) {
+            return;
+        }
+
+        $entitlement = $company->fresh()?->entitlement;
+
+        $payment->forceFill([
+            'company_id' => $company->id,
+            'plan_id' => $entitlement?->subscription?->plan_id,
+            'subscription_id' => $entitlement?->subscription_id,
+        ])->save();
+
+        PaymentSubscription::query()->create([
+            'subscription_id' => $entitlement?->subscription_id,
+            'company_id' => $company->id,
+            'plan_id' => $entitlement?->subscription?->plan_id,
+            'amount' => $payment->amount,
+            'payment_date' => now()->toDateString(),
+            'payment_method' => 'hyperpay',
+            'status' => 'paid',
+            'transaction_id' => $payment->payment_id ?: $payment->merchant_transaction_id,
+            'paid_amount' => $payment->amount,
+            'remaining_amount' => 0,
+        ]);
+
+        session()->forget(['registration.payment_uid', 'registration.plan_config']);
     }
 }

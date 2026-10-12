@@ -238,3 +238,12 @@
 .fi-fo-select .choices__list[aria-expanded] {
     @apply z-[100];
 }
+
+.fi-page-header-heading {
+    letter-spacing: -0.03em;
+}
+
+.fi-wi-stats-overview-stat {
+    border: 1px solid rgba(235, 184, 30, 0.16);
+    box-shadow: 0 10px 28px rgba(26, 26, 26, 0.04);
+}

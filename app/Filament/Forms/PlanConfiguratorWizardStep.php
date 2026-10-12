@@ -9,12 +9,18 @@ use Filament\Forms\Components\Wizard;
 
 class PlanConfiguratorWizardStep
 {
-    public static function make(bool $required = true): Wizard\Step
+    public static function make(bool $required = true, ?\Closure $afterValidation = null): Wizard\Step
     {
-        return Wizard\Step::make('plan')
+        $step = Wizard\Step::make('plan')
             ->label(__('main.wizard.plan_information'))
             ->icon('heroicon-o-squares-plus')
             ->schema(static::schema($required));
+
+        if ($afterValidation) {
+            $step->afterValidation($afterValidation);
+        }
+
+        return $step;
     }
 
     /**
@@ -38,7 +44,7 @@ class PlanConfiguratorWizardStep
                 ]),
             Hidden::make('plan_config')
                 ->default([
-                    'period' => 'Month',
+                    'period' => 'Year',
                     'modules' => [],
                     'employees' => $employeesIncluded,
                     'establishments' => $establishmentsIncluded,
@@ -64,6 +70,16 @@ class PlanConfiguratorWizardStep
                     $resolved = $catalog->resolveDependencies($modules);
                     if ($catalog->missingRequiresAny($resolved) !== []) {
                         $fail(__('main.wizard.plan_reports_needs_data_module'));
+
+                        return;
+                    }
+
+                    $includedEmployees = $catalog->includedEmployees($resolved);
+                    $employees = (int) ($value['employees'] ?? 0);
+                    if ($employees < $includedEmployees) {
+                        $fail(__('main.wizard.plan_employees_below_included', [
+                            'count' => $includedEmployees,
+                        ]));
                     }
                 }),
         ];

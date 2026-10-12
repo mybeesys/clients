@@ -3,7 +3,11 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Forms\RegistrationWizard;
+use App\Models\HyperPayPayment;
 use App\Services\Entitlements\CouponApplicator;
+use App\Services\Entitlements\EntitlementPricer;
+use App\Services\HyperPay\HyperPayCheckoutService;
+use App\Services\HyperPay\HyperPayConfig;
 use App\Services\RegistrationService;
 use App\Support\TenantApplicationUrl;
 use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
@@ -13,7 +17,11 @@ use Filament\Forms\Form;
 use Filament\Http\Responses\Auth\Contracts\RegistrationResponse;
 use Filament\Notifications\Notification;
 use Filament\Pages\Auth\Register;
+use Filament\Support\Exceptions\Halt;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Support\Str;
+use InvalidArgumentException;
+use RuntimeException;
 
 class Registration extends Register
 {
@@ -30,6 +38,148 @@ class Registration extends Register
         if (is_string($ref) && $ref !== '') {
             session(['referral_code' => strtoupper(trim($ref))]);
         }
+
+        $paid = $this->paidRegistrationPayment();
+
+        if ($paid && is_array($paid->plan_config)) {
+            $this->form->fill([
+                'plan_config' => $paid->plan_config,
+            ]);
+        }
+
+        $step = (string) request()->query('step', 'plan');
+
+        if (in_array($step, ['company', 'account'], true) && ! $this->hasSatisfiedPlanPayment()) {
+            $this->redirect(url('/admin/register?step=plan'));
+        }
+    }
+
+    public function startRegistrationPayment(): void
+    {
+        $planConfig = data_get($this->data, 'plan_config', []);
+
+        try {
+            $quote = app(EntitlementPricer::class)->quote(is_array($planConfig) ? $planConfig : []);
+        } catch (\Throwable $exception) {
+            Notification::make()
+                ->title($exception->getMessage())
+                ->danger()
+                ->send();
+
+            throw new Halt();
+        }
+
+        if ((float) ($quote['period_total'] ?? 0) <= 0) {
+            session([
+                'registration.payment_uid' => 'free',
+                'registration.plan_config' => $planConfig,
+            ]);
+
+            return;
+        }
+
+        $existing = $this->paidRegistrationPayment();
+
+        if ($existing && $existing->matchesPlanConfig($planConfig)) {
+            return;
+        }
+
+        if (! HyperPayConfig::instance()->isConfigured()) {
+            Notification::make()
+                ->title(__('fields.hyperpay_not_configured'))
+                ->danger()
+                ->send();
+
+            throw new Halt();
+        }
+
+        $token = (string) session('registration.session_token', '');
+
+        if ($token === '') {
+            $token = Str::random(40);
+            session(['registration.session_token' => $token]);
+        }
+
+        try {
+            $payment = HyperPayCheckoutService::instance()->startRegistration(
+                $planConfig,
+                $quote,
+                HyperPayCheckoutService::placeholderBilling(),
+                $token,
+            );
+        } catch (InvalidArgumentException|RuntimeException $exception) {
+            Notification::make()
+                ->title(__('fields.hyperpay_checkout_failed'))
+                ->body($exception->getMessage())
+                ->danger()
+                ->send();
+
+            throw new Halt();
+        }
+
+        session([
+            'registration.payment_uid' => $payment->uid,
+            'registration.plan_config' => $planConfig,
+        ]);
+
+        $this->redirect(route('hyperpay.checkout', ['uid' => $payment->uid]), navigate: false);
+
+        throw new Halt();
+    }
+
+    public function hasSatisfiedPlanPayment(): bool
+    {
+        $planConfig = data_get($this->data, 'plan_config')
+            ?? session('registration.plan_config');
+
+        if (! is_array($planConfig) || empty($planConfig['modules'])) {
+            $planConfig = session('registration.plan_config');
+        }
+
+        if (! is_array($planConfig)) {
+            return false;
+        }
+
+        try {
+            $quote = app(EntitlementPricer::class)->quote($planConfig);
+        } catch (\Throwable) {
+            return false;
+        }
+
+        if ((float) ($quote['period_total'] ?? 0) <= 0) {
+            return true;
+        }
+
+        $paid = $this->paidRegistrationPayment();
+
+        return $paid !== null && $paid->matchesPlanConfig($planConfig);
+    }
+
+    public function paidRegistrationPayment(): ?HyperPayPayment
+    {
+        $uid = (string) session('registration.payment_uid', '');
+
+        if ($uid === '' || $uid === 'free') {
+            return null;
+        }
+
+        $payment = HyperPayPayment::query()
+            ->where('uid', $uid)
+            ->where('status', HyperPayPayment::STATUS_PAID)
+            ->whereNull('company_id')
+            ->first();
+
+        if (! $payment) {
+            return null;
+        }
+
+        $token = (string) session('registration.session_token', '');
+
+        if ($payment->session_token && $token !== '' && ! hash_equals((string) $payment->session_token, $token)) {
+            return null;
+        }
+
+        return $payment;
     }
 
     public function form(Form $form): Form

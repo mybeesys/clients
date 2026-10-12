@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\HyperPayCheckoutController;
 use App\Http\Controllers\Internal\GrantTenantAdminPermissionsController;
 use App\Http\Controllers\InviteLandingController;
 use App\Http\Controllers\RegistrationThankYouController;
@@ -25,6 +26,14 @@ Route::get('/login', function () {
 
 Route::get('/register/thank-you', RegistrationThankYouController::class)
     ->name('register.thank-you');
+
+Route::get('/pay/hyperpay/{uid}', [HyperPayCheckoutController::class, 'show'])
+    ->middleware(LocalizationMiddleware::class)
+    ->name('hyperpay.checkout');
+
+Route::match(['get', 'post'], '/pay/hyperpay/{uid}/result', [HyperPayCheckoutController::class, 'result'])
+    ->middleware(LocalizationMiddleware::class)
+    ->name('hyperpay.result');
 
 Route::get('/invite/{code}', InviteLandingController::class)
     ->middleware(LocalizationMiddleware::class)
