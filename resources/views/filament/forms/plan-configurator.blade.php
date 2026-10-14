@@ -44,6 +44,16 @@
         'modules_hint' => __('main.wizard.plan_modules_hint'),
         'quotas_title' => __('main.wizard.plan_quotas_title'),
         'platform_badge' => __('main.wizard.plan_platform_badge'),
+        'platform_locked' => __('main.wizard.plan_platform_locked'),
+        'depends_on_platform' => __('main.wizard.plan_depends_on_platform'),
+        'foundation_note' => __('main.wizard.plan_foundation_note'),
+        'employees_count' => __('main.wizard.plan_employees_count'),
+        'employees_quota_hint' => __('main.wizard.plan_employees_quota_hint'),
+        'pos_devices_count' => __('main.wizard.plan_pos_devices_count'),
+        'pos_devices_hint' => __('main.wizard.plan_pos_devices_hint'),
+        'waiter_seats_count' => __('main.wizard.plan_waiter_seats_count'),
+        'waiter_seats_hint' => __('main.wizard.plan_waiter_seats_hint'),
+        'quota_cap_hint' => __('main.wizard.plan_quota_cap_hint'),
         'requires' => __('main.wizard.plan_requires'),
         'includes' => __('main.wizard.plan_includes'),
         'module_employees' => __('main.wizard.plan_module_employees'),
@@ -318,60 +328,6 @@
             line-height: 1;
         }
 
-        .pc-platform {
-            display: flex;
-            gap: 0.85rem;
-            align-items: flex-start;
-            padding: 0.85rem 1rem;
-            border-radius: 1rem;
-            border: 1px solid var(--pc-line);
-            background:
-                linear-gradient(135deg, var(--pc-accent-soft), transparent 55%),
-                var(--pc-surface);
-            margin-bottom: 0.95rem;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .pc-platform::after {
-            content: "";
-            position: absolute;
-            inset-inline-end: -10px;
-            top: -14px;
-            width: 64px;
-            height: 64px;
-            background: rgba(235, 184, 30, 0.2);
-            clip-path: var(--pc-hex);
-        }
-
-        .pc-platform-badge {
-            flex-shrink: 0;
-            font-size: 0.66rem;
-            font-weight: 800;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-            color: #111;
-            background: var(--pc-accent);
-            padding: 0.32rem 0.55rem;
-            border-radius: 0.55rem;
-            position: relative;
-            z-index: 1;
-        }
-
-        .pc-platform h4 {
-            margin: 0;
-            color: var(--pc-ink);
-            font-size: 0.95rem;
-            font-weight: 800;
-        }
-
-        .pc-platform p {
-            margin: 0.3rem 0 0;
-            color: var(--pc-muted);
-            font-size: 0.8rem;
-            line-height: 1.5;
-        }
-
         .pc-group {
             margin-bottom: 1rem;
         }
@@ -415,12 +371,13 @@
             border: 1.5px solid var(--pc-line);
             background: var(--pc-surface);
             border-radius: 1rem;
-            padding: 0.9rem 0.95rem 1.85rem;
-            cursor: pointer;
+            padding: 0;
             transition: border-color 0.22s ease, transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
             width: 100%;
             overflow: hidden;
             font-family: inherit;
+            display: flex;
+            flex-direction: column;
         }
 
         .pc-module::before {
@@ -432,6 +389,7 @@
             width: 3px;
             background: transparent;
             transition: background 0.22s ease;
+            z-index: 2;
         }
 
         .pc-module:hover {
@@ -450,6 +408,104 @@
 
         .pc-module.is-on::before {
             background: linear-gradient(180deg, #f0c43a, var(--pc-accent-2));
+        }
+
+        .pc-module-main {
+            all: unset;
+            box-sizing: border-box;
+            display: block;
+            width: 100%;
+            padding: 0.9rem 0.95rem 1.85rem;
+            cursor: pointer;
+            font-family: inherit;
+            color: inherit;
+            text-align: start;
+        }
+
+        .pc-module-main:focus-visible {
+            outline: 2px solid var(--pc-accent);
+            outline-offset: -2px;
+        }
+
+        .pc-module-quota {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin: 0;
+            padding: 0.7rem 0.95rem;
+            border-top: 1px solid rgba(235, 184, 30, 0.28);
+            background:
+                linear-gradient(90deg, rgba(235, 184, 30, 0.14), transparent 70%),
+                rgba(255, 253, 247, 0.92);
+            animation: pc-quota-in 0.28s ease;
+        }
+
+        @keyframes pc-quota-in {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .pc-module-quota-copy {
+            min-width: 0;
+            flex: 1 1 8rem;
+        }
+
+        .pc-module-quota-copy strong {
+            display: block;
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: var(--pc-ink);
+        }
+
+        .pc-module-quota-copy span {
+            display: block;
+            margin-top: 0.15rem;
+            font-size: 0.68rem;
+            color: var(--pc-muted);
+            line-height: 1.4;
+        }
+
+        .pc-module-quota-cap {
+            flex: 1 1 100%;
+            margin: 0.15rem 0 0;
+            padding: 0.4rem 0.55rem;
+            border-radius: 0.65rem;
+            font-size: 0.68rem;
+            font-weight: 700;
+            line-height: 1.45;
+            color: #8a5a00;
+            background: rgba(235, 184, 30, 0.16);
+            border: 1px solid rgba(235, 184, 30, 0.35);
+        }
+
+        .pc-module.has-inline-quota .pc-module-main {
+            padding-bottom: 0.95rem;
+        }
+
+        .pc-module.has-inline-quota.is-on .pc-check {
+            bottom: auto;
+            top: 0.75rem;
+        }
+
+        .pc-module.quota-preview .pc-module-quota {
+            opacity: 0.72;
+            filter: saturate(0.85);
+        }
+
+        .pc-module.quota-preview:hover .pc-module-quota {
+            opacity: 0.92;
+        }
+
+        .pc-stepper.is-capped button:last-of-type {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        /* Digital screens also use in-card counter */
+        .pc-module.has-inline-quota .pc-module-quota {
+            min-height: 3.25rem;
         }
 
         .pc-module-top {
@@ -1219,70 +1275,103 @@
 
     <div class="pc-layout">
         <div>
-            <div class="pc-platform">
-                <span class="pc-platform-badge" x-text="labels.platform_badge"></span>
-                <div style="flex:1">
-                    <div class="pc-module-top">
-                        <h4 x-text="catalog.platform.name"></h4>
-                        <div class="pc-price-tag" :class="{ 'is-deal': isYearlyDeal() }">
-                            <span class="pc-price-was" x-show="isYearlyDeal()" x-text="format(catalog.platform.price_month)"></span>
-                            <span class="pc-price-row">
-                                <span :class="isYearlyDeal() ? 'pc-price-now' : ''" x-text="displayMonthly(catalog.platform.price_month)"></span>
-                                <small x-text="' / ' + labels.per_month"></small>
-                            </span>
-                        </div>
-                    </div>
-                    <p x-text="catalog.platform.description"></p>
-                </div>
-            </div>
-
             <template x-for="group in catalog.groups" :key="group.key">
                 <div class="pc-group" x-show="modulesFor(group.key).length">
                     <h4 class="pc-group-title" x-text="group.name"></h4>
                     <div class="pc-modules">
                         <template x-for="mod in modulesFor(group.key)" :key="mod.key">
-                            <button
-                                type="button"
+                            <article
                                 class="pc-module"
-                                :class="{ 'is-on': isSelected(mod.key) }"
-                                x-on:click="toggle(mod.key)"
+                                :class="{
+                                    'is-on': isSelected(mod.key),
+                                    'has-inline-quota': Boolean(resolveInlineQuotaKey(mod) && inlineQuota(mod)),
+                                    'quota-preview': Boolean(resolveInlineQuotaKey(mod) && inlineQuota(mod) && !isSelected(mod.key)),
+                                }"
                             >
-                                <span class="pc-check">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-3.5 w-3.5">
-                                        <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd" />
-                                    </svg>
-                                </span>
-                                <div class="pc-module-top">
-                                    <h5 x-text="mod.name"></h5>
-                                    <div class="pc-price-tag" :class="{ 'is-deal': isYearlyDeal() }">
-                                        <span class="pc-price-was" x-show="isYearlyDeal()" x-text="format(mod.price_month)"></span>
-                                        <span class="pc-price-row">
-                                            <span :class="isYearlyDeal() ? 'pc-price-now' : ''" x-text="displayMonthly(mod.price_month)"></span>
-                                            <small x-text="' / ' + labels.per_month"></small>
+                                <button
+                                    type="button"
+                                    class="pc-module-main"
+                                    :aria-pressed="isSelected(mod.key)"
+                                    x-on:click="toggle(mod.key)"
+                                >
+                                    <span class="pc-check">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-3.5 w-3.5">
+                                            <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd" />
+                                        </svg>
+                                    </span>
+                                    <div class="pc-module-top">
+                                        <h5 x-text="mod.name"></h5>
+                                        <div class="pc-price-tag" :class="{ 'is-deal': isYearlyDeal() }">
+                                            <span class="pc-price-was" x-show="isYearlyDeal()" x-text="format(mod.price_month)"></span>
+                                            <span class="pc-price-row">
+                                                <span :class="isYearlyDeal() ? 'pc-price-now' : ''" x-text="displayMonthly(mod.price_month)"></span>
+                                                <small x-text="' / ' + labels.per_month"></small>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <p x-text="mod.description"></p>
+                                    <template x-if="Number(mod.included_employees) > 0 || mod.includes?.length">
+                                        <div>
+                                            <div class="pc-includes-label" x-text="labels.includes"></div>
+                                            <ul class="pc-includes">
+                                                <li x-show="Number(mod.included_employees) > 0" x-text="employeeSeatLabel(mod.included_employees)"></li>
+                                                <template x-for="(item, idx) in (mod.includes || [])" :key="mod.key + '-inc-' + idx">
+                                                    <li x-text="item"></li>
+                                                </template>
+                                            </ul>
+                                        </div>
+                                    </template>
+                                    <div class="pc-req" x-show="mod.requires?.length" x-text="labels.requires + ': ' + requiredNames(mod)"></div>
+                                    <div class="pc-req" x-show="mod.requires_any?.length" x-text="labels.works_with + ': ' + requiresAnyNames(mod)"></div>
+                                </button>
+
+                                {{-- In-card counter: POS devices / waiter seats / shifts employees --}}
+                                <div
+                                    class="pc-module-quota"
+                                    x-show="resolveInlineQuotaKey(mod) && inlineQuota(mod)"
+                                    x-cloak
+                                    x-on:click.stop
+                                >
+                                    <div class="pc-module-quota-copy">
+                                        <strong x-text="inlineQuotaLabel(mod)"></strong>
+                                        <span x-text="inlineQuotaHint(mod)" x-show="inlineQuotaHint(mod)"></span>
+                                        <span>
+                                            <span x-text="quotaIncluded(inlineQuota(mod)) + ' ' + labels.included"></span>
+                                            ·
+                                            <span x-show="!isYearlyDeal()" x-text="format(inlineQuota(mod)?.price_per_extra_month) + ' / +1'"></span>
+                                            <span x-show="isYearlyDeal()">
+                                                <span class="pc-price-was" x-text="format(inlineQuota(mod)?.price_per_extra_month)"></span>
+                                                <span class="pc-price-now" style="font-size:0.72rem" x-text="formatDeal(effectiveMonthly(inlineQuota(mod)?.price_per_extra_month))"></span>
+                                                / +1
+                                            </span>
                                         </span>
                                     </div>
-                                </div>
-                                <p x-text="mod.description"></p>
-                                <template x-if="Number(mod.included_employees) > 0 || mod.includes?.length">
-                                    <div>
-                                        <div class="pc-includes-label" x-text="labels.includes"></div>
-                                        <ul class="pc-includes">
-                                            <li x-show="Number(mod.included_employees) > 0" x-text="employeeSeatLabel(mod.included_employees)"></li>
-                                            <template x-for="(item, idx) in (mod.includes || [])" :key="mod.key + '-inc-' + idx">
-                                                <li x-text="item"></li>
-                                            </template>
-                                        </ul>
+                                    <div
+                                        class="pc-stepper"
+                                        :class="{ 'is-capped': isSelected(mod.key) && isQuotaAtMax(resolveInlineQuotaKey(mod)) }"
+                                    >
+                                        <button type="button" x-on:click="bumpInline(mod, -1)">−</button>
+                                        <span x-text="quotaValue(resolveInlineQuotaKey(mod))"></span>
+                                        <button
+                                            type="button"
+                                            x-on:click="bumpInline(mod, 1)"
+                                            :disabled="isSelected(mod.key) && isQuotaAtMax(resolveInlineQuotaKey(mod))"
+                                        >+</button>
                                     </div>
-                                </template>
-                                <div class="pc-req" x-show="mod.requires?.length" x-text="labels.requires + ': ' + requiredNames(mod)"></div>
-                                <div class="pc-req" x-show="mod.requires_any?.length" x-text="labels.works_with + ': ' + requiresAnyNames(mod)"></div>
-                            </button>
+                                    <p
+                                        class="pc-module-quota-cap"
+                                        x-show="isSelected(mod.key) && quotaCapKey === resolveInlineQuotaKey(mod)"
+                                        x-text="labels.quota_cap_hint"
+                                        x-transition
+                                    ></p>
+                                </div>
+                            </article>
                         </template>
                     </div>
                 </div>
             </template>
 
-            <div class="pc-quotas">
+            <div class="pc-quotas" x-show="visibleQuotas.length">
                 <h4 x-text="labels.quotas_title"></h4>
                 <template x-for="quota in visibleQuotas" :key="quota.key">
                     <div class="pc-quota-row">

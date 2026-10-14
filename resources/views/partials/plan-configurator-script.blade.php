@@ -11,6 +11,9 @@
             employees: initial.employees ?? catalog?.quotas?.find(q => q.key === 'employees')?.included ?? 5,
             establishments: initial.establishments ?? catalog?.quotas?.find(q => q.key === 'establishments')?.included ?? 1,
             screen_devices: initial.screen_devices ?? catalog?.quotas?.find(q => q.key === 'screen_devices')?.included ?? 1,
+            pos_devices: initial.pos_devices ?? catalog?.quotas?.find(q => q.key === 'pos_devices')?.included ?? 1,
+            waiter_seats: initial.waiter_seats ?? catalog?.quotas?.find(q => q.key === 'waiter_seats')?.included ?? 1,
+            quotaCapKey: null,
             coupon_input: initial.coupon_code || '',
             coupon_code: '',
             coupon_discount: 0,
@@ -20,11 +23,15 @@
             coupon_loading: false,
             init() {
                 this.employees = this.clampEmployees(this.employees);
+                this.pos_devices = this.clampPlainQuota('pos_devices', this.pos_devices);
+                this.waiter_seats = this.clampPlainQuota('waiter_seats', this.waiter_seats);
                 this.syncToWire();
                 this.$watch('modules', () => { this.refreshCouponDiscount(); this.syncToWire(); });
                 this.$watch('employees', () => { this.refreshCouponDiscount(); this.syncToWire(); });
                 this.$watch('establishments', () => { this.refreshCouponDiscount(); this.syncToWire(); });
                 this.$watch('screen_devices', () => { this.refreshCouponDiscount(); this.syncToWire(); });
+                this.$watch('pos_devices', () => { this.refreshCouponDiscount(); this.syncToWire(); });
+                this.$watch('waiter_seats', () => { this.refreshCouponDiscount(); this.syncToWire(); });
                 this.$watch('period', () => { this.refreshCouponDiscount(); this.syncToWire(); });
                 if (this.coupon_input) {
                     this.applyCoupon();
@@ -35,11 +42,11 @@
                 const available = new Set((this.catalog.modules || []).map(m => m.key));
                 const selected = [];
                 (rec.modules || []).forEach(key => {
-                    if (!available.has(key)) return;
+                    if (!available.has(key) || key === 'platform') return;
                     const mod = (this.catalog.modules || []).find(m => m.key === key);
                     selected.push(key);
                     (mod?.requires || []).forEach(r => {
-                        if (available.has(r) && !selected.includes(r)) selected.push(r);
+                        if (available.has(r) && r !== 'platform' && !selected.includes(r)) selected.push(r);
                     });
                 });
                 this.modules = Array.from(new Set(selected));
@@ -69,23 +76,99 @@
                 this.employees = this.clampEmployees(this.includedEmployees());
             },
             modulesFor(groupKey) {
-                return (this.catalog.modules || []).filter(m => m.group === groupKey);
+                return (this.catalog.modules || []).filter(m => m.group === groupKey && !m.locked && m.key !== 'platform');
+            },
+            isCore(modOrKey) {
+                return false;
             },
             get visibleQuotas() {
+                const inlineKeys = new Set(
+                    (this.catalog.modules || [])
+                        .map(m => this.resolveInlineQuotaKey(m))
+                        .filter(Boolean)
+                );
+                // Always keep these inside their module cards — never the bottom strip.
+                ['pos_devices', 'waiter_seats', 'employees', 'screen_devices'].forEach(k => inlineKeys.add(k));
+
                 return (this.catalog.quotas || []).filter(quota => {
+                    if (inlineKeys.has(quota.key)) return false;
                     if (!quota.linked_module) return true;
                     return this.modules.includes(quota.linked_module);
                 });
+            },
+            resolveInlineQuotaKey(mod) {
+                if (mod?.inline_quota) return mod.inline_quota;
+                return ({
+                    cashier_pos: 'pos_devices',
+                    waiter_app: 'waiter_seats',
+                    employee_schedule: 'employees',
+                    digital_screens: 'screen_devices',
+                })[mod?.key] || null;
+            },
+            inlineQuota(mod) {
+                const key = this.resolveInlineQuotaKey(mod);
+                if (!key) return null;
+                return (this.catalog.quotas || []).find(q => q.key === key) || null;
+            },
+            inlineQuotaLabel(mod) {
+                const key = this.resolveInlineQuotaKey(mod);
+                const map = {
+                    employees: this.labels.employees_count,
+                    pos_devices: this.labels.pos_devices_count,
+                    waiter_seats: this.labels.waiter_seats_count,
+                };
+                return map[key] || this.inlineQuota(mod)?.name || '';
+            },
+            inlineQuotaHint(mod) {
+                const key = this.resolveInlineQuotaKey(mod);
+                const map = {
+                    employees: this.labels.employees_quota_hint,
+                    pos_devices: this.labels.pos_devices_hint,
+                    waiter_seats: this.labels.waiter_seats_hint,
+                };
+                return map[key] || '';
+            },
+            ensureModuleForQuota(mod) {
+                const key = mod?.key;
+                if (!key || this.isSelected(key)) return;
+                this.toggle(key);
+            },
+            bumpInline(mod, delta) {
+                const key = this.resolveInlineQuotaKey(mod);
+                if (!key) return;
+                if (!this.isSelected(mod.key)) {
+                    this.ensureModuleForQuota(mod);
+                    // After selecting, apply the bump on next tick so state is ready.
+                    this.$nextTick(() => this.bump(key, delta));
+                    return;
+                }
+                this.bump(key, delta);
             },
             quotaValue(key) {
                 if (key === 'employees') return this.employees;
                 if (key === 'establishments') return this.establishments;
                 if (key === 'screen_devices') return this.screen_devices;
+                if (key === 'pos_devices') return this.pos_devices;
+                if (key === 'waiter_seats') return this.waiter_seats;
                 return 0;
             },
             quotaIncluded(quota) {
                 if (quota?.key === 'employees') return this.includedEmployees();
                 return Number(quota?.included ?? 0);
+            },
+            isQuotaAtMax(key) {
+                const quota = (this.catalog.quotas || []).find(q => q.key === key);
+                if (!quota) return false;
+                return this.quotaValue(key) >= Number(quota.max ?? 9999);
+            },
+            clampPlainQuota(key, value) {
+                const quota = (this.catalog.quotas || []).find(q => q.key === key) || {};
+                const min = Number(quota.min ?? 0);
+                const max = Number(quota.max ?? 9999);
+                const fallback = Number(quota.included ?? min);
+                const n = Number(value || 0);
+                const base = n > 0 ? n : fallback;
+                return Math.min(max, Math.max(min, base));
             },
             resolvedModules() {
                 const byKey = new Map((this.catalog.modules || []).map(m => [m.key, m]));
@@ -125,6 +208,8 @@
                 if (key === 'employees') this.employees = value;
                 else if (key === 'establishments') this.establishments = value;
                 else if (key === 'screen_devices') this.screen_devices = value;
+                else if (key === 'pos_devices') this.pos_devices = value;
+                else if (key === 'waiter_seats') this.waiter_seats = value;
             },
             isSelected(key) {
                 return this.modules.includes(key);
@@ -149,6 +234,7 @@
             },
             toggle(key) {
                 this.activeRecommendation = null;
+                this.quotaCapKey = null;
                 const extras = Math.max(0, this.employees - this.includedEmployees());
                 if (this.isSelected(key)) {
                     this.modules = this.modules.filter(k => k !== key);
@@ -160,12 +246,31 @@
                         const q = (this.catalog.quotas || []).find(item => item.key === 'screen_devices');
                         this.screen_devices = q?.included ?? 1;
                     }
+                    if (key === 'cashier_pos') {
+                        this.pos_devices = this.clampPlainQuota('pos_devices', (this.catalog.quotas || []).find(q => q.key === 'pos_devices')?.included ?? 1);
+                        // Drop waiter if cashier removed (requires cashier_pos).
+                        if (!this.modules.includes('waiter_app')) {
+                            this.waiter_seats = this.clampPlainQuota('waiter_seats', (this.catalog.quotas || []).find(q => q.key === 'waiter_seats')?.included ?? 1);
+                        }
+                    }
+                    if (key === 'waiter_app') {
+                        this.waiter_seats = this.clampPlainQuota('waiter_seats', (this.catalog.quotas || []).find(q => q.key === 'waiter_seats')?.included ?? 1);
+                    }
+                    if (key === 'employee_schedule') {
+                        this.employees = this.clampEmployees(this.includedEmployees());
+                    }
                 } else {
                     const mod = (this.catalog.modules || []).find(m => m.key === key);
                     const next = new Set(this.modules);
                     next.add(key);
                     (mod?.requires || []).forEach(r => next.add(r));
                     this.modules = Array.from(next);
+                    if (key === 'cashier_pos') {
+                        this.pos_devices = this.clampPlainQuota('pos_devices', this.pos_devices);
+                    }
+                    if (key === 'waiter_app') {
+                        this.waiter_seats = this.clampPlainQuota('waiter_seats', this.waiter_seats);
+                    }
                 }
                 this.employees = this.clampEmployees(this.includedEmployees() + extras);
             },
@@ -177,7 +282,13 @@
                 const min = key === 'employees'
                     ? Math.max(Number(quota.min ?? 0), this.includedEmployees())
                     : Number(quota.min ?? 0);
-                const next = Math.min(Number(quota.max), Math.max(min, current + delta));
+                const max = Number(quota.max ?? 9999);
+                if (delta > 0 && current >= max) {
+                    this.quotaCapKey = key;
+                    return;
+                }
+                const next = Math.min(max, Math.max(min, current + delta));
+                this.quotaCapKey = next >= max ? key : null;
                 this.setQuotaValue(key, next);
             },
             setPeriod(period) {
@@ -227,30 +338,33 @@
             },
             get baseLineItems() {
                 const items = [];
-                const platform = this.catalog.platform || {};
-                items.push({
-                    key: 'platform',
-                    label: platform.name,
-                    total: platform.price_month,
-                    type: 'platform',
-                });
+                // Foundation (products / employees / branches) is free — never billed.
                 (this.catalog.modules || []).forEach(mod => {
+                    if (mod.key === 'platform' || mod.locked) return;
                     if (this.modules.includes(mod.key)) {
                         items.push({ key: mod.key, label: mod.name, total: mod.price_month, type: 'module' });
                     }
                 });
-                this.visibleQuotas.forEach(quota => {
+
+                const pushQuotaExtra = (quota) => {
+                    if (!quota) return;
                     const count = this.quotaValue(quota.key);
                     const extra = Math.max(0, count - this.quotaIncluded(quota));
-                    if (extra > 0) {
-                        items.push({
-                            key: quota.key + '_extra',
-                            label: quota.name + ' (+' + extra + ')',
-                            total: extra * quota.price_per_extra_month,
-                            type: 'quota',
-                        });
-                    }
+                    if (extra <= 0) return;
+                    items.push({
+                        key: quota.key + '_extra',
+                        label: quota.name + ' (+' + extra + ')',
+                        total: extra * quota.price_per_extra_month,
+                        type: 'quota',
+                    });
+                };
+
+                (this.catalog.modules || []).forEach(mod => {
+                    if (!this.resolveInlineQuotaKey(mod) || !this.modules.includes(mod.key)) return;
+                    pushQuotaExtra(this.inlineQuota(mod));
                 });
+
+                this.visibleQuotas.forEach(pushQuotaExtra);
                 return items;
             },
             get lineItems() {
@@ -350,6 +464,8 @@
                         employees: this.employees,
                         establishments: this.establishments,
                         screen_devices: this.modules.includes('digital_screens') ? this.screen_devices : 0,
+                        pos_devices: this.modules.includes('cashier_pos') ? this.pos_devices : 0,
+                        waiter_seats: this.modules.includes('waiter_app') ? this.waiter_seats : 0,
                         coupon_code: this.coupon_code || null,
                     });
                 } catch (e) {}

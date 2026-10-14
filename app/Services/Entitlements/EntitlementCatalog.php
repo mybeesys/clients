@@ -236,7 +236,10 @@ class EntitlementCatalog
                 'description' => $localeIsAr
                     ? ($platform['description_ar'] ?? $platform['description_en'] ?? null)
                     : ($platform['description_en'] ?? $platform['description_ar'] ?? null),
-                'price_month' => (float) ($platform['price_month'] ?? 0),
+                'price_month' => 0,
+                'billable' => false,
+                'always_included' => true,
+                'includes' => $this->moduleIncludes($platform, $localeIsAr),
             ],
             'recommendations' => $this->recommendationsForFrontend($localeIsAr),
             'quotas' => collect($this->quotas())->map(function (array $quota, $key) use ($localeIsAr) {
@@ -273,9 +276,28 @@ class EntitlementCatalog
                     'includes' => $this->moduleIncludes($module, $localeIsAr),
                     'included_employees' => $this->seatsFromModuleArray($module),
                     'icon' => $module['icon'] ?? null,
+                    'locked' => false,
+                    'always_included' => false,
+                    'depends_on_platform' => false,
+                    'inline_quota' => $this->resolveInlineQuotaKey((string) $key, $module),
                 ];
             })->values()->all(),
         ];
+    }
+
+    /**
+     * Prefer module/meta, then live config — so stale DB rows still get in-card counters.
+     */
+    protected function resolveInlineQuotaKey(string $key, array $module): ?string
+    {
+        $fromModule = $module['inline_quota'] ?? $module['meta']['inline_quota'] ?? null;
+        if (is_string($fromModule) && $fromModule !== '') {
+            return $fromModule;
+        }
+
+        $fromConfig = config("entitlements.modules.{$key}.inline_quota");
+
+        return is_string($fromConfig) && $fromConfig !== '' ? $fromConfig : null;
     }
 
     /**

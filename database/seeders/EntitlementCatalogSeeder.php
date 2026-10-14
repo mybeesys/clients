@@ -29,11 +29,11 @@ class EntitlementCatalogSeeder extends Seeder
             [
                 'type' => EntitlementProduct::TYPE_PLATFORM,
                 'group' => null,
-                'name_en' => $platform['name_en'] ?? 'Core platform',
-                'name_ar' => $platform['name_ar'] ?? 'المنصة الأساسية',
+                'name_en' => $platform['name_en'] ?? 'Operational foundation',
+                'name_ar' => $platform['name_ar'] ?? 'الأساس التشغيلي',
                 'description_en' => $platform['description_en'] ?? null,
                 'description_ar' => $platform['description_ar'] ?? null,
-                'price_month' => $platform['price_month'] ?? 199,
+                'price_month' => (float) ($platform['price_month'] ?? 0),
                 'sort_order' => 0,
                 'active' => true,
                 'meta' => [],
@@ -57,13 +57,14 @@ class EntitlementCatalogSeeder extends Seeder
                 'icon' => $module['icon'] ?? null,
                 'sort_order' => $sort,
                 'active' => true,
-                'meta' => [
-                    'menu_keys' => $module['menu_keys'] ?? [],
-                    'api_prefixes' => $module['api_prefixes'] ?? [],
-                    'requires_any' => $module['requires_any'] ?? [],
-                    'grants' => $module['grants'] ?? [],
-                    'includes' => $module['includes'] ?? [],
-                ],
+                    'meta' => [
+                        'menu_keys' => $module['menu_keys'] ?? [],
+                        'api_prefixes' => $module['api_prefixes'] ?? [],
+                        'requires_any' => $module['requires_any'] ?? [],
+                        'grants' => $module['grants'] ?? [],
+                        'includes' => $module['includes'] ?? [],
+                        'inline_quota' => $module['inline_quota'] ?? null,
+                    ],
             ]);
             if ($product->included === null) {
                 $product->included = (int) ($module['included_employees'] ?? $module['included'] ?? 1);

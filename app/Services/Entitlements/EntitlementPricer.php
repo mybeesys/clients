@@ -65,21 +65,22 @@ class EntitlementPricer
             $screenDevices = $this->clampQuota('screen_devices', (int) ($input['screen_devices'] ?? 0));
         }
 
+        $posDevices = 0;
+        if (in_array('cashier_pos', $modules, true)) {
+            $posDevices = $this->clampQuota('pos_devices', (int) ($input['pos_devices'] ?? 0));
+        }
+
+        $waiterSeats = 0;
+        if (in_array('waiter_app', $modules, true)) {
+            $waiterSeats = $this->clampQuota('waiter_seats', (int) ($input['waiter_seats'] ?? 0));
+        }
+
         $lineItems = [];
         $monthly = 0.0;
         $localeIsAr = app()->getLocale() === 'ar';
 
-        $platform = $this->catalog->platform();
-        $platformPrice = (float) ($platform['price_month'] ?? 0);
-        $lineItems[] = [
-            'key' => $platform['key'] ?? 'platform',
-            'label' => $localeIsAr ? ($platform['name_ar'] ?? $platform['name_en']) : ($platform['name_en'] ?? $platform['name_ar']),
-            'quantity' => 1,
-            'unit_price' => $platformPrice,
-            'total' => $platformPrice,
-            'type' => 'platform',
-        ];
-        $monthly += $platformPrice;
+        // Platform foundation (products, employees, branches, settings) is never billed —
+        // it is granted free with any purchased module.
 
         foreach ($modules as $key) {
             $module = $this->catalog->module($key);
@@ -115,6 +116,24 @@ class EntitlementPricer
                 'screen_devices',
                 $screenDevices,
                 fn (int $extra) => __('main.wizard.plan_extra_screen_devices', ['count' => $extra])
+            );
+        }
+
+        if ($posDevices > 0) {
+            $monthly += $this->appendExtraQuota(
+                $lineItems,
+                'pos_devices',
+                $posDevices,
+                fn (int $extra) => __('main.wizard.plan_extra_pos_devices', ['count' => $extra])
+            );
+        }
+
+        if ($waiterSeats > 0) {
+            $monthly += $this->appendExtraQuota(
+                $lineItems,
+                'waiter_seats',
+                $waiterSeats,
+                fn (int $extra) => __('main.wizard.plan_extra_waiter_seats', ['count' => $extra])
             );
         }
 
@@ -154,6 +173,8 @@ class EntitlementPricer
             'included_employees' => $includedEmployees,
             'establishments' => $establishments,
             'screen_devices' => $screenDevices,
+            'pos_devices' => $posDevices,
+            'waiter_seats' => $waiterSeats,
             'currency' => $this->catalog->currency(),
             'monthly_subtotal' => round($monthly, 2),
             'period_subtotal' => $periodSubtotal,

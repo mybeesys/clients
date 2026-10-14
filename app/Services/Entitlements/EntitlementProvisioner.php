@@ -75,6 +75,8 @@ class EntitlementProvisioner
                 'employees_quota' => $quote['employees'],
                 'establishments_quota' => $quote['establishments'],
                 'screen_devices_quota' => $quote['screen_devices'],
+                'pos_devices_quota' => $quote['pos_devices'] ?? 0,
+                'waiter_seats_quota' => $quote['waiter_seats'] ?? 0,
                 'period' => $quote['period'],
                 'currency' => $quote['currency'],
                 'monthly_subtotal' => $quote['monthly_subtotal'],
@@ -131,6 +133,8 @@ class EntitlementProvisioner
             'employees' => (int) $entitlement->employees_quota,
             'establishments' => (int) $entitlement->establishments_quota,
             'screen_devices' => (int) $entitlement->screen_devices_quota,
+            'pos_devices' => (int) ($entitlement->pos_devices_quota ?? 0),
+            'waiter_seats' => (int) ($entitlement->waiter_seats_quota ?? 0),
             'coupon_code' => $overrides['coupon_code'] ?? null,
             'started_at' => now(),
             'expired_at' => $period === 'Year'

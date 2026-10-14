@@ -32,6 +32,8 @@ class PlanConfiguratorWizardStep
         $employeesIncluded = (int) ($catalog->quota('employees')['included'] ?? 5);
         $establishmentsIncluded = (int) ($catalog->quota('establishments')['included'] ?? 1);
         $screenDevicesIncluded = (int) ($catalog->quota('screen_devices')['included'] ?? 1);
+        $posDevicesIncluded = (int) ($catalog->quota('pos_devices')['included'] ?? 1);
+        $waiterSeatsIncluded = (int) ($catalog->quota('waiter_seats')['included'] ?? 1);
 
         return [
             ViewField::make('plan_configurator')
@@ -49,6 +51,8 @@ class PlanConfiguratorWizardStep
                     'employees' => $employeesIncluded,
                     'establishments' => $establishmentsIncluded,
                     'screen_devices' => $screenDevicesIncluded,
+                    'pos_devices' => $posDevicesIncluded,
+                    'waiter_seats' => $waiterSeatsIncluded,
                     'coupon_code' => null,
                 ])
                 ->dehydrated()

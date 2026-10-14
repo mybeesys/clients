@@ -84,6 +84,8 @@ class HyperPayPayment extends Model
             'employees' => (int) ($planConfig['employees'] ?? 0),
             'establishments' => (int) ($planConfig['establishments'] ?? 0),
             'screen_devices' => (int) ($planConfig['screen_devices'] ?? 0),
+            'pos_devices' => (int) ($planConfig['pos_devices'] ?? 0),
+            'waiter_seats' => (int) ($planConfig['waiter_seats'] ?? 0),
             'coupon_code' => isset($planConfig['coupon_code']) ? strtoupper(trim((string) $planConfig['coupon_code'])) : '',
         ];
 

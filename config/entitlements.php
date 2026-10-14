@@ -17,14 +17,23 @@ return [
     /** Annual billing: charge this many months, grant a full 12-month term (10 = two months free). */
     'yearly_months_charged' => 10,
 
+    /**
+     * Operational foundation — always granted with any paid module, never billed.
+     * Products, employees, branches, settings, and the ledger engine.
+     */
     'platform' => [
         'key' => 'platform',
-        'name_en' => 'Core platform',
-        'name_ar' => 'المنصة الأساسية',
-        'description_en' => 'Products, employees, branches, settings, and ledger engine.',
-        'description_ar' => 'المنتجات والموظفين والفروع والإعدادات ومحرك القيود المحاسبية.',
-        'price_month' => 199,
+        'name_en' => 'Operational foundation',
+        'name_ar' => 'الأساس التشغيلي',
+        'description_en' => 'Products, employees, branches, and settings — included free with every module you choose.',
+        'description_ar' => 'المنتجات والموظفون والفروع والإعدادات — مشمولة مجاناً مع أي وحدة تختارها.',
+        'price_month' => 0,
         'always_included' => true,
+        'billable' => false,
+        'includes' => [
+            'en' => ['Product catalog', 'Employees', 'Branches', 'Settings', 'Ledger engine'],
+            'ar' => ['كتالوج المنتجات', 'الموظفون', 'الفروع', 'الإعدادات', 'محرك القيود المحاسبية'],
+        ],
     ],
 
     'quotas' => [
@@ -36,6 +45,7 @@ return [
             'max' => 500,
             'included' => 5,
             'price_per_extra_month' => 25,
+            'linked_module' => 'employee_schedule',
         ],
         'establishments' => [
             'key' => 'establishments',
@@ -55,6 +65,27 @@ return [
             'included' => 1,
             'price_per_extra_month' => 49,
             'linked_module' => 'digital_screens',
+        ],
+        /** Billed per extra device beyond included; shown inside Cashier card. */
+        'pos_devices' => [
+            'key' => 'pos_devices',
+            'name_en' => 'POS devices',
+            'name_ar' => 'أجهزة الكاشير',
+            'min' => 1,
+            'max' => 20,
+            'included' => 1,
+            'price_per_extra_month' => 79,
+            'linked_module' => 'cashier_pos',
+        ],
+        'waiter_seats' => [
+            'key' => 'waiter_seats',
+            'name_en' => 'Waiter app seats',
+            'name_ar' => 'مقاعد تطبيق الويتر',
+            'min' => 1,
+            'max' => 50,
+            'included' => 1,
+            'price_per_extra_month' => 29,
+            'linked_module' => 'waiter_app',
         ],
     ],
 
@@ -80,6 +111,7 @@ return [
             'price_month' => 299,
             'icon' => 'cash-register',
             'requires' => [],
+            'inline_quota' => 'pos_devices',
             'includes' => [
                 'en' => ['POS checkout', 'Tables & areas', 'Counter order flow'],
                 'ar' => ['كاشير المبيعات', 'الطاولات والمناطق', 'تدفق طلبات العداد'],
@@ -101,6 +133,7 @@ return [
             'price_month' => 129,
             'icon' => 'device-phone',
             'requires' => ['cashier_pos'],
+            'inline_quota' => 'waiter_seats',
             'includes' => [
                 'en' => ['Waiter mobile ordering', 'Table service actions'],
                 'ar' => ['طلبات الويتر من الجوال', 'خدمة الطاولات'],
@@ -161,6 +194,7 @@ return [
             'price_month' => 149,
             'icon' => 'tv',
             'requires' => [],
+            'inline_quota' => 'screen_devices',
             'includes' => [
                 'en' => ['Screen devices', 'Playlists', 'Promo player'],
                 'ar' => ['أجهزة الشاشات', 'قوائم التشغيل', 'مشغّل الإعلانات'],
@@ -210,16 +244,17 @@ return [
         'employee_schedule' => [
             'key' => 'employee_schedule',
             'group' => 'operations',
-            'name_en' => 'Employee schedule',
-            'name_ar' => 'جدولة الموظفين',
-            'description_en' => 'Shifts, timecards, timesheet rules, and payroll scheduling.',
-            'description_ar' => 'الورديات وبطاقات الدوام وقواعد الجداول وجدولة الرواتب.',
+            'name_en' => 'Employee shifts',
+            'name_ar' => 'دوامات الموظفين',
+            'description_en' => 'Shift planning, timecards, attendance rules, and payroll scheduling.',
+            'description_ar' => 'تخطيط الدوامات وبطاقات الحضور وقواعد الدوام وجدولة الرواتب.',
             'price_month' => 99,
             'icon' => 'calendar',
             'requires' => [],
+            'inline_quota' => 'employees',
             'includes' => [
-                'en' => ['Shift schedule', 'Timecards', 'Payroll schedule'],
-                'ar' => ['جدول الورديات', 'بطاقات الدوام', 'جدولة الرواتب'],
+                'en' => ['Shift roster', 'Timecards', 'Payroll schedule'],
+                'ar' => ['جدول الدوامات', 'بطاقات الحضور', 'جدولة الرواتب'],
             ],
             'menu_keys' => ['schedules', 'shift_schedule', 'payroll'],
             'api_prefixes' => [],
@@ -398,7 +433,7 @@ return [
             'name_en' => 'Factory / Production',
             'name_ar' => 'مصنع / إنتاج',
             'description_en' => 'Finance, inventory, manufacturing, employee schedule, and reports.',
-            'description_ar' => 'المالية والمخزون والتصنيع وجدولة الموظفين والتقارير.',
+            'description_ar' => 'المالية والمخزون والتصنيع ودوامات الموظفين والتقارير.',
             'modules' => [
                 'finance_business',
                 'inventory',
@@ -418,7 +453,7 @@ return [
             'name_en' => 'Workshop / Light industry',
             'name_ar' => 'ورشة / صناعة خفيفة',
             'description_en' => 'Finance, inventory, manufacturing, optional POS, and schedule.',
-            'description_ar' => 'المالية والمخزون والتصنيع مع كاشير اختياري والجدولة.',
+            'description_ar' => 'المالية والمخزون والتصنيع مع كاشير اختياري والدوامات.',
             'modules' => [
                 'finance_business',
                 'inventory',
@@ -438,8 +473,8 @@ return [
             'key' => 'services',
             'name_en' => 'Services / Contractors',
             'name_ar' => 'خدمات ومقاولات',
-            'description_en' => 'Finance package, employee schedule, and reports.',
-            'description_ar' => 'باقة المالية وجدولة الموظفين والتقارير.',
+            'description_en' => 'Finance package, employee shifts, and reports.',
+            'description_ar' => 'باقة المالية ودوامات الموظفين والتقارير.',
             'modules' => ['finance_business', 'employee_schedule', 'reports'],
             'quotas' => [
                 'employees' => 12,

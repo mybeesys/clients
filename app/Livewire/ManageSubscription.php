@@ -51,6 +51,8 @@ class ManageSubscription extends Component
             'employees' => max($includedEmployees, (int) ($entitlement?->employees_quota ?: $includedEmployees)),
             'establishments' => (int) ($entitlement?->establishments_quota ?: ($catalog->quota('establishments')['included'] ?? 1)),
             'screen_devices' => (int) ($entitlement?->screen_devices_quota ?: ($catalog->quota('screen_devices')['included'] ?? 1)),
+            'pos_devices' => (int) ($entitlement?->pos_devices_quota ?: ($catalog->quota('pos_devices')['included'] ?? 1)),
+            'waiter_seats' => (int) ($entitlement?->waiter_seats_quota ?: ($catalog->quota('waiter_seats')['included'] ?? 1)),
             'coupon_code' => null,
         ];
     }
@@ -109,6 +111,8 @@ class ManageSubscription extends Component
                 'employees' => (int) $entitlement->employees_quota,
                 'establishments' => (int) $entitlement->establishments_quota,
                 'screen_devices' => (int) $entitlement->screen_devices_quota,
+                'pos_devices' => (int) ($entitlement->pos_devices_quota ?? 0),
+                'waiter_seats' => (int) ($entitlement->waiter_seats_quota ?? 0),
                 'coupon_code' => filled($this->renew_coupon) ? $this->renew_coupon : null,
             ];
 
@@ -169,6 +173,8 @@ class ManageSubscription extends Component
                     'employees' => (int) $entitlement->employees_quota,
                     'establishments' => (int) $entitlement->establishments_quota,
                     'screen_devices' => (int) $entitlement->screen_devices_quota,
+                    'pos_devices' => (int) ($entitlement->pos_devices_quota ?? 0),
+                    'waiter_seats' => (int) ($entitlement->waiter_seats_quota ?? 0),
                     'coupon_code' => filled($this->renew_coupon) ? $this->renew_coupon : null,
                 ]);
             } catch (\Throwable) {
