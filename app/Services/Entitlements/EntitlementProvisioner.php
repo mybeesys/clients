@@ -77,6 +77,7 @@ class EntitlementProvisioner
                 'screen_devices_quota' => $quote['screen_devices'],
                 'pos_devices_quota' => $quote['pos_devices'] ?? 0,
                 'waiter_seats_quota' => $quote['waiter_seats'] ?? 0,
+                'kitchen_devices_quota' => $quote['kitchen_devices'] ?? 0,
                 'period' => $quote['period'],
                 'currency' => $quote['currency'],
                 'monthly_subtotal' => $quote['monthly_subtotal'],
@@ -135,6 +136,7 @@ class EntitlementProvisioner
             'screen_devices' => (int) $entitlement->screen_devices_quota,
             'pos_devices' => (int) ($entitlement->pos_devices_quota ?? 0),
             'waiter_seats' => (int) ($entitlement->waiter_seats_quota ?? 0),
+            'kitchen_devices' => (int) ($entitlement->kitchen_devices_quota ?? 0),
             'coupon_code' => $overrides['coupon_code'] ?? null,
             'started_at' => now(),
             'expired_at' => $period === 'Year'
@@ -158,6 +160,55 @@ class EntitlementProvisioner
     public function replace(Company $company, array $input): CompanyEntitlement
     {
         return $this->provision($company, $input);
+    }
+
+    /**
+     * Mid-cycle quota top-up after payment. Updates quotas only — keeps modules and expiry.
+     *
+     * @param  array{
+     *     employees?: int,
+     *     establishments?: int,
+     *     screen_devices?: int,
+     *     pos_devices?: int,
+     *     waiter_seats?: int,
+     *     kitchen_devices?: int
+     * }  $targetQuotas
+     */
+    public function applyAddon(Company $company, array $targetQuotas): CompanyEntitlement
+    {
+        $quote = $this->pricer->quoteAddon($company, $targetQuotas);
+        $entitlement = $company->entitlement;
+
+        if (! $entitlement) {
+            throw ValidationException::withMessages([
+                'addon' => __('main.subscribe.addon_requires_package'),
+            ]);
+        }
+
+        $meta = is_array($entitlement->meta) ? $entitlement->meta : [];
+        $meta['last_addon'] = [
+            'at' => now()->toIso8601String(),
+            'period_total' => $quote['period_total'],
+            'remaining_months' => $quote['remaining_months'],
+            'deltas' => $quote['deltas'],
+            'line_items' => $quote['line_items'],
+            'currency' => $quote['currency'],
+        ];
+
+        $entitlement->forceFill([
+            'employees_quota' => $quote['employees'],
+            'establishments_quota' => $quote['establishments'],
+            'screen_devices_quota' => $quote['screen_devices'],
+            'pos_devices_quota' => $quote['pos_devices'],
+            'waiter_seats_quota' => $quote['waiter_seats'],
+            'kitchen_devices_quota' => $quote['kitchen_devices'],
+            'meta' => $meta,
+        ])->save();
+
+        Cache::forget("tenant_subscription_status:{$company->id}");
+        Cache::forget("tenant_entitlements:{$company->id}");
+
+        return $entitlement->fresh();
     }
 
     protected function suppressActiveSubscriptions(Company $company): void

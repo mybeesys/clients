@@ -21,10 +21,16 @@ use RuntimeException;
 #[Layout('layouts.subscribe')]
 class ManageSubscription extends Component
 {
-    /** @var 'choose'|'renew'|'customize' */
+    /** @var 'choose'|'renew'|'customize'|'addon' */
     public string $mode = 'choose';
 
     public array $plan_config = [];
+
+    /** @var array<string, int> */
+    public array $addon_quotas = [];
+
+    /** @var array<string, int> */
+    public array $addon_floors = [];
 
     public ?string $renew_coupon = null;
 
@@ -53,8 +59,16 @@ class ManageSubscription extends Component
             'screen_devices' => (int) ($entitlement?->screen_devices_quota ?: ($catalog->quota('screen_devices')['included'] ?? 1)),
             'pos_devices' => (int) ($entitlement?->pos_devices_quota ?: ($catalog->quota('pos_devices')['included'] ?? 1)),
             'waiter_seats' => (int) ($entitlement?->waiter_seats_quota ?: ($catalog->quota('waiter_seats')['included'] ?? 1)),
+            'kitchen_devices' => (int) ($entitlement?->kitchen_devices_quota ?: ($catalog->quota('kitchen_devices')['included'] ?? 1)),
             'coupon_code' => null,
         ];
+
+        $this->seedAddonFromEntitlement($company);
+
+        $requestedMode = request()->query('mode');
+        if ($requestedMode === 'addon' && $entitlement) {
+            $this->mode = 'addon';
+        }
     }
 
     public function showRenew(): void
@@ -76,10 +90,39 @@ class ManageSubscription extends Component
         $this->resetErrorBag();
     }
 
+    public function showAddon(): void
+    {
+        $company = $this->company();
+        if (! $company?->entitlement) {
+            $this->addError('addon', __('main.subscribe.addon_requires_package'));
+
+            return;
+        }
+
+        $this->seedAddonFromEntitlement($company);
+        $this->mode = 'addon';
+        $this->resetErrorBag();
+    }
+
     public function showChoose(): void
     {
         $this->mode = 'choose';
         $this->resetErrorBag();
+    }
+
+    public function bumpAddon(string $key, int $delta): void
+    {
+        if (! in_array($key, EntitlementPricer::ADDON_QUOTA_KEYS, true)) {
+            return;
+        }
+
+        $catalog = app(EntitlementCatalog::class);
+        $quota = $catalog->quota($key);
+        $max = (int) ($quota['max'] ?? 9999);
+        $floor = (int) ($this->addon_floors[$key] ?? 0);
+        $current = (int) ($this->addon_quotas[$key] ?? $floor);
+        $this->addon_quotas[$key] = max($floor, min($max, $current + $delta));
+        $this->resetErrorBag('addon');
     }
 
     /**
@@ -106,6 +149,7 @@ class ManageSubscription extends Component
             }
 
             $planConfig = [
+                'intent' => 'renew',
                 'period' => $this->renew_period === 'Month' ? 'Month' : 'Year',
                 'modules' => $entitlement->modules ?? [],
                 'employees' => (int) $entitlement->employees_quota,
@@ -113,6 +157,7 @@ class ManageSubscription extends Component
                 'screen_devices' => (int) $entitlement->screen_devices_quota,
                 'pos_devices' => (int) ($entitlement->pos_devices_quota ?? 0),
                 'waiter_seats' => (int) ($entitlement->waiter_seats_quota ?? 0),
+                'kitchen_devices' => (int) ($entitlement->kitchen_devices_quota ?? 0),
                 'coupon_code' => filled($this->renew_coupon) ? $this->renew_coupon : null,
             ];
 
@@ -137,6 +182,7 @@ class ManageSubscription extends Component
             abort_unless($company, 403);
 
             $config = $this->plan_config;
+            $config['intent'] = 'replace';
 
             if (! is_array($config) || empty($config['modules'])) {
                 throw ValidationException::withMessages([
@@ -156,18 +202,55 @@ class ManageSubscription extends Component
         }
     }
 
+    public function buyAddon(): mixed
+    {
+        $this->saving = true;
+
+        try {
+            $company = $this->company();
+            abort_unless($company, 403);
+
+            $quote = app(EntitlementPricer::class)->quoteAddon($company, $this->addon_quotas);
+
+            $planConfig = [
+                'intent' => 'addon',
+                'period' => $quote['period'],
+                'modules' => $quote['modules'],
+                'employees' => $quote['employees'],
+                'establishments' => $quote['establishments'],
+                'screen_devices' => $quote['screen_devices'],
+                'pos_devices' => $quote['pos_devices'],
+                'waiter_seats' => $quote['waiter_seats'],
+                'kitchen_devices' => $quote['kitchen_devices'],
+                'remaining_months' => $quote['remaining_months'],
+                'coupon_code' => null,
+            ];
+
+            return $this->startCardCheckout($company, $planConfig, 'addon', 'addon', $quote);
+        } catch (ValidationException $e) {
+            $this->saving = false;
+            throw $e;
+        } catch (\Throwable $e) {
+            $this->saving = false;
+            $this->addError('addon', $e->getMessage());
+
+            return null;
+        }
+    }
+
     public function render()
     {
         $company = $this->company();
         $entitlement = $company?->entitlement;
         $subscription = $company?->subscription;
         $catalog = app(EntitlementCatalog::class);
+        $pricer = app(EntitlementPricer::class);
         $localeIsAr = app()->getLocale() === 'ar';
 
         $renewQuote = null;
         if ($entitlement) {
             try {
-                $renewQuote = app(EntitlementPricer::class)->quote([
+                $renewQuote = $pricer->quote([
                     'period' => $this->renew_period === 'Month' ? 'Month' : 'Year',
                     'modules' => $entitlement->modules ?? [],
                     'employees' => (int) $entitlement->employees_quota,
@@ -175,10 +258,23 @@ class ManageSubscription extends Component
                     'screen_devices' => (int) $entitlement->screen_devices_quota,
                     'pos_devices' => (int) ($entitlement->pos_devices_quota ?? 0),
                     'waiter_seats' => (int) ($entitlement->waiter_seats_quota ?? 0),
+                    'kitchen_devices' => (int) ($entitlement->kitchen_devices_quota ?? 0),
                     'coupon_code' => filled($this->renew_coupon) ? $this->renew_coupon : null,
                 ]);
             } catch (\Throwable) {
                 $renewQuote = null;
+            }
+        }
+
+        $addonQuote = null;
+        $addonError = null;
+        if ($this->mode === 'addon' && $entitlement) {
+            try {
+                $addonQuote = $pricer->quoteAddon($company, $this->addon_quotas);
+            } catch (ValidationException $e) {
+                $addonError = collect($e->errors())->flatten()->first();
+            } catch (\Throwable $e) {
+                $addonError = $e->getMessage();
             }
         }
 
@@ -197,12 +293,39 @@ class ManageSubscription extends Component
             ->values()
             ->all();
 
+        $modules = array_values(array_unique(array_merge(['platform'], $entitlement?->modules ?? [])));
+        $addonRows = [];
+        foreach (EntitlementPricer::ADDON_QUOTA_KEYS as $key) {
+            $quota = $catalog->quota($key);
+            if (! $quota) {
+                continue;
+            }
+            $linked = $quota['linked_module'] ?? null;
+            $requiresModule = in_array($key, ['screen_devices', 'pos_devices', 'waiter_seats', 'kitchen_devices'], true);
+            if ($requiresModule && $linked && ! in_array($linked, $modules, true)) {
+                continue;
+            }
+            $addonRows[] = [
+                'key' => $key,
+                'name' => $localeIsAr
+                    ? ($quota['name_ar'] ?? $quota['name_en'] ?? $key)
+                    : ($quota['name_en'] ?? $quota['name_ar'] ?? $key),
+                'unit' => (float) ($quota['price_per_extra_month'] ?? 0),
+                'max' => (int) ($quota['max'] ?? 9999),
+                'floor' => (int) ($this->addon_floors[$key] ?? 0),
+                'value' => (int) ($this->addon_quotas[$key] ?? 0),
+            ];
+        }
+
         return view('livewire.manage-subscription', [
             'company' => $company,
             'entitlement' => $entitlement,
             'subscription' => $subscription,
             'catalog' => $catalog->toFrontend(),
             'renewQuote' => $renewQuote,
+            'addonQuote' => $addonQuote,
+            'addonError' => $addonError,
+            'addonRows' => $addonRows,
             'moduleLabels' => $moduleLabels,
             'tenantUrl' => $company ? TenantApplicationUrl::forCompany($company) : null,
             'hasCustomPackage' => (bool) $entitlement,
@@ -219,12 +342,37 @@ class ManageSubscription extends Component
         return $user?->defaultCompany() ?? $user?->company;
     }
 
+    protected function seedAddonFromEntitlement(Company $company): void
+    {
+        $entitlement = $company->entitlement;
+        if (! $entitlement) {
+            $this->addon_quotas = [];
+            $this->addon_floors = [];
+
+            return;
+        }
+
+        $current = app(EntitlementPricer::class)->syncEffectiveQuotas($entitlement);
+        $this->addon_floors = $current;
+        $this->addon_quotas = $current;
+    }
+
     /**
      * @param  array<string, mixed>  $planConfig
+     * @param  array<string, mixed>|null  $precomputedQuote
      */
-    protected function startCardCheckout(Company $company, array $planConfig, string $intent, string $errorBag): mixed
-    {
-        $quote = app(EntitlementPricer::class)->quote($planConfig);
+    protected function startCardCheckout(
+        Company $company,
+        array $planConfig,
+        string $intent,
+        string $errorBag,
+        ?array $precomputedQuote = null,
+    ): mixed {
+        $quote = $precomputedQuote ?? (
+            $intent === 'addon'
+                ? app(EntitlementPricer::class)->quoteAddon($company, $planConfig)
+                : app(EntitlementPricer::class)->quote($planConfig)
+        );
 
         if ((float) ($quote['period_total'] ?? 0) <= 0) {
             if ($intent === 'renew') {
@@ -232,6 +380,8 @@ class ManageSubscription extends Component
                     'coupon_code' => $planConfig['coupon_code'] ?? null,
                     'period' => ($planConfig['period'] ?? 'Year') === 'Month' ? 'Month' : 'Year',
                 ]);
+            } elseif ($intent === 'addon') {
+                app(EntitlementProvisioner::class)->applyAddon($company, $planConfig);
             } else {
                 app(EntitlementProvisioner::class)->replace($company, $planConfig);
             }

@@ -13,6 +13,7 @@
             screen_devices: initial.screen_devices ?? catalog?.quotas?.find(q => q.key === 'screen_devices')?.included ?? 1,
             pos_devices: initial.pos_devices ?? catalog?.quotas?.find(q => q.key === 'pos_devices')?.included ?? 1,
             waiter_seats: initial.waiter_seats ?? catalog?.quotas?.find(q => q.key === 'waiter_seats')?.included ?? 1,
+            kitchen_devices: initial.kitchen_devices ?? catalog?.quotas?.find(q => q.key === 'kitchen_devices')?.included ?? 1,
             quotaCapKey: null,
             coupon_input: initial.coupon_code || '',
             coupon_code: '',
@@ -25,6 +26,7 @@
                 this.employees = this.clampEmployees(this.employees);
                 this.pos_devices = this.clampPlainQuota('pos_devices', this.pos_devices);
                 this.waiter_seats = this.clampPlainQuota('waiter_seats', this.waiter_seats);
+                this.kitchen_devices = this.clampPlainQuota('kitchen_devices', this.kitchen_devices);
                 this.syncToWire();
                 this.$watch('modules', () => { this.refreshCouponDiscount(); this.syncToWire(); });
                 this.$watch('employees', () => { this.refreshCouponDiscount(); this.syncToWire(); });
@@ -32,6 +34,7 @@
                 this.$watch('screen_devices', () => { this.refreshCouponDiscount(); this.syncToWire(); });
                 this.$watch('pos_devices', () => { this.refreshCouponDiscount(); this.syncToWire(); });
                 this.$watch('waiter_seats', () => { this.refreshCouponDiscount(); this.syncToWire(); });
+                this.$watch('kitchen_devices', () => { this.refreshCouponDiscount(); this.syncToWire(); });
                 this.$watch('period', () => { this.refreshCouponDiscount(); this.syncToWire(); });
                 if (this.coupon_input) {
                     this.applyCoupon();
@@ -88,7 +91,7 @@
                         .filter(Boolean)
                 );
                 // Always keep these inside their module cards — never the bottom strip.
-                ['pos_devices', 'waiter_seats', 'employees', 'screen_devices'].forEach(k => inlineKeys.add(k));
+                ['pos_devices', 'waiter_seats', 'kitchen_devices', 'employees', 'screen_devices'].forEach(k => inlineKeys.add(k));
 
                 return (this.catalog.quotas || []).filter(quota => {
                     if (inlineKeys.has(quota.key)) return false;
@@ -101,6 +104,7 @@
                 return ({
                     cashier_pos: 'pos_devices',
                     waiter_app: 'waiter_seats',
+                    kitchen_app: 'kitchen_devices',
                     employee_schedule: 'employees',
                     digital_screens: 'screen_devices',
                 })[mod?.key] || null;
@@ -116,6 +120,7 @@
                     employees: this.labels.employees_count,
                     pos_devices: this.labels.pos_devices_count,
                     waiter_seats: this.labels.waiter_seats_count,
+                    kitchen_devices: this.labels.kitchen_devices_count,
                 };
                 return map[key] || this.inlineQuota(mod)?.name || '';
             },
@@ -125,6 +130,7 @@
                     employees: this.labels.employees_quota_hint,
                     pos_devices: this.labels.pos_devices_hint,
                     waiter_seats: this.labels.waiter_seats_hint,
+                    kitchen_devices: this.labels.kitchen_devices_hint,
                 };
                 return map[key] || '';
             },
@@ -150,6 +156,7 @@
                 if (key === 'screen_devices') return this.screen_devices;
                 if (key === 'pos_devices') return this.pos_devices;
                 if (key === 'waiter_seats') return this.waiter_seats;
+                if (key === 'kitchen_devices') return this.kitchen_devices;
                 return 0;
             },
             quotaIncluded(quota) {
@@ -210,6 +217,7 @@
                 else if (key === 'screen_devices') this.screen_devices = value;
                 else if (key === 'pos_devices') this.pos_devices = value;
                 else if (key === 'waiter_seats') this.waiter_seats = value;
+                else if (key === 'kitchen_devices') this.kitchen_devices = value;
             },
             isSelected(key) {
                 return this.modules.includes(key);
@@ -248,13 +256,19 @@
                     }
                     if (key === 'cashier_pos') {
                         this.pos_devices = this.clampPlainQuota('pos_devices', (this.catalog.quotas || []).find(q => q.key === 'pos_devices')?.included ?? 1);
-                        // Drop waiter if cashier removed (requires cashier_pos).
+                        // Drop waiter/kitchen quotas if their modules were removed with cashier.
                         if (!this.modules.includes('waiter_app')) {
                             this.waiter_seats = this.clampPlainQuota('waiter_seats', (this.catalog.quotas || []).find(q => q.key === 'waiter_seats')?.included ?? 1);
+                        }
+                        if (!this.modules.includes('kitchen_app')) {
+                            this.kitchen_devices = this.clampPlainQuota('kitchen_devices', (this.catalog.quotas || []).find(q => q.key === 'kitchen_devices')?.included ?? 1);
                         }
                     }
                     if (key === 'waiter_app') {
                         this.waiter_seats = this.clampPlainQuota('waiter_seats', (this.catalog.quotas || []).find(q => q.key === 'waiter_seats')?.included ?? 1);
+                    }
+                    if (key === 'kitchen_app') {
+                        this.kitchen_devices = this.clampPlainQuota('kitchen_devices', (this.catalog.quotas || []).find(q => q.key === 'kitchen_devices')?.included ?? 1);
                     }
                     if (key === 'employee_schedule') {
                         this.employees = this.clampEmployees(this.includedEmployees());
@@ -270,6 +284,9 @@
                     }
                     if (key === 'waiter_app') {
                         this.waiter_seats = this.clampPlainQuota('waiter_seats', this.waiter_seats);
+                    }
+                    if (key === 'kitchen_app') {
+                        this.kitchen_devices = this.clampPlainQuota('kitchen_devices', this.kitchen_devices);
                     }
                 }
                 this.employees = this.clampEmployees(this.includedEmployees() + extras);
@@ -375,11 +392,7 @@
                         ...line,
                         total: monthly * months,
                         meta: this.period === 'Year'
-                            ? (
-                                this.isYearlyDeal()
-                                    ? `${this.formatDeal(this.effectiveMonthly(monthly))} / ${this.labels.per_month} · ${this.labels.yearly_was} ${this.format(monthly)}`
-                                    : `${this.format(monthly)} × ${months}`
-                            )
+                            ? `${this.format(monthly)} × ${months}`
                             : `/ ${this.labels.per_month}`,
                     };
                 });
@@ -466,6 +479,7 @@
                         screen_devices: this.modules.includes('digital_screens') ? this.screen_devices : 0,
                         pos_devices: this.modules.includes('cashier_pos') ? this.pos_devices : 0,
                         waiter_seats: this.modules.includes('waiter_app') ? this.waiter_seats : 0,
+                        kitchen_devices: this.modules.includes('kitchen_app') ? this.kitchen_devices : 0,
                         coupon_code: this.coupon_code || null,
                     });
                 } catch (e) {}

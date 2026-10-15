@@ -53,6 +53,8 @@
         'pos_devices_hint' => __('main.wizard.plan_pos_devices_hint'),
         'waiter_seats_count' => __('main.wizard.plan_waiter_seats_count'),
         'waiter_seats_hint' => __('main.wizard.plan_waiter_seats_hint'),
+        'kitchen_devices_count' => __('main.wizard.plan_kitchen_devices_count'),
+        'kitchen_devices_hint' => __('main.wizard.plan_kitchen_devices_hint'),
         'quota_cap_hint' => __('main.wizard.plan_quota_cap_hint'),
         'requires' => __('main.wizard.plan_requires'),
         'includes' => __('main.wizard.plan_includes'),
@@ -60,6 +62,8 @@
         'works_with' => __('main.wizard.plan_works_with'),
         'empty_modules' => __('main.wizard.plan_modules_required'),
         'select_at_least' => __('main.wizard.plan_select_at_least'),
+        'module_select' => __('main.wizard.plan_module_select'),
+        'module_selected' => __('main.wizard.plan_module_selected'),
         'reports_needs_data' => __('main.wizard.plan_reports_needs_data_module'),
         'recommend_title' => __('main.wizard.plan_recommend_title'),
         'recommend_hint' => __('main.wizard.plan_recommend_hint'),
@@ -204,32 +208,6 @@
             box-shadow: 0 8px 18px rgba(184, 137, 18, 0.25);
         }
 
-        .pc-period-gift {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.28rem;
-            font-size: 0.82rem;
-            font-style: normal;
-            font-weight: 800;
-            letter-spacing: 0;
-            opacity: 0.95;
-            white-space: nowrap;
-        }
-
-        .pc-period-gift svg {
-            width: 1.05rem;
-            height: 1.05rem;
-            flex-shrink: 0;
-        }
-
-        .pc-period-gift em {
-            font-style: normal;
-        }
-
-        .pc-period button.is-active .pc-period-gift {
-            opacity: 1;
-        }
-
         .pc-period-hint {
             margin: 0;
             font-size: 0.72rem;
@@ -284,39 +262,35 @@
             flex-shrink: 0;
             font-weight: 800;
             color: var(--pc-ink);
-            font-size: 0.88rem;
+            font-size: 0.98rem;
             text-align: end;
-        }
-
-        .pc-price-tag.is-deal {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 0.06rem;
         }
 
         .pc-price-row {
             display: inline-flex;
             align-items: baseline;
-            gap: 0.28rem;
+            gap: 0.35rem;
             white-space: nowrap;
-            line-height: 1;
+            line-height: 1.15;
+            flex-wrap: nowrap;
         }
 
         .pc-price-was {
             text-decoration: line-through;
             text-decoration-thickness: 1.5px;
-            color: var(--pc-muted);
-            font-size: 0.7rem;
+            text-decoration-color: rgba(156, 163, 175, 0.9);
+            color: #9ca3af;
+            font-size: inherit;
             font-weight: 700;
             line-height: 1;
+            font-variant-numeric: tabular-nums;
         }
 
         .pc-price-now {
             color: #15803d;
-            font-size: 1.12rem;
+            font-size: inherit;
             font-weight: 800;
-            letter-spacing: -0.03em;
+            letter-spacing: -0.02em;
             line-height: 1;
             font-variant-numeric: tabular-nums;
         }
@@ -370,7 +344,7 @@
             text-align: start;
             border: 1.5px solid var(--pc-line);
             background: var(--pc-surface);
-            border-radius: 1rem;
+            border-radius: 1.15rem;
             padding: 0;
             transition: border-color 0.22s ease, transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
             width: 100%;
@@ -402,7 +376,7 @@
             border-color: var(--pc-accent);
             box-shadow: 0 0 0 3px var(--pc-accent-soft), var(--pc-shadow);
             background:
-                linear-gradient(160deg, var(--pc-accent-soft), transparent 48%),
+                linear-gradient(165deg, rgba(235, 184, 30, 0.14), transparent 46%),
                 var(--pc-surface);
         }
 
@@ -415,97 +389,17 @@
             box-sizing: border-box;
             display: block;
             width: 100%;
-            padding: 0.9rem 0.95rem 1.85rem;
+            padding: 0.9rem 1rem 0.7rem;
             cursor: pointer;
             font-family: inherit;
             color: inherit;
             text-align: start;
+            flex: 1 1 auto;
         }
 
         .pc-module-main:focus-visible {
             outline: 2px solid var(--pc-accent);
             outline-offset: -2px;
-        }
-
-        .pc-module-quota {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 0.75rem;
-            flex-wrap: wrap;
-            margin: 0;
-            padding: 0.7rem 0.95rem;
-            border-top: 1px solid rgba(235, 184, 30, 0.28);
-            background:
-                linear-gradient(90deg, rgba(235, 184, 30, 0.14), transparent 70%),
-                rgba(255, 253, 247, 0.92);
-            animation: pc-quota-in 0.28s ease;
-        }
-
-        @keyframes pc-quota-in {
-            from { opacity: 0; transform: translateY(6px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .pc-module-quota-copy {
-            min-width: 0;
-            flex: 1 1 8rem;
-        }
-
-        .pc-module-quota-copy strong {
-            display: block;
-            font-size: 0.78rem;
-            font-weight: 800;
-            color: var(--pc-ink);
-        }
-
-        .pc-module-quota-copy span {
-            display: block;
-            margin-top: 0.15rem;
-            font-size: 0.68rem;
-            color: var(--pc-muted);
-            line-height: 1.4;
-        }
-
-        .pc-module-quota-cap {
-            flex: 1 1 100%;
-            margin: 0.15rem 0 0;
-            padding: 0.4rem 0.55rem;
-            border-radius: 0.65rem;
-            font-size: 0.68rem;
-            font-weight: 700;
-            line-height: 1.45;
-            color: #8a5a00;
-            background: rgba(235, 184, 30, 0.16);
-            border: 1px solid rgba(235, 184, 30, 0.35);
-        }
-
-        .pc-module.has-inline-quota .pc-module-main {
-            padding-bottom: 0.95rem;
-        }
-
-        .pc-module.has-inline-quota.is-on .pc-check {
-            bottom: auto;
-            top: 0.75rem;
-        }
-
-        .pc-module.quota-preview .pc-module-quota {
-            opacity: 0.72;
-            filter: saturate(0.85);
-        }
-
-        .pc-module.quota-preview:hover .pc-module-quota {
-            opacity: 0.92;
-        }
-
-        .pc-stepper.is-capped button:last-of-type {
-            opacity: 0.45;
-            cursor: not-allowed;
-        }
-
-        /* Digital screens also use in-card counter */
-        .pc-module.has-inline-quota .pc-module-quota {
-            min-height: 3.25rem;
         }
 
         .pc-module-top {
@@ -517,37 +411,157 @@
 
         .pc-module h5 {
             margin: 0;
-            font-size: 0.92rem;
+            font-size: 0.98rem;
+            font-weight: 800;
+            color: var(--pc-ink);
+            letter-spacing: -0.01em;
+            line-height: 1.3;
+        }
+
+        .pc-module-main > p {
+            margin: 0.35rem 0 0;
+            color: var(--pc-muted);
+            font-size: 0.74rem;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Soft dock: counter + select affordance */
+        .pc-module-dock {
+            margin-top: auto;
+            border-top: 1px solid var(--pc-line);
+            background: rgba(250, 248, 242, 0.88);
+            padding: 0.55rem 0.7rem 0.65rem;
+            display: grid;
+            gap: 0.45rem;
+        }
+
+        .pc-module.is-on .pc-module-dock {
+            background: linear-gradient(180deg, rgba(235, 184, 30, 0.1), rgba(250, 248, 242, 0.95));
+            border-top-color: rgba(235, 184, 30, 0.28);
+        }
+
+        .pc-module-quota {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.65rem;
+            min-width: 0;
+        }
+
+        .pc-module-quota-copy {
+            min-width: 0;
+            flex: 1 1 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.18rem;
+        }
+
+        .pc-module-quota-copy strong {
+            font-size: 0.76rem;
+            font-weight: 800;
+            color: var(--pc-ink);
+            line-height: 1.2;
+        }
+
+        .pc-module-quota-copy .pc-quota-sub {
+            font-size: 0.66rem;
+            color: var(--pc-muted);
+            line-height: 1.35;
+            font-weight: 600;
+        }
+
+        .pc-quota-price {
+            margin-top: 0.05rem;
+            font-size: 0.84rem;
             font-weight: 800;
             color: var(--pc-ink);
         }
 
-        .pc-module p {
-            margin: 0.35rem 0 0;
+        .pc-quota-price small {
+            font-size: 0.62rem;
+        }
+
+        .pc-module-foot {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 0.55rem;
+            padding-top: 0.1rem;
+        }
+
+        .pc-module.has-inline-quota .pc-module-foot {
+            border-top: 1px dashed rgba(26, 26, 26, 0.08);
+            padding-top: 0.4rem;
+        }
+
+        .pc-module-quota-cap {
+            margin: 0;
+            padding: 0.35rem 0.5rem;
+            border-radius: 0.55rem;
+            font-size: 0.66rem;
+            font-weight: 700;
+            line-height: 1.4;
+            color: #8a5a00;
+            background: rgba(235, 184, 30, 0.14);
+            border: 1px solid rgba(235, 184, 30, 0.28);
+        }
+
+        .pc-module-select {
+            all: unset;
+            box-sizing: border-box;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            cursor: pointer;
+            font-family: inherit;
             color: var(--pc-muted);
-            font-size: 0.76rem;
-            line-height: 1.5;
-            min-height: 0;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 0.2rem 0.1rem;
+        }
+
+        .pc-module-select:focus-visible {
+            outline: 2px solid var(--pc-accent);
+            outline-offset: 2px;
+            border-radius: 0.4rem;
+        }
+
+        .pc-module.is-on .pc-module-select {
+            color: var(--pc-ink);
         }
 
         .pc-check {
-            position: absolute;
-            top: auto;
-            bottom: 0.65rem;
-            inset-inline-end: 0.7rem;
             width: 1.35rem;
             height: 1.5rem;
-            display: none;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
+            background: rgba(26, 26, 26, 0.06);
+            color: transparent;
+            clip-path: var(--pc-hex);
+            transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .pc-module.is-on .pc-check {
             background: var(--pc-accent);
             color: #111;
-            clip-path: var(--pc-hex);
             box-shadow: 0 4px 10px rgba(184, 137, 18, 0.35);
             animation: pc-pop 0.28s ease;
         }
 
-        .pc-module.is-on .pc-check { display: flex; }
+        .pc-module.quota-preview .pc-module-quota {
+            opacity: 0.78;
+        }
+
+        .pc-stepper.is-capped button:last-of-type {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
 
         @keyframes pc-pop {
             from { transform: scale(0.55); opacity: 0; }
@@ -562,18 +576,18 @@
         }
 
         .pc-includes {
-            margin: 0.45rem 0 0;
+            margin: 0.35rem 0 0;
             padding: 0;
             list-style: none;
             display: grid;
-            gap: 0.22rem;
+            gap: 0.16rem;
         }
 
         .pc-includes li {
             position: relative;
-            padding-inline-start: 0.9rem;
-            font-size: 0.72rem;
-            line-height: 1.4;
+            padding-inline-start: 0.85rem;
+            font-size: 0.7rem;
+            line-height: 1.35;
             color: var(--pc-muted);
             font-weight: 600;
         }
@@ -644,38 +658,47 @@
         .pc-stepper {
             display: inline-flex;
             align-items: center;
-            gap: 0.3rem;
-            background: var(--pc-soft);
+            gap: 0.12rem;
+            background: var(--pc-surface);
             border: 1px solid var(--pc-line);
             border-radius: 999px;
-            padding: 0.18rem;
+            padding: 0.12rem;
+            flex-shrink: 0;
+            box-shadow: 0 1px 2px rgba(26, 26, 26, 0.04);
+        }
+
+        .pc-module.is-on .pc-stepper {
+            border-color: rgba(235, 184, 30, 0.45);
+            background: rgba(255, 255, 255, 0.92);
         }
 
         .pc-stepper button {
-            width: 1.9rem;
-            height: 1.9rem;
+            width: 1.7rem;
+            height: 1.7rem;
             border: 0;
             border-radius: 999px;
-            background: var(--pc-surface);
+            background: transparent;
             color: var(--pc-ink);
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 700;
             cursor: pointer;
-            box-shadow: var(--pc-shadow);
-            transition: background 0.15s ease, transform 0.15s ease;
+            transition: background 0.15s ease, color 0.15s ease;
             font-family: inherit;
+            line-height: 1;
         }
 
         .pc-stepper button:hover {
             background: var(--pc-accent-soft);
-            transform: scale(1.05);
+            color: #111;
         }
 
         .pc-stepper span {
-            min-width: 2rem;
+            min-width: 1.7rem;
             text-align: center;
             font-weight: 800;
+            font-size: 0.88rem;
             color: var(--pc-ink);
+            font-variant-numeric: tabular-nums;
         }
 
         .pc-invoice {
@@ -877,40 +900,10 @@
             line-height: 1.45;
         }
 
-        .pc-year-offer {
-            margin: 0.55rem 0 0.2rem;
-            padding: 0.6rem 0.7rem;
-            border-radius: 0.75rem;
-            background: linear-gradient(135deg, rgba(22, 163, 74, 0.1), rgba(234, 179, 8, 0.12));
-            border: 1px solid rgba(22, 163, 74, 0.2);
-        }
-
         .pc-eq-line {
             margin-top: 0.45rem;
             display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 0.12rem;
-        }
-
-        .pc-eq-line em {
-            font-style: normal;
-            font-size: 0.68rem;
-            color: var(--pc-muted);
-            font-weight: 600;
-        }
-
-        .pc-year-offer div {
-            display: flex;
-            justify-content: space-between;
-            gap: 0.75rem;
-            font-size: 0.74rem;
-            font-weight: 700;
-            padding: 0.12rem 0;
-        }
-
-        .pc-year-offer .is-gift {
-            color: #15803d;
+            justify-content: flex-end;
         }
 
         .pc-empty {
@@ -1212,16 +1205,7 @@
         </div>
         <div class="pc-period-wrap">
             <div class="pc-period" role="group" aria-label="{{ __('general.monthly') }} / {{ __('general.annual') }}">
-                <button type="button" :class="{ 'is-active': period === 'Year' }" x-on:click="setPeriod('Year')">
-                    <span x-text="labels.annual"></span>
-                    <span class="pc-period-gift" x-show="yearlyGifted() > 0">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                            <path d="M9.375 3a1.875 1.875 0 0 0 0 3.75h1.875v4.5H3.375A1.125 1.125 0 0 1 2.25 10.125V9.75c0-1.036.84-1.875 1.875-1.875h4.5A1.875 1.875 0 0 1 9.375 3Z" />
-                            <path d="M12.75 6.75h1.875a1.875 1.875 0 1 0-1.875-1.875V6.75ZM12.75 8.25v4.5h7.875c.621 0 1.125-.504 1.125-1.125V9.75a1.875 1.875 0 0 0-1.875-1.875h-7.125ZM12.75 15v6.75h6.375A1.875 1.875 0 0 0 21 19.875V15H12.75ZM11.25 21.75V15H3v4.875c0 1.036.84 1.875 1.875 1.875H11.25Z" />
-                        </svg>
-                        <em x-text="labels.yearly_badge"></em>
-                    </span>
-                </button>
+                <button type="button" :class="{ 'is-active': period === 'Year' }" x-on:click="setPeriod('Year')" x-text="labels.annual"></button>
                 <button type="button" :class="{ 'is-active': period === 'Month' }" x-on:click="setPeriod('Month')" x-text="labels.monthly"></button>
             </div>
         </div>
@@ -1294,16 +1278,11 @@
                                     :aria-pressed="isSelected(mod.key)"
                                     x-on:click="toggle(mod.key)"
                                 >
-                                    <span class="pc-check">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-3.5 w-3.5">
-                                            <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd" />
-                                        </svg>
-                                    </span>
                                     <div class="pc-module-top">
                                         <h5 x-text="mod.name"></h5>
-                                        <div class="pc-price-tag" :class="{ 'is-deal': isYearlyDeal() }">
-                                            <span class="pc-price-was" x-show="isYearlyDeal()" x-text="format(mod.price_month)"></span>
+                                        <div class="pc-price-tag">
                                             <span class="pc-price-row">
+                                                <span class="pc-price-was" x-show="isYearlyDeal()" x-text="format(mod.price_month)"></span>
                                                 <span :class="isYearlyDeal() ? 'pc-price-now' : ''" x-text="displayMonthly(mod.price_month)"></span>
                                                 <small x-text="' / ' + labels.per_month"></small>
                                             </span>
@@ -1325,45 +1304,72 @@
                                     <div class="pc-req" x-show="mod.requires_any?.length" x-text="labels.works_with + ': ' + requiresAnyNames(mod)"></div>
                                 </button>
 
-                                {{-- In-card counter: POS devices / waiter seats / shifts employees --}}
-                                <div
-                                    class="pc-module-quota"
-                                    x-show="resolveInlineQuotaKey(mod) && inlineQuota(mod)"
-                                    x-cloak
-                                    x-on:click.stop
-                                >
-                                    <div class="pc-module-quota-copy">
-                                        <strong x-text="inlineQuotaLabel(mod)"></strong>
-                                        <span x-text="inlineQuotaHint(mod)" x-show="inlineQuotaHint(mod)"></span>
-                                        <span>
-                                            <span x-text="quotaIncluded(inlineQuota(mod)) + ' ' + labels.included"></span>
-                                            ·
-                                            <span x-show="!isYearlyDeal()" x-text="format(inlineQuota(mod)?.price_per_extra_month) + ' / +1'"></span>
-                                            <span x-show="isYearlyDeal()">
-                                                <span class="pc-price-was" x-text="format(inlineQuota(mod)?.price_per_extra_month)"></span>
-                                                <span class="pc-price-now" style="font-size:0.72rem" x-text="formatDeal(effectiveMonthly(inlineQuota(mod)?.price_per_extra_month))"></span>
-                                                / +1
-                                            </span>
-                                        </span>
-                                    </div>
+                                <div class="pc-module-dock">
                                     <div
-                                        class="pc-stepper"
-                                        :class="{ 'is-capped': isSelected(mod.key) && isQuotaAtMax(resolveInlineQuotaKey(mod)) }"
+                                        class="pc-module-quota"
+                                        x-show="resolveInlineQuotaKey(mod) && inlineQuota(mod)"
+                                        x-cloak
+                                        x-on:click.stop
                                     >
-                                        <button type="button" x-on:click="bumpInline(mod, -1)">−</button>
-                                        <span x-text="quotaValue(resolveInlineQuotaKey(mod))"></span>
-                                        <button
-                                            type="button"
-                                            x-on:click="bumpInline(mod, 1)"
-                                            :disabled="isSelected(mod.key) && isQuotaAtMax(resolveInlineQuotaKey(mod))"
-                                        >+</button>
+                                        <div class="pc-module-quota-copy">
+                                            <strong x-text="inlineQuotaLabel(mod)"></strong>
+                                            <span class="pc-quota-sub">
+                                                <span x-text="quotaIncluded(inlineQuota(mod)) + ' ' + labels.included"></span>
+                                            </span>
+                                            <span class="pc-price-row pc-quota-price">
+                                                <span
+                                                    class="pc-price-was"
+                                                    x-show="isYearlyDeal()"
+                                                    x-text="format(inlineQuota(mod)?.price_per_extra_month)"
+                                                ></span>
+                                                <span
+                                                    :class="isYearlyDeal() ? 'pc-price-now' : ''"
+                                                    x-text="isYearlyDeal()
+                                                        ? formatDeal(effectiveMonthly(inlineQuota(mod)?.price_per_extra_month))
+                                                        : format(inlineQuota(mod)?.price_per_extra_month)"
+                                                ></span>
+                                                <small>/ +1</small>
+                                            </span>
+                                        </div>
+                                        <div
+                                            class="pc-stepper"
+                                            :class="{ 'is-capped': isSelected(mod.key) && isQuotaAtMax(resolveInlineQuotaKey(mod)) }"
+                                        >
+                                            <button type="button" x-on:click="bumpInline(mod, -1)">−</button>
+                                            <span x-text="quotaValue(resolveInlineQuotaKey(mod))"></span>
+                                            <button
+                                                type="button"
+                                                x-on:click="bumpInline(mod, 1)"
+                                                :disabled="isSelected(mod.key) && isQuotaAtMax(resolveInlineQuotaKey(mod))"
+                                            >+</button>
+                                        </div>
                                     </div>
+
                                     <p
                                         class="pc-module-quota-cap"
-                                        x-show="isSelected(mod.key) && quotaCapKey === resolveInlineQuotaKey(mod)"
+                                        x-show="isSelected(mod.key) && resolveInlineQuotaKey(mod) && quotaCapKey === resolveInlineQuotaKey(mod)"
                                         x-text="labels.quota_cap_hint"
                                         x-transition
                                     ></p>
+
+                                    <div class="pc-module-foot">
+                                        <button
+                                            type="button"
+                                            class="pc-module-select"
+                                            :aria-pressed="isSelected(mod.key)"
+                                            x-on:click="toggle(mod.key)"
+                                        >
+                                            <span
+                                                class="pc-check"
+                                                aria-hidden="true"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-3.5 w-3.5">
+                                                    <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd" />
+                                                </svg>
+                                            </span>
+                                            <span x-text="isSelected(mod.key) ? labels.module_selected : labels.module_select"></span>
+                                        </button>
+                                    </div>
                                 </div>
                             </article>
                         </template>
@@ -1380,11 +1386,19 @@
                             <div class="pc-quota-meta">
                                 <span x-text="quotaIncluded(quota) + ' ' + labels.included"></span>
                                 ·
-                                <span x-show="!isYearlyDeal()" x-text="format(quota.price_per_extra_month) + ' / +1'"></span>
-                                <span x-show="isYearlyDeal()">
-                                    <span class="pc-price-was" x-text="format(quota.price_per_extra_month)"></span>
-                                    <span class="pc-price-now" style="font-size:0.82rem" x-text="formatDeal(effectiveMonthly(quota.price_per_extra_month))"></span>
-                                    / +1
+                                <span class="pc-price-row pc-quota-price">
+                                    <span
+                                        class="pc-price-was"
+                                        x-show="isYearlyDeal()"
+                                        x-text="format(quota.price_per_extra_month)"
+                                    ></span>
+                                    <span
+                                        :class="isYearlyDeal() ? 'pc-price-now' : ''"
+                                        x-text="isYearlyDeal()
+                                            ? formatDeal(effectiveMonthly(quota.price_per_extra_month))
+                                            : format(quota.price_per_extra_month)"
+                                    ></span>
+                                    <small>/ +1</small>
                                 </span>
                             </div>
                         </div>
@@ -1426,17 +1440,6 @@
                     </template>
                 </div>
 
-                <div class="pc-year-offer" x-show="period === 'Year' && yearlyGifted() > 0">
-                    <div>
-                        <span x-text="labels.yearly_value"></span>
-                        <strong x-text="format(yearlyListValue())"></strong>
-                    </div>
-                    <div class="is-gift">
-                        <span x-text="labels.yearly_gift"></span>
-                        <strong x-text="'−' + format(yearlyGiftAmount())"></strong>
-                    </div>
-                </div>
-
                 <div class="pc-invoice-totals">
                     <div class="pc-total-row">
                         <span x-text="labels.invoice_subtotal"></span>
@@ -1456,14 +1459,11 @@
                     </strong>
                 </div>
                 <div class="pc-eq-line" x-show="isYearlyDeal() && monthlyTotal > 0">
-                    <span class="pc-price-was" x-text="format(monthlyTotal) + ' / ' + labels.per_month"></span>
-                    <strong class="pc-price-now" style="font-size:0.95rem">
-                        <span x-text="labels.yearly_effective"></span>
-                        <span x-text="formatDeal(effectiveMonthly(monthlyTotal))"></span>
-                        /
-                        <span x-text="labels.per_month"></span>
-                    </strong>
-                    <em x-text="labels.yearly_effective_hint"></em>
+                    <span class="pc-price-row">
+                        <span class="pc-price-was" x-text="format(monthlyTotal)"></span>
+                        <span class="pc-price-now" x-text="formatDeal(effectiveMonthly(monthlyTotal))"></span>
+                        <small x-text="' / ' + labels.per_month"></small>
+                    </span>
                 </div>
 
                 <div class="pc-coupon">
@@ -1499,7 +1499,6 @@
                     ></p>
                 </div>
 
-                <p class="pc-invoice-note" x-show="period === 'Year'" x-text="labels.yearly_note"></p>
                 <p class="pc-invoice-note" x-show="period === 'Month'" x-text="labels.modules_hint"></p>
                 <div class="pc-empty" x-show="modules.length === 0" x-text="labels.select_at_least"></div>
                 <div class="pc-empty" x-show="modules.length > 0 && softDependencyBroken" x-text="labels.reports_needs_data"></div>

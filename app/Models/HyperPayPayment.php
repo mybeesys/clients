@@ -79,6 +79,7 @@ class HyperPayPayment extends Model
     public static function hashPlanConfig(array $planConfig): string
     {
         $normalized = [
+            'intent' => (string) ($planConfig['intent'] ?? 'replace'),
             'period' => ($planConfig['period'] ?? 'Month') === 'Year' ? 'Year' : 'Month',
             'modules' => array_values(array_unique(array_filter($planConfig['modules'] ?? []))),
             'employees' => (int) ($planConfig['employees'] ?? 0),
@@ -86,6 +87,8 @@ class HyperPayPayment extends Model
             'screen_devices' => (int) ($planConfig['screen_devices'] ?? 0),
             'pos_devices' => (int) ($planConfig['pos_devices'] ?? 0),
             'waiter_seats' => (int) ($planConfig['waiter_seats'] ?? 0),
+            'kitchen_devices' => (int) ($planConfig['kitchen_devices'] ?? 0),
+            'remaining_months' => (int) ($planConfig['remaining_months'] ?? 0),
             'coupon_code' => isset($planConfig['coupon_code']) ? strtoupper(trim((string) $planConfig['coupon_code'])) : '',
         ];
 

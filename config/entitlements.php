@@ -87,6 +87,16 @@ return [
             'price_per_extra_month' => 29,
             'linked_module' => 'waiter_app',
         ],
+        'kitchen_devices' => [
+            'key' => 'kitchen_devices',
+            'name_en' => 'Kitchen devices',
+            'name_ar' => 'أجهزة المطبخ',
+            'min' => 1,
+            'max' => 20,
+            'included' => 1,
+            'price_per_extra_month' => 49,
+            'linked_module' => 'kitchen_app',
+        ],
     ],
 
     /**
@@ -154,6 +164,7 @@ return [
             'price_month' => 129,
             'icon' => 'fire',
             'requires' => ['cashier_pos'],
+            'inline_quota' => 'kitchen_devices',
             'includes' => [
                 'en' => ['Kitchen order board', 'Ticket status updates'],
                 'ar' => ['لوحة طلبات المطبخ', 'تحديث حالة التذاكر'],
@@ -410,6 +421,9 @@ return [
                 'employees' => 10,
                 'establishments' => 1,
                 'screen_devices' => 3,
+                'pos_devices' => 2,
+                'waiter_seats' => 3,
+                'kitchen_devices' => 2,
             ],
             'sort_order' => 10,
             'active' => true,
@@ -465,6 +479,7 @@ return [
             'quotas' => [
                 'employees' => 15,
                 'establishments' => 1,
+                'pos_devices' => 1,
             ],
             'sort_order' => 40,
             'active' => true,
@@ -520,6 +535,9 @@ return [
                 'employees' => 25,
                 'establishments' => 3,
                 'screen_devices' => 6,
+                'pos_devices' => 3,
+                'waiter_seats' => 5,
+                'kitchen_devices' => 3,
             ],
             'sort_order' => 70,
             'active' => true,

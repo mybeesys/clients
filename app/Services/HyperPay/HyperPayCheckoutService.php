@@ -53,7 +53,11 @@ class HyperPayCheckoutService
         string $intent,
         string $sessionToken,
     ): HyperPayPayment {
-        $quote['checkout_intent'] = $intent === 'renew' ? 'renew' : 'replace';
+        $quote['checkout_intent'] = match ($intent) {
+            'renew' => 'renew',
+            'addon' => 'addon',
+            default => 'replace',
+        };
 
         return $this->startCheckout($planConfig, $quote, $billing, [
             'company_id' => $company->id,
@@ -214,32 +218,47 @@ class HyperPayCheckoutService
             $planConfig = is_array($locked->plan_config) ? $locked->plan_config : [];
             $provisioner = app(EntitlementProvisioner::class);
 
-            $entitlement = $intent === 'renew'
-                ? $provisioner->renew($company, [
+            if ($intent === 'renew') {
+                $entitlement = $provisioner->renew($company, [
                     'coupon_code' => $locked->coupon_code ?: ($planConfig['coupon_code'] ?? null),
                     'period' => ($planConfig['period'] ?? data_get($locked->quote, 'period')) === 'Month' ? 'Month' : 'Year',
-                ])
-                : $provisioner->replace($company, $planConfig);
+                ]);
+            } elseif ($intent === 'addon') {
+                $entitlement = $provisioner->applyAddon($company, [
+                    'employees' => (int) ($planConfig['employees'] ?? 0),
+                    'establishments' => (int) ($planConfig['establishments'] ?? 0),
+                    'screen_devices' => (int) ($planConfig['screen_devices'] ?? 0),
+                    'pos_devices' => (int) ($planConfig['pos_devices'] ?? 0),
+                    'waiter_seats' => (int) ($planConfig['waiter_seats'] ?? 0),
+                    'kitchen_devices' => (int) ($planConfig['kitchen_devices'] ?? 0),
+                ]);
+            } else {
+                $entitlement = $provisioner->replace($company, $planConfig);
+            }
 
             $entitlement->loadMissing('subscription');
+            $subscriptionId = $entitlement->subscription_id
+                ?: $company->subscription?->id;
 
             $locked->forceFill([
-                'plan_id' => $entitlement->subscription?->plan_id,
-                'subscription_id' => $entitlement->subscription_id,
+                'plan_id' => $entitlement->subscription?->plan_id ?? $company->subscription?->plan_id,
+                'subscription_id' => $subscriptionId,
             ])->save();
 
-            PaymentSubscription::query()->create([
-                'subscription_id' => $entitlement->subscription_id,
-                'company_id' => $company->id,
-                'plan_id' => $entitlement->subscription?->plan_id,
-                'amount' => $locked->amount,
-                'payment_date' => now()->toDateString(),
-                'payment_method' => 'hyperpay',
-                'status' => 'paid',
-                'transaction_id' => $locked->payment_id ?: $locked->merchant_transaction_id,
-                'paid_amount' => $locked->amount,
-                'remaining_amount' => 0,
-            ]);
+            if ($subscriptionId) {
+                PaymentSubscription::query()->create([
+                    'subscription_id' => $subscriptionId,
+                    'company_id' => $company->id,
+                    'plan_id' => $entitlement->subscription?->plan_id ?? $company->subscription?->plan_id,
+                    'amount' => $locked->amount,
+                    'payment_date' => now()->toDateString(),
+                    'payment_method' => 'hyperpay',
+                    'status' => 'paid',
+                    'transaction_id' => $locked->payment_id ?: $locked->merchant_transaction_id,
+                    'paid_amount' => $locked->amount,
+                    'remaining_amount' => 0,
+                ]);
+            }
 
             return $locked->fresh();
         });

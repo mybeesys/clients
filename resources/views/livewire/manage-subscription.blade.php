@@ -522,6 +522,87 @@
             line-height: 1.5;
         }
 
+        .ms-grid-3 {
+            display: grid;
+            gap: 0.85rem;
+        }
+
+        @media (min-width: 900px) {
+            .ms-grid-3 {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+
+        .ms-addon-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.85rem;
+            padding: 0.75rem 0;
+            border-top: 1px solid var(--ms-line);
+        }
+
+        .ms-addon-row:first-of-type {
+            border-top: 0;
+            padding-top: 0.25rem;
+        }
+
+        .ms-addon-copy strong {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 800;
+        }
+
+        .ms-addon-copy span {
+            display: block;
+            margin-top: 0.15rem;
+            font-size: 0.74rem;
+            color: var(--ms-muted);
+            font-weight: 600;
+        }
+
+        .ms-stepper {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.15rem;
+            background: var(--ms-soft);
+            border: 1px solid var(--ms-line);
+            border-radius: 999px;
+            padding: 0.15rem;
+            flex-shrink: 0;
+        }
+
+        .ms-stepper button {
+            width: 1.85rem;
+            height: 1.85rem;
+            border: 0;
+            border-radius: 999px;
+            background: transparent;
+            color: var(--ms-ink);
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            font-family: inherit;
+            line-height: 1;
+        }
+
+        .ms-stepper button:hover:not(:disabled) {
+            background: var(--ms-accent-soft);
+        }
+
+        .ms-stepper button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .ms-stepper em {
+            min-width: 1.85rem;
+            text-align: center;
+            font-style: normal;
+            font-weight: 800;
+            font-variant-numeric: tabular-nums;
+        }
+
         .ms-customize {
             margin-top: 0.75rem;
             background: transparent;
@@ -573,13 +654,22 @@
         @endif
 
         @if ($mode === 'choose')
-            <div class="ms-grid">
+            <div class="ms-grid ms-grid-3">
                 <button type="button" class="ms-card choice" wire:click="showRenew" @disabled(! $hasCustomPackage)>
                     <span class="ms-badge">@lang('main.subscribe.renew_badge')</span>
                     <h2>@lang('main.subscribe.renew_title')</h2>
                     <p>@lang('main.subscribe.renew_desc')</p>
                     @unless ($hasCustomPackage)
                         <p class="ms-note">@lang('main.subscribe.renew_requires_custom_package')</p>
+                    @endunless
+                </button>
+
+                <button type="button" class="ms-card choice" wire:click="showAddon" @disabled(! $hasCustomPackage)>
+                    <span class="ms-badge">@lang('main.subscribe.addon_badge')</span>
+                    <h2>@lang('main.subscribe.addon_title')</h2>
+                    <p>@lang('main.subscribe.addon_desc')</p>
+                    @unless ($hasCustomPackage)
+                        <p class="ms-note">@lang('main.subscribe.addon_requires_package')</p>
                     @endunless
                 </button>
 
@@ -714,6 +804,78 @@
                     <button type="button" class="ms-btn ms-btn-primary" wire:click="renewCurrent" wire:loading.attr="disabled">
                         <span wire:loading.remove wire:target="renewCurrent">@lang('main.subscribe.confirm_renew')</span>
                         <span wire:loading wire:target="renewCurrent">@lang('main.wizard.saving')</span>
+                    </button>
+                </div>
+            </div>
+        @endif
+
+        @if ($mode === 'addon')
+            <div class="ms-summary">
+                <h3>@lang('main.subscribe.addon_title')</h3>
+                <p class="ms-note" style="margin-top:0;">@lang('main.subscribe.addon_hint')</p>
+
+                @forelse ($addonRows as $row)
+                    <div class="ms-addon-row">
+                        <div class="ms-addon-copy">
+                            <strong>{{ $row['name'] }}</strong>
+                            <span>
+                                @lang('main.subscribe.addon_current'): {{ $row['floor'] }}
+                                ·
+                                @lang('main.subscribe.addon_per_month_unit', ['amount' => number_format($row['unit'], 0)])
+                            </span>
+                        </div>
+                        <div class="ms-stepper">
+                            <button
+                                type="button"
+                                wire:click="bumpAddon('{{ $row['key'] }}', -1)"
+                                @disabled($row['value'] <= $row['floor'] || $saving)
+                            >−</button>
+                            <em>{{ $row['value'] }}</em>
+                            <button
+                                type="button"
+                                wire:click="bumpAddon('{{ $row['key'] }}', 1)"
+                                @disabled($row['value'] >= $row['max'] || $saving)
+                            >+</button>
+                        </div>
+                    </div>
+                @empty
+                    <p class="ms-note">@lang('main.subscribe.addon_requires_package')</p>
+                @endforelse
+
+                @if ($addonQuote)
+                    <div class="ms-kv" style="margin-top:0.85rem;">
+                        <span>@lang('main.subscribe.addon_remaining', ['months' => $addonQuote['remaining_months']])</span>
+                        <strong>{{ $addonQuote['remaining_months'] }}</strong>
+                    </div>
+                    @foreach ($addonQuote['line_items'] as $line)
+                        <div class="ms-kv">
+                            <span>{{ $line['label'] }}</span>
+                            <strong>{{ number_format((float) $line['total'], 0) }} {{ __('general.sar') }}</strong>
+                        </div>
+                    @endforeach
+                    <div class="ms-kv">
+                        <span>@lang('main.subscribe.addon_due_now')</span>
+                        <strong>{{ number_format((float) $addonQuote['period_total'], 0) }} {{ __('general.sar') }}</strong>
+                    </div>
+                @elseif ($addonError)
+                    <div class="ms-error">{{ $addonError }}</div>
+                @endif
+
+                @error('addon') <div class="ms-error">{{ $message }}</div> @enderror
+
+                <div class="ms-actions">
+                    <button type="button" class="ms-btn ms-btn-secondary" wire:click="showChoose" @disabled($saving)>
+                        @lang('main.subscribe.back')
+                    </button>
+                    <button
+                        type="button"
+                        class="ms-btn ms-btn-primary"
+                        wire:click="buyAddon"
+                        wire:loading.attr="disabled"
+                        @disabled(! $addonQuote || $saving)
+                    >
+                        <span wire:loading.remove wire:target="buyAddon">@lang('main.subscribe.confirm_addon')</span>
+                        <span wire:loading wire:target="buyAddon">@lang('main.wizard.saving')</span>
                     </button>
                 </div>
             </div>

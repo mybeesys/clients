@@ -16,6 +16,7 @@ class CompanyEntitlement extends Model
         'screen_devices_quota',
         'pos_devices_quota',
         'waiter_seats_quota',
+        'kitchen_devices_quota',
         'period',
         'currency',
         'monthly_subtotal',
@@ -37,6 +38,7 @@ class CompanyEntitlement extends Model
             'screen_devices_quota' => 'integer',
             'pos_devices_quota' => 'integer',
             'waiter_seats_quota' => 'integer',
+            'kitchen_devices_quota' => 'integer',
         ];
     }
 
