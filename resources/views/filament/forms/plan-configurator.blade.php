@@ -1466,38 +1466,40 @@
                     </span>
                 </div>
 
-                <div class="pc-coupon">
-                    <label class="pc-coupon-label" x-text="labels.coupon_label"></label>
-                    <div class="pc-coupon-row">
-                        <input
-                            type="text"
-                            x-model="coupon_input"
-                            :placeholder="labels.coupon_placeholder"
-                            :disabled="!!coupon_code || coupon_loading"
-                            x-on:keydown.enter.prevent="applyCoupon()"
-                        >
-                        <button
-                            type="button"
-                            x-show="!coupon_code"
-                            x-on:click="applyCoupon()"
-                            :disabled="coupon_loading"
-                            x-text="labels.coupon_apply"
-                        ></button>
-                        <button
-                            type="button"
-                            class="is-muted"
-                            x-show="coupon_code"
-                            x-on:click="clearCoupon()"
-                            x-text="labels.coupon_remove"
-                        ></button>
+                @if ($hasActiveCoupon ?? false)
+                    <div class="pc-coupon">
+                        <label class="pc-coupon-label" x-text="labels.coupon_label"></label>
+                        <div class="pc-coupon-row">
+                            <input
+                                type="text"
+                                x-model="coupon_input"
+                                :placeholder="labels.coupon_placeholder"
+                                :disabled="!!coupon_code || coupon_loading"
+                                x-on:keydown.enter.prevent="applyCoupon()"
+                            >
+                            <button
+                                type="button"
+                                x-show="!coupon_code"
+                                x-on:click="applyCoupon()"
+                                :disabled="coupon_loading"
+                                x-text="labels.coupon_apply"
+                            ></button>
+                            <button
+                                type="button"
+                                class="is-muted"
+                                x-show="coupon_code"
+                                x-on:click="clearCoupon()"
+                                x-text="labels.coupon_remove"
+                            ></button>
+                        </div>
+                        <p
+                            class="pc-coupon-msg"
+                            :class="coupon_ok ? 'is-ok' : 'is-err'"
+                            x-show="coupon_message"
+                            x-text="coupon_message"
+                        ></p>
                     </div>
-                    <p
-                        class="pc-coupon-msg"
-                        :class="coupon_ok ? 'is-ok' : 'is-err'"
-                        x-show="coupon_message"
-                        x-text="coupon_message"
-                    ></p>
-                </div>
+                @endif
 
                 <p class="pc-invoice-note" x-show="period === 'Month'" x-text="labels.modules_hint"></p>
                 <div class="pc-empty" x-show="modules.length === 0" x-text="labels.select_at_least"></div>

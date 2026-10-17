@@ -331,6 +331,7 @@ class ManageSubscription extends Component
             'hasCustomPackage' => (bool) $entitlement,
             'yearlyMonthsCharged' => $catalog->yearlyMonthsCharged(),
             'yearlyMonthsGifted' => $catalog->yearlyMonthsGifted(),
+            'hasActiveCoupon' => app(CouponApplicator::class)->hasActive(),
         ]);
     }
 

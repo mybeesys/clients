@@ -43,6 +43,24 @@ class CouponApplicator
     }
 
     /**
+     * True when at least one coupon can be entered/applied right now.
+     */
+    public function hasActive(): bool
+    {
+        $today = Carbon::today()->toDateString();
+
+        return Coupon::query()
+            ->where('active', true)
+            ->whereDate('start', '<=', $today)
+            ->whereDate('end', '>=', $today)
+            ->where(function ($query) {
+                $query->where('uses_limit', '<=', 0)
+                    ->orWhereColumn('uses_count', '<', 'uses_limit');
+            })
+            ->exists();
+    }
+
+    /**
      * @return array{ok: bool, message?: string, code?: string, type?: string, value?: float, discount?: float, label?: string}
      */
     public function preview(?string $code, float $amount): array

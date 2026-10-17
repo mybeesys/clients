@@ -2,6 +2,7 @@
 
 namespace App\Filament\Forms;
 
+use App\Services\Entitlements\CouponApplicator;
 use App\Services\Entitlements\EntitlementCatalog;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\ViewField;
@@ -44,6 +45,7 @@ class PlanConfiguratorWizardStep
                 ->viewData([
                     'catalog' => $catalog->toFrontend(),
                     'required' => $required,
+                    'hasActiveCoupon' => app(CouponApplicator::class)->hasActive(),
                 ]),
             Hidden::make('plan_config')
                 ->default([

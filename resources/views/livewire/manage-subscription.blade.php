@@ -787,12 +787,14 @@
                     </div>
                 @endif
 
-                <div style="margin-top:0.85rem;">
-                    <label class="ms-note" style="display:block;margin-bottom:0.3rem;font-weight:800;">
-                        @lang('main.wizard.coupon_label')
-                    </label>
-                    <input type="text" class="ms-input" wire:model.live.debounce.400ms="renew_coupon" placeholder="{{ __('main.wizard.coupon_placeholder') }}">
-                </div>
+                @if ($hasActiveCoupon)
+                    <div style="margin-top:0.85rem;">
+                        <label class="ms-note" style="display:block;margin-bottom:0.3rem;font-weight:800;">
+                            @lang('main.wizard.coupon_label')
+                        </label>
+                        <input type="text" class="ms-input" wire:model.live.debounce.400ms="renew_coupon" placeholder="{{ __('main.wizard.coupon_placeholder') }}">
+                    </div>
+                @endif
 
                 @error('renew') <div class="ms-error">{{ $message }}</div> @enderror
                 @error('renew_coupon') <div class="ms-error">{{ $message }}</div> @enderror
@@ -899,6 +901,7 @@
                     'required' => true,
                     'wirePath' => 'plan_config',
                     'initial' => $plan_config,
+                    'hasActiveCoupon' => $hasActiveCoupon,
                 ])
             </div>
 
