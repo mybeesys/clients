@@ -287,6 +287,10 @@ return [
         'updated' => 'Subscription updated successfully.',
         'handoff_invalid' => 'This subscription link is invalid or expired. Please sign in and try again.',
         'handoff_forbidden' => 'You are not allowed to manage this company subscription.',
+        'embed_error_title' => 'Could not open subscription management',
+        'embed_error_body' => 'The secure link expired or could not be verified. Reload the page and try again.',
+        'embed_error_unauthenticated' => 'Your session expired inside the subscription window. Reload and try again.',
+        'embed_error_retry' => 'Reload',
     ],
 
     'platform_dashboard' => [

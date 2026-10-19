@@ -4,8 +4,10 @@ use App\Http\Controllers\HyperPayCheckoutController;
 use App\Http\Controllers\Internal\GrantTenantAdminPermissionsController;
 use App\Http\Controllers\InviteLandingController;
 use App\Http\Controllers\RegistrationThankYouController;
+use App\Http\Controllers\SubscribeEmbedErrorController;
 use App\Http\Controllers\SubscribeHandoffController;
 use App\Http\Controllers\SubscriptionController;
+use App\Http\Middleware\AllowSubscribeFrame;
 use App\Http\Middleware\LocalizationMiddleware;
 use App\Livewire\ManageSubscription;
 use Illuminate\Support\Facades\Route;
@@ -40,12 +42,16 @@ Route::get('/invite/{code}', InviteLandingController::class)
     ->name('referrals.landing');
 
 Route::get('/subscribe/handoff/{token}', SubscribeHandoffController::class)
-    ->middleware(LocalizationMiddleware::class)
+    ->middleware([LocalizationMiddleware::class, AllowSubscribeFrame::class])
     ->where('token', '[A-Za-z0-9]{64}')
     ->name('subscribe.handoff');
 
+Route::get('/subscribe/embed-error', SubscribeEmbedErrorController::class)
+    ->middleware([LocalizationMiddleware::class, AllowSubscribeFrame::class])
+    ->name('subscribe.embed-error');
+
 Route::get('/subscribe', ManageSubscription::class)
-    ->middleware([LocalizationMiddleware::class, 'auth'])
+    ->middleware([LocalizationMiddleware::class, AllowSubscribeFrame::class, 'auth'])
     ->name('subscribe');
 
 Route::post('/plan/subscribe', [SubscriptionController::class, 'store'])->middleware('auth');

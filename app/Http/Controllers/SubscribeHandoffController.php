@@ -13,8 +13,10 @@ class SubscribeHandoffController extends Controller
 {
     public function __invoke(string $token): RedirectResponse
     {
+        $embed = $this->wantsEmbed();
+
         if (! Schema::hasTable('subscription_handoff_tokens')) {
-            abort(503, 'Subscription handoff is not configured yet.');
+            return $this->fail('invalid', $embed);
         }
 
         $hash = hash('sha256', $token);
@@ -26,9 +28,7 @@ class SubscribeHandoffController extends Controller
             ->first();
 
         if (! $row) {
-            return redirect()
-                ->route('filament.admin.auth.login')
-                ->withErrors(['email' => __('main.subscribe.handoff_invalid')]);
+            return $this->fail('invalid', $embed);
         }
 
         $used = DB::table('subscription_handoff_tokens')
@@ -37,16 +37,12 @@ class SubscribeHandoffController extends Controller
             ->update(['used_at' => now()]);
 
         if ($used !== 1) {
-            return redirect()
-                ->route('filament.admin.auth.login')
-                ->withErrors(['email' => __('main.subscribe.handoff_invalid')]);
+            return $this->fail('invalid', $embed);
         }
 
         $user = User::query()->find($row->user_id);
         if (! $user) {
-            return redirect()
-                ->route('filament.admin.auth.login')
-                ->withErrors(['email' => __('main.subscribe.handoff_invalid')]);
+            return $this->fail('invalid', $embed);
         }
 
         if ($row->company_id) {
@@ -59,9 +55,7 @@ class SubscribeHandoffController extends Controller
                 ->exists();
 
             if (! $allowed) {
-                return redirect()
-                    ->route('filament.admin.auth.login')
-                    ->withErrors(['email' => __('main.subscribe.handoff_forbidden')]);
+                return $this->fail('forbidden', $embed);
             }
         }
 
@@ -73,6 +67,57 @@ class SubscribeHandoffController extends Controller
             $redirect = '/subscribe';
         }
 
+        $embed = $embed || $this->redirectHasEmbed($redirect);
+
+        session([
+            'subscribe.company_id' => $row->company_id ? (int) $row->company_id : null,
+            'subscribe.embed' => $embed,
+        ]);
+
+        if ($embed && ! $this->redirectHasEmbed($redirect)) {
+            $redirect .= (str_contains($redirect, '?') ? '&' : '?').'embed=1';
+        }
+
         return redirect()->to($redirect);
+    }
+
+    protected function wantsEmbed(): bool
+    {
+        $request = request();
+
+        if ($request->boolean('embed')) {
+            return true;
+        }
+
+        $dest = strtolower((string) $request->headers->get('Sec-Fetch-Dest', ''));
+
+        return in_array($dest, ['iframe', 'nested'], true);
+    }
+
+    protected function redirectHasEmbed(string $redirect): bool
+    {
+        $query = parse_url($redirect, PHP_URL_QUERY);
+        if (! is_string($query) || $query === '') {
+            return false;
+        }
+
+        parse_str($query, $params);
+
+        return filter_var($params['embed'] ?? false, FILTER_VALIDATE_BOOLEAN);
+    }
+
+    protected function fail(string $reason, bool $embed): RedirectResponse
+    {
+        if ($embed) {
+            return redirect()->route('subscribe.embed-error', ['reason' => $reason]);
+        }
+
+        $message = $reason === 'forbidden'
+            ? __('main.subscribe.handoff_forbidden')
+            : __('main.subscribe.handoff_invalid');
+
+        return redirect()
+            ->route('filament.admin.auth.login')
+            ->withErrors(['email' => $message]);
     }
 }

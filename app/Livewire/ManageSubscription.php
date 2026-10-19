@@ -14,11 +14,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
-use Livewire\Attributes\Layout;
 use Livewire\Component;
 use RuntimeException;
 
-#[Layout('layouts.subscribe')]
 class ManageSubscription extends Component
 {
     /** @var 'choose'|'renew'|'customize'|'addon' */
@@ -40,6 +38,10 @@ class ManageSubscription extends Component
 
     public function mount(): void
     {
+        if (request()->boolean('embed')) {
+            session(['subscribe.embed' => true]);
+        }
+
         $company = $this->company();
 
         if (! $company) {
@@ -332,15 +334,45 @@ class ManageSubscription extends Component
             'yearlyMonthsCharged' => $catalog->yearlyMonthsCharged(),
             'yearlyMonthsGifted' => $catalog->yearlyMonthsGifted(),
             'hasActiveCoupon' => app(CouponApplicator::class)->hasActive(),
-        ]);
+        ])->layout($this->isEmbed() ? 'layouts.subscribe-embed' : 'layouts.subscribe');
+    }
+
+    protected function isEmbed(): bool
+    {
+        return (bool) (request()->boolean('embed') || session('subscribe.embed'));
     }
 
     protected function company(): ?Company
     {
         /** @var \App\Models\User|null $user */
         $user = Auth::user();
+        if (! $user) {
+            return null;
+        }
 
-        return $user?->defaultCompany() ?? $user?->company;
+        $handoffCompanyId = session('subscribe.company_id');
+        if ($handoffCompanyId) {
+            $company = Company::query()
+                ->where('id', (int) $handoffCompanyId)
+                ->where(function ($query) use ($user) {
+                    $query->where('user_id', $user->id)
+                        ->orWhereHas('members', fn ($members) => $members->where('users.id', $user->id));
+                })
+                ->first();
+
+            if ($company) {
+                return $company;
+            }
+        }
+
+        return $user->defaultCompany() ?? $user->company;
+    }
+
+    protected function breakOutTo(string $url): mixed
+    {
+        $safe = json_encode($url, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT);
+
+        return $this->js('window.top.location.href = '.$safe);
     }
 
     protected function seedAddonFromEntitlement(Company $company): void
@@ -420,7 +452,13 @@ class ManageSubscription extends Component
             'hyperpay.checkout_token' => $token,
         ]);
 
-        return $this->redirect(route('hyperpay.checkout', ['uid' => $payment->uid]), navigate: false);
+        $checkoutUrl = route('hyperpay.checkout', ['uid' => $payment->uid]);
+
+        if ($this->isEmbed()) {
+            return $this->breakOutTo($checkoutUrl);
+        }
+
+        return $this->redirect($checkoutUrl, navigate: false);
     }
 
     protected function redirectToTenant(Company $company): mixed
@@ -428,7 +466,13 @@ class ManageSubscription extends Component
         $url = TenantApplicationUrl::forCompany($company);
 
         if ($url) {
-            return redirect()->away($url.'/subscription');
+            $target = $url.'/subscription';
+
+            if ($this->isEmbed()) {
+                return $this->breakOutTo($target);
+            }
+
+            return redirect()->away($target);
         }
 
         return redirect()->route('subscribe')->with('status', __('main.subscribe.updated'));
