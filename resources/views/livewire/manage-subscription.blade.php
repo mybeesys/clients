@@ -635,7 +635,9 @@
                     {{ app()->getLocale() === 'ar' ? 'English' : 'عربي' }}
                 </a>
                 @if ($tenantUrl)
-                    <a href="{{ $tenantUrl }}/subscription">@lang('main.subscribe.back_to_system')</a>
+                    <a href="{{ $tenantUrl }}/subscription" @if (! empty($isEmbed)) target="_top" @endif>
+                        @lang($isEmbed ? 'main.subscribe.back_to_subscriptions' : 'main.subscribe.back_to_system')
+                    </a>
                 @endif
             </div>
         </div>

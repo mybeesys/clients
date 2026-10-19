@@ -334,6 +334,7 @@ class ManageSubscription extends Component
             'yearlyMonthsCharged' => $catalog->yearlyMonthsCharged(),
             'yearlyMonthsGifted' => $catalog->yearlyMonthsGifted(),
             'hasActiveCoupon' => app(CouponApplicator::class)->hasActive(),
+            'isEmbed' => $this->isEmbed(),
         ])->layout($this->isEmbed() ? 'layouts.subscribe-embed' : 'layouts.subscribe');
     }
 

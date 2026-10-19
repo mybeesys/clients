@@ -251,6 +251,7 @@ return [
         'title' => 'Manage subscription',
         'subtitle' => ':company — renew, add seats/devices, or choose a new package.',
         'back_to_system' => 'Back to system',
+        'back_to_subscriptions' => 'Back to subscriptions',
         'back' => 'Back',
         'renew_badge' => 'Renew',
         'renew_title' => 'Renew same subscription',

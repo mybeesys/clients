@@ -48,5 +48,8 @@
             {{ __('main.subscribe.embed_error_retry') }}
         </button>
     </div>
+    <script>
+        window.parent.postMessage({ type: 'subscribe-embed-failed' }, '*');
+    </script>
 </body>
 </html>

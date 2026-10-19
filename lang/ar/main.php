@@ -251,6 +251,7 @@ return [
         'title' => 'إدارة الاشتراك',
         'subtitle' => 'شركة :company — جدّد باقتك، أضف حصصاً، أو اختر باقة جديدة.',
         'back_to_system' => 'العودة للنظام',
+        'back_to_subscriptions' => 'العودة للاشتراكات',
         'back' => 'رجوع',
         'renew_badge' => 'تجديد',
         'renew_title' => 'تجديد نفس الاشتراك',
