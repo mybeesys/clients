@@ -26,7 +26,7 @@
             color: var(--bee-ink);
             background: var(--bee-cream);
         }
-        body { padding: 0.75rem 0.85rem 1.25rem; }
+        body { padding: 0; margin: 0; }
     </style>
 </head>
 <body>
