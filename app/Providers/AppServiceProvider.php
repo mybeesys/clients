@@ -6,6 +6,7 @@ use App\Http\Responses\RegistrationThankYouResponse;
 use BezhanSalleh\FilamentLanguageSwitch\LanguageSwitch;
 use Filament\Http\Responses\Auth\Contracts\RegistrationResponse as RegistrationResponseContract;
 use Illuminate\Auth\Middleware\Authenticate;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -23,6 +24,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $request = request();
+        if ($request->isSecure()
+            || str_starts_with(strtolower((string) $request->header('X-Forwarded-Proto', '')), 'https')) {
+            URL::forceScheme('https');
+        }
+
         LanguageSwitch::configureUsing(function (LanguageSwitch $switch) {
             $switch->visible(outsidePanels: true)
                 ->locales(['ar','en']);

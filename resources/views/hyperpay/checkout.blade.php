@@ -553,6 +553,12 @@
         src="{{ $widgetUrl }}"
         @if (filled($payment->integrity)) integrity="{{ $payment->integrity }}" crossorigin="anonymous" @endif
     ></script>
+    <script>
+        // If checkout opened inside the tenant iframe, break out immediately.
+        if (window.top && window.top !== window.self) {
+            window.top.location.replace(window.location.href);
+        }
+    </script>
 </head>
 <body>
     <header class="hp-bar">

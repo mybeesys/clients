@@ -453,10 +453,12 @@ class ManageSubscription extends Component
             'hyperpay.checkout_token' => $token,
         ]);
 
-        $checkoutUrl = route('hyperpay.checkout', ['uid' => $payment->uid]);
+        $checkoutUrl = route('hyperpay.checkout', ['uid' => $payment->uid], absolute: true);
 
+        // Always leave the iframe for card checkout — HyperPay/3DS needs a top-level window,
+        // and top-level navigation also avoids CSRF/session quirks inside the embed.
         if ($this->isEmbed()) {
-            return $this->breakOutTo($checkoutUrl);
+            return redirect()->away($checkoutUrl);
         }
 
         return $this->redirect($checkoutUrl, navigate: false);
@@ -470,7 +472,7 @@ class ManageSubscription extends Component
             $target = $url.'/subscription';
 
             if ($this->isEmbed()) {
-                return $this->breakOutTo($target);
+                return redirect()->away($target);
             }
 
             return redirect()->away($target);
