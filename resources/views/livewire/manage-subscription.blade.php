@@ -806,7 +806,13 @@
                         @lang('main.subscribe.back')
                     </button>
                     <button type="button" class="ms-btn ms-btn-primary" wire:click="renewCurrent" wire:loading.attr="disabled">
-                        <span wire:loading.remove wire:target="renewCurrent">@lang('main.subscribe.confirm_renew')</span>
+                        <span wire:loading.remove wire:target="renewCurrent">
+                            @if (! empty($defaultSavedCard))
+                                @lang('main.subscribe.confirm_renew_saved', ['card' => $defaultSavedCard->label()])
+                            @else
+                                @lang('main.subscribe.confirm_renew')
+                            @endif
+                        </span>
                         <span wire:loading wire:target="renewCurrent">@lang('main.wizard.saving')</span>
                     </button>
                 </div>
@@ -878,8 +884,28 @@
                         wire:loading.attr="disabled"
                         @disabled(! $addonQuote || $saving)
                     >
-                        <span wire:loading.remove wire:target="buyAddon">@lang('main.subscribe.confirm_addon')</span>
+                        <span wire:loading.remove wire:target="buyAddon">
+                            @if (! empty($defaultSavedCard))
+                                @lang('main.subscribe.confirm_addon_saved', ['card' => $defaultSavedCard->label()])
+                            @else
+                                @lang('main.subscribe.confirm_addon')
+                            @endif
+                        </span>
                         <span wire:loading wire:target="buyAddon">@lang('main.wizard.saving')</span>
+                    </button>
+                </div>
+            </div>
+        @endif
+
+        @if ($mode === 'add-card')
+            <div class="ms-summary" wire:init="startAddCard">
+                <h3>@lang('main.subscribe.add_card_title')</h3>
+                <p class="ms-note" style="margin-top:0;">@lang('main.subscribe.add_card_hint')</p>
+                @error('add_card') <div class="ms-error">{{ $message }}</div> @enderror
+                <div class="ms-actions" style="margin-top:1rem;">
+                    <button type="button" class="ms-btn ms-btn-primary" wire:click="startAddCard" wire:loading.attr="disabled">
+                        <span wire:loading.remove wire:target="startAddCard">@lang('main.subscribe.add_card_cta')</span>
+                        <span wire:loading wire:target="startAddCard">@lang('main.wizard.saving')</span>
                     </button>
                 </div>
             </div>

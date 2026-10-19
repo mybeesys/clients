@@ -5,6 +5,7 @@ namespace App\Services\HyperPay;
 use App\Models\Company;
 use App\Models\HyperPayPayment;
 use App\Models\PaymentSubscription;
+use App\Models\SavedPaymentCard;
 use App\Models\User;
 use App\Services\Entitlements\EntitlementProvisioner;
 use Illuminate\Support\Facades\DB;
@@ -64,6 +65,41 @@ class HyperPayCheckoutService
             'session_token' => $sessionToken,
             'source' => HyperPayPayment::SOURCE_SUBSCRIPTION,
         ]);
+    }
+
+    /**
+     * Vault a card via a small verification charge (createRegistration).
+     *
+     * @param  array<string, string>  $billing
+     */
+    public function startSaveCard(Company $company, array $billing, string $sessionToken): HyperPayPayment
+    {
+        $amount = $this->saveCardVerificationAmount();
+        $currency = $this->config->currency();
+        $label = __('fields.hyperpay_save_card_line');
+
+        $quote = [
+            'period' => 'Month',
+            'period_subtotal' => $amount,
+            'period_total' => $amount,
+            'discount' => 0,
+            'currency' => $currency,
+            'checkout_intent' => 'save_card',
+            'line_items' => [
+                ['label' => $label, 'amount' => $amount],
+            ],
+        ];
+
+        return $this->startCheckout([], $quote, $billing, [
+            'company_id' => $company->id,
+            'session_token' => $sessionToken,
+            'source' => HyperPayPayment::SOURCE_SAVE_CARD,
+        ]);
+    }
+
+    public function saveCardVerificationAmount(): float
+    {
+        return 1.0;
     }
 
     /**
@@ -183,6 +219,8 @@ class HyperPayCheckoutService
             return $locked->fresh();
         });
 
+        $this->rememberSavedCard($paid, $status);
+
         if ($paid->source === HyperPayPayment::SOURCE_SUBSCRIPTION) {
             try {
                 return $this->fulfillSubscription($paid);
@@ -194,6 +232,32 @@ class HyperPayCheckoutService
         }
 
         return $paid;
+    }
+
+    /**
+     * @param  array<string, mixed>  $gatewayResponse
+     */
+    protected function rememberSavedCard(HyperPayPayment $payment, array $gatewayResponse): void
+    {
+        if (! $payment->company_id) {
+            return;
+        }
+
+        $company = Company::query()->find($payment->company_id);
+        if (! $company) {
+            return;
+        }
+
+        try {
+            app(SavedPaymentCardService::class)->storeFromGatewayResponse(
+                $company,
+                $gatewayResponse,
+                $payment,
+                $company->user,
+            );
+        } catch (\Throwable $exception) {
+            report($exception);
+        }
     }
 
     public function fulfillSubscription(HyperPayPayment $payment): HyperPayPayment
@@ -285,6 +349,11 @@ class HyperPayCheckoutService
             'billing.country' => strtoupper($billing['country']),
             'billing.postcode' => $billing['postcode'],
             'integrity' => 'true',
+            // Save the card for later MIT renewals / one-click pay.
+            'createRegistration' => 'true',
+            'standingInstruction.mode' => 'INITIAL',
+            'standingInstruction.type' => 'UNSCHEDULED',
+            'standingInstruction.source' => 'CIT',
         ];
 
         if ($this->config->isTest()) {
@@ -294,6 +363,135 @@ class HyperPayCheckoutService
         }
 
         return $payload;
+    }
+
+    /**
+     * Charge the company's default (or given) saved card without the widget.
+     *
+     * @param  array<string, mixed>  $planConfig
+     * @param  array<string, mixed>  $quote
+     * @param  array<string, string>  $billing
+     */
+    public function chargeSavedCard(
+        Company $company,
+        array $planConfig,
+        array $quote,
+        array $billing,
+        string $intent,
+        ?SavedPaymentCard $card = null,
+    ): HyperPayPayment {
+        if (! $this->config->isConfigured()) {
+            throw new RuntimeException(__('fields.hyperpay_not_configured'));
+        }
+
+        $card ??= app(SavedPaymentCardService::class)->defaultFor($company);
+        if (! $card || ! $card->isActive() || blank($card->registration_id)) {
+            throw new RuntimeException(__('fields.hyperpay_saved_card_missing'));
+        }
+
+        $this->assertBilling($billing);
+
+        $amount = (float) ($quote['period_total'] ?? 0);
+        if ($amount <= 0) {
+            throw new InvalidArgumentException(__('fields.hyperpay_free_plan_no_checkout'));
+        }
+
+        $quote['checkout_intent'] = match ($intent) {
+            'renew' => 'renew',
+            'addon' => 'addon',
+            default => 'replace',
+        };
+
+        $formattedAmount = $this->config->formatAmount($amount);
+        $merchantTransactionId = $this->uniqueMerchantTransactionId();
+
+        $payload = [
+            'entityId' => $this->config->entityId(),
+            'amount' => $formattedAmount,
+            'currency' => $this->config->currency(),
+            'paymentType' => $this->config->paymentType(),
+            'merchantTransactionId' => $merchantTransactionId,
+            'customer.email' => $billing['email'],
+            'customer.givenName' => $billing['given_name'],
+            'customer.surname' => $billing['surname'],
+            'standingInstruction.mode' => 'REPEATED',
+            'standingInstruction.type' => 'UNSCHEDULED',
+            'standingInstruction.source' => 'MIT',
+        ];
+
+        if ($this->config->isTest()) {
+            $payload['testMode'] = 'EXTERNAL';
+        }
+
+        $payment = HyperPayPayment::query()->create([
+            'company_id' => $company->id,
+            'config_hash' => HyperPayPayment::hashPlanConfig($planConfig),
+            'billing_period' => ($quote['period'] ?? 'Month') === 'Year' ? 'Year' : 'Month',
+            'coupon_code' => $quote['coupon_code'] ?? null,
+            'amount' => (float) $formattedAmount,
+            'currency' => $this->config->currency(),
+            'merchant_transaction_id' => $merchantTransactionId,
+            'status' => HyperPayPayment::STATUS_PENDING,
+            'source' => HyperPayPayment::SOURCE_SUBSCRIPTION,
+            'brand' => $card->brand,
+            'billing' => $billing,
+            'plan_config' => $planConfig,
+            'quote' => $quote,
+            'request_payload' => $this->safePayload($payload + ['registrationId' => $card->registration_id]),
+        ]);
+
+        try {
+            $response = $this->gateway->chargeRegistration($card->registration_id, $payload);
+        } catch (\Throwable $exception) {
+            $payment->fill([
+                'status' => HyperPayPayment::STATUS_FAILED,
+                'failed_at' => now(),
+                'result_description' => $exception->getMessage(),
+            ])->save();
+
+            throw $exception;
+        }
+
+        $code = (string) data_get($response, 'result.code', '');
+        $description = (string) data_get($response, 'result.description', '');
+
+        $payment->fill([
+            'payment_id' => $response['id'] ?? null,
+            'brand' => data_get($response, 'paymentBrand', $card->brand),
+            'result_code' => $code,
+            'result_description' => $description,
+            'gateway_response' => $response,
+        ]);
+
+        if (HyperPayResult::isPending($code)) {
+            $payment->status = HyperPayPayment::STATUS_PENDING_GATEWAY;
+            $payment->save();
+
+            return $payment->fresh();
+        }
+
+        if (! HyperPayResult::isSuccessful($code)) {
+            $payment->status = HyperPayPayment::STATUS_FAILED;
+            $payment->failed_at = now();
+            $payment->save();
+
+            throw new RuntimeException($description !== '' ? $description : __('fields.hyperpay_payment_failed_body'));
+        }
+
+        $payment->fill([
+            'status' => HyperPayPayment::STATUS_PAID,
+            'paid_at' => now(),
+        ])->save();
+
+        $paid = $payment->fresh();
+
+        try {
+            return $this->fulfillSubscription($paid);
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return $paid;
+        }
     }
 
     /**

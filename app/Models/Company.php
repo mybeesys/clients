@@ -63,6 +63,11 @@ class Company extends Model
         return $this->hasOne(CompanyEntitlement::class);
     }
 
+    public function savedPaymentCards()
+    {
+        return $this->hasMany(SavedPaymentCard::class);
+    }
+
     protected static function booted(): void
     {
         static::saved(function (Company $company): void {

@@ -9,6 +9,7 @@ use App\Services\Entitlements\EntitlementPricer;
 use App\Services\Entitlements\EntitlementProvisioner;
 use App\Services\HyperPay\HyperPayCheckoutService;
 use App\Services\HyperPay\HyperPayConfig;
+use App\Services\HyperPay\SavedPaymentCardService;
 use App\Support\TenantApplicationUrl;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -19,7 +20,7 @@ use RuntimeException;
 
 class ManageSubscription extends Component
 {
-    /** @var 'choose'|'renew'|'customize'|'addon' */
+    /** @var 'choose'|'renew'|'customize'|'addon'|'add-card' */
     public string $mode = 'choose';
 
     public array $plan_config = [];
@@ -70,7 +71,49 @@ class ManageSubscription extends Component
         $requestedMode = request()->query('mode');
         if ($requestedMode === 'addon' && $entitlement) {
             $this->mode = 'addon';
+        } elseif ($requestedMode === 'add-card') {
+            $this->mode = 'add-card';
         }
+    }
+
+    public function startAddCard(): mixed
+    {
+        $company = $this->company();
+        if (! $company) {
+            abort(403);
+        }
+
+        if (! HyperPayConfig::instance()->isConfigured()) {
+            $this->addError('add_card', __('fields.hyperpay_not_configured'));
+
+            return null;
+        }
+
+        $this->saving = true;
+        $billing = HyperPayCheckoutService::billingFromCompany($company, Auth::user());
+        $token = Str::random(40);
+
+        try {
+            $payment = HyperPayCheckoutService::instance()->startSaveCard($company, $billing, $token);
+        } catch (InvalidArgumentException|RuntimeException $exception) {
+            $this->saving = false;
+            $this->addError('add_card', $exception->getMessage());
+
+            return null;
+        }
+
+        session([
+            'hyperpay.checkout_uid' => $payment->uid,
+            'hyperpay.checkout_token' => $token,
+        ]);
+
+        $checkoutUrl = route('hyperpay.checkout', ['uid' => $payment->uid], absolute: true);
+
+        if ($this->isEmbed()) {
+            return redirect()->away($checkoutUrl);
+        }
+
+        return $this->redirect($checkoutUrl, navigate: false);
     }
 
     public function showRenew(): void
@@ -335,6 +378,9 @@ class ManageSubscription extends Component
             'yearlyMonthsGifted' => $catalog->yearlyMonthsGifted(),
             'hasActiveCoupon' => app(CouponApplicator::class)->hasActive(),
             'isEmbed' => $this->isEmbed(),
+            'defaultSavedCard' => $company
+                ? app(SavedPaymentCardService::class)->defaultFor($company)
+                : null,
         ])->layout($this->isEmbed() ? 'layouts.subscribe-embed' : 'layouts.subscribe');
     }
 
@@ -423,6 +469,38 @@ class ManageSubscription extends Component
             return null;
         }
 
+        $billing = HyperPayCheckoutService::billingFromCompany($company, Auth::user());
+        $defaultCard = app(SavedPaymentCardService::class)->defaultFor($company);
+
+        // Prefer the company's default saved card for renew/addon (automatic MIT charge).
+        if ($defaultCard && in_array($intent, ['renew', 'addon'], true)) {
+            try {
+                $payment = HyperPayCheckoutService::instance()->chargeSavedCard(
+                    $company,
+                    $planConfig,
+                    $quote,
+                    $billing,
+                    $intent,
+                    $defaultCard,
+                );
+
+                if ($payment->isPaid()) {
+                    return $this->redirectToTenant($company);
+                }
+
+                $this->saving = false;
+                $this->addError(
+                    $errorBag,
+                    $payment->result_description ?: __('fields.hyperpay_payment_pending_body')
+                );
+
+                return null;
+            } catch (\Throwable $exception) {
+                report($exception);
+                // Fall through to interactive checkout with a fresh card.
+            }
+        }
+
         $token = Str::random(40);
 
         try {
@@ -430,7 +508,7 @@ class ManageSubscription extends Component
                 $company,
                 $planConfig,
                 $quote,
-                HyperPayCheckoutService::billingFromCompany($company, Auth::user()),
+                $billing,
                 $intent,
                 $token,
             );

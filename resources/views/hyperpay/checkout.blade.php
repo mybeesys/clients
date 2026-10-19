@@ -574,6 +574,11 @@
                 <span class="is-on">{{ __('main.wizard.payment_information') }}</span>
                 <span>{{ __('main.wizard.company_information') }}</span>
             </div>
+        @elseif (! empty($isSaveCard))
+            <div class="hp-steps">
+                <span>{{ __('fields.hyperpay_save_card_title') }}</span>
+                <span class="is-on">{{ __('main.wizard.payment_information') }}</span>
+            </div>
         @elseif (! empty($isSubscription))
             <div class="hp-steps">
                 <span>{{ __('main.subscribe.title') }}</span>
@@ -666,7 +671,8 @@
                     @endif
                 </div>
 
-                <div class="hp-stage">
+                {{-- Temporary: hide decorative card preview while focusing on the payment widget --}}
+                <div class="hp-stage" id="hp-stage" hidden aria-hidden="true" style="display:none !important;">
                     <div class="hp-flip" id="hp-flip">
                         <div class="hp-face hp-face--front" data-brand="{{ $defaultBrand }}" id="hp-cardface">
                             <div class="hp-face__top">

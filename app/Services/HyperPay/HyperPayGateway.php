@@ -49,6 +49,26 @@ class HyperPayGateway
     }
 
     /**
+     * Charge a previously registered card (merchant-initiated / MIT).
+     *
+     * @param  array<string, mixed>  $parameters
+     * @return array<string, mixed>
+     */
+    public function chargeRegistration(string $registrationId, array $parameters): array
+    {
+        $registrationId = trim($registrationId);
+        if ($registrationId === '') {
+            throw new RuntimeException(__('fields.hyperpay_saved_card_missing'));
+        }
+
+        return $this->request(
+            'post',
+            '/v1/registrations/'.rawurlencode($registrationId).'/payments',
+            $parameters
+        );
+    }
+
+    /**
      * @param  array<string, mixed>  $parameters
      * @return array<string, mixed>
      */

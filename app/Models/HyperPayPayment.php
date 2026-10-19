@@ -22,6 +22,9 @@ class HyperPayPayment extends Model
 
     public const SOURCE_SUBSCRIPTION = 'subscription';
 
+    /** Card vaulting only (no subscription fulfillment). */
+    public const SOURCE_SAVE_CARD = 'save_card';
+
     protected $table = 'hyperpay_payments';
 
     protected $guarded = [];
