@@ -621,121 +621,156 @@
             }
         }
 
-        .ms-card-pick { margin: 1rem 0 0.35rem; }
+        .ms-card-pick { margin: 1.15rem 0 0.5rem; }
         .ms-card-pick__head {
-            font-size: 0.82rem;
+            font-size: 0.9rem;
             font-weight: 800;
             color: var(--ms-muted);
-            margin-bottom: 0.55rem;
+            margin-bottom: 0.75rem;
         }
         .ms-card-pick__grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
-            gap: 0.7rem;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 1rem;
         }
         .ms-vault {
             position: relative;
             display: flex;
             flex-direction: column;
-            gap: 0.35rem;
+            gap: 0.55rem;
             text-align: start;
-            border: 1px solid var(--ms-line);
-            border-radius: 1rem;
-            padding: 0.85rem 0.9rem 0.75rem;
-            min-height: 7.2rem;
+            border: 1px solid rgba(235, 184, 30, 0.28);
+            border-radius: 1.15rem;
+            padding: 1.15rem 1.2rem 1rem;
+            min-height: 10.5rem;
             background:
-                radial-gradient(circle at 85% 15%, rgba(235, 184, 30, 0.35), transparent 42%),
-                linear-gradient(145deg, #2a2418 0%, #1a1a1a 55%, #3a2f18 100%);
+                radial-gradient(circle at 88% 12%, rgba(235, 184, 30, 0.4), transparent 40%),
+                radial-gradient(circle at 12% 88%, rgba(184, 137, 18, 0.18), transparent 46%),
+                linear-gradient(145deg, #2c2416 0%, #1a1a1a 52%, #3d3118 100%);
             color: #fffdf8;
-            box-shadow: 0 10px 24px rgba(26, 26, 26, 0.12);
+            box-shadow: 0 14px 32px rgba(26, 26, 26, 0.14);
             cursor: pointer;
             overflow: hidden;
             transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
         }
-        .ms-vault:hover { transform: translateY(-2px); }
+        .ms-vault:hover { transform: translateY(-3px); }
         .ms-vault.is-selected {
             border-color: var(--ms-accent);
-            box-shadow: 0 0 0 2px rgba(235, 184, 30, 0.45), 0 12px 28px rgba(26, 26, 26, 0.16);
+            box-shadow: 0 0 0 3px rgba(235, 184, 30, 0.4), 0 16px 34px rgba(26, 26, 26, 0.18);
         }
         .ms-vault__hex {
             position: absolute;
-            inset-inline-end: -8%;
-            bottom: -18%;
-            width: 72px;
-            height: 72px;
-            background: rgba(235, 184, 30, 0.18);
+            inset-inline-end: -6%;
+            bottom: -20%;
+            width: 96px;
+            height: 96px;
+            background: rgba(235, 184, 30, 0.16);
             clip-path: polygon(25% 6%, 75% 6%, 100% 50%, 75% 94%, 25% 94%, 0 50%);
             pointer-events: none;
+        }
+        .ms-vault__chip {
+            position: relative;
+            z-index: 1;
+            width: 2.35rem;
+            height: 1.7rem;
+            border-radius: 0.35rem;
+            background: linear-gradient(135deg, #f0c43a, #b88912 55%, #f6d96a);
+            box-shadow: inset 0 0 0 1px rgba(0,0,0,0.12);
+            margin-bottom: 0.15rem;
         }
         .ms-vault__top {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 0.4rem;
+            gap: 0.5rem;
             position: relative;
             z-index: 1;
         }
         .ms-vault__brand {
-            font-size: 0.72rem;
+            font-size: 0.82rem;
             font-weight: 800;
-            letter-spacing: 0.06em;
+            letter-spacing: 0.08em;
             font-style: normal;
-            opacity: 0.92;
+            opacity: 0.95;
+            text-transform: uppercase;
         }
         .ms-vault__star {
             color: var(--ms-accent);
-            font-size: 0.95rem;
+            font-size: 1.1rem;
             line-height: 1;
         }
         .ms-vault__pan {
             position: relative;
             z-index: 1;
             font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-            font-size: 0.95rem;
+            font-size: 1.2rem;
             font-weight: 700;
-            letter-spacing: 0.04em;
-            margin-top: 0.15rem;
+            letter-spacing: 0.14em;
+            margin-top: 0.2rem;
         }
         .ms-vault__meta {
             position: relative;
             z-index: 1;
             display: flex;
             justify-content: space-between;
-            gap: 0.4rem;
-            font-size: 0.68rem;
-            opacity: 0.78;
+            align-items: flex-end;
+            gap: 0.65rem;
+            font-size: 0.78rem;
+            opacity: 0.86;
+            margin-top: auto;
+        }
+        .ms-vault__meta strong {
+            display: block;
+            font-size: 0.62rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            opacity: 0.7;
+            margin-bottom: 0.12rem;
         }
         .ms-vault__default-btn {
             position: relative;
             z-index: 2;
             align-self: flex-start;
-            margin-top: 0.2rem;
-            font-size: 0.68rem;
+            margin-top: 0.35rem;
+            font-size: 0.74rem;
             font-weight: 800;
             color: #1a1a1a;
             background: linear-gradient(135deg, #F0C43A, var(--ms-accent));
             border-radius: 999px;
-            padding: 0.22rem 0.55rem;
+            padding: 0.32rem 0.7rem;
         }
         .ms-vault--new {
             background: linear-gradient(160deg, #fffdf8, #f7f1e3);
             color: var(--ms-ink);
-            border-style: dashed;
+            border: 1.5px dashed rgba(184, 137, 18, 0.45);
             align-items: center;
             justify-content: center;
             text-align: center;
+            gap: 0.55rem;
+            min-height: 10.5rem;
         }
-        .ms-vault--new .ms-vault__pan { font-family: inherit; font-size: 0.82rem; letter-spacing: 0; }
+        .ms-vault--new .ms-vault__pan {
+            font-family: inherit;
+            font-size: 0.92rem;
+            letter-spacing: 0;
+            font-weight: 800;
+        }
         .ms-vault__plus {
-            width: 2rem;
-            height: 2rem;
+            width: 2.6rem;
+            height: 2.6rem;
             display: grid;
             place-items: center;
             border-radius: 999px;
             background: var(--ms-accent-soft);
             color: var(--ms-accent-2);
-            font-size: 1.25rem;
+            font-size: 1.4rem;
             font-weight: 800;
+        }
+        @media (max-width: 720px) {
+            .ms-card-pick__grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 

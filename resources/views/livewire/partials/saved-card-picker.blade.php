@@ -27,10 +27,17 @@
                             <span class="ms-vault__star" title="{{ __('main.subscribe.default_card_badge') }}">★</span>
                         @endif
                     </span>
-                    <span class="ms-vault__pan" dir="ltr">•••• {{ $card->last_four ?: '••••' }}</span>
+                    <span class="ms-vault__chip" aria-hidden="true"></span>
+                    <span class="ms-vault__pan" dir="ltr">•••• •••• •••• {{ $card->last_four ?: '••••' }}</span>
                     <span class="ms-vault__meta">
-                        <span>{{ $card->label() }}</span>
-                        <span>{{ $card->expiryLabel() }}</span>
+                        <span>
+                            <strong>@lang('fields.hyperpay_label_card_holder')</strong>
+                            {{ $card->holder ?: $card->label() }}
+                        </span>
+                        <span>
+                            <strong>@lang('fields.hyperpay_label_expiry')</strong>
+                            {{ $card->expiryLabel() }}
+                        </span>
                     </span>
                     @unless ($card->is_default)
                         <span
