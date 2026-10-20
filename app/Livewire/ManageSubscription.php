@@ -20,7 +20,7 @@ use RuntimeException;
 
 class ManageSubscription extends Component
 {
-    /** @var 'choose'|'renew'|'customize'|'addon' */
+    /** @var 'choose'|'renew'|'customize'|'addon'|'add-card' */
     public string $mode = 'choose';
 
     public array $plan_config = [];
@@ -74,6 +74,8 @@ class ManageSubscription extends Component
         $requestedMode = request()->query('mode');
         if ($requestedMode === 'addon' && $entitlement) {
             $this->mode = 'addon';
+        } elseif ($requestedMode === 'add-card') {
+            $this->mode = 'add-card';
         }
 
         $default = app(SavedPaymentCardService::class)->defaultFor($company);
@@ -104,6 +106,46 @@ class ManageSubscription extends Component
 
         app(SavedPaymentCardService::class)->setDefault($company, $card);
         $this->selected_card_id = (int) $card->id;
+    }
+
+    /**
+     * Start a registration-only vault session (no charge) for the cards-tab modal.
+     */
+    public function startAddCard(): mixed
+    {
+        $company = $this->company();
+        if (! $company) {
+            abort(403);
+        }
+
+        if (! HyperPayConfig::instance()->isConfigured()) {
+            $this->addError('add_card', __('fields.hyperpay_not_configured'));
+
+            return null;
+        }
+
+        $this->saving = true;
+        $billing = HyperPayCheckoutService::billingFromCompany($company, Auth::user());
+        $token = Str::random(40);
+
+        try {
+            $payment = HyperPayCheckoutService::instance()->startSaveCard($company, $billing, $token);
+        } catch (InvalidArgumentException|RuntimeException $exception) {
+            $this->saving = false;
+            $this->addError('add_card', $exception->getMessage());
+
+            return null;
+        }
+
+        session([
+            'hyperpay.checkout_uid' => $payment->uid,
+            'hyperpay.checkout_token' => $token,
+        ]);
+
+        $checkoutUrl = route('hyperpay.checkout', ['uid' => $payment->uid], absolute: true);
+
+        // Stay inside the cards-tab modal iframe.
+        return redirect()->away($checkoutUrl);
     }
 
     public function showRenew(): void

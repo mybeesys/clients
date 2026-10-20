@@ -33,7 +33,7 @@ class HyperPayCheckoutController extends Controller
         $isSubscription = $payment->source === HyperPayPayment::SOURCE_SUBSCRIPTION;
         $isSaveCard = $payment->source === HyperPayPayment::SOURCE_SAVE_CARD;
 
-        return view('hyperpay.checkout', [
+        $payload = [
             'payment' => $payment,
             'config' => $config,
             'widgetUrl' => $service->widgetScriptUrl($payment),
@@ -45,10 +45,17 @@ class HyperPayCheckoutController extends Controller
             'isSaveCard' => $isSaveCard,
             'quote' => $this->viewQuote($payment, $quote),
             'cardholder' => trim(($billing['given_name'] ?? '').' '.($billing['surname'] ?? '')),
-        ]);
+        ];
+
+        // Compact MyBee vault form for the cards-tab modal (no full checkout chrome).
+        if ($isSaveCard) {
+            return view('hyperpay.vault-card', $payload);
+        }
+
+        return view('hyperpay.checkout', $payload);
     }
 
-    public function result(Request $request, string $uid): RedirectResponse
+    public function result(Request $request, string $uid): RedirectResponse|View
     {
         $payment = $this->ownedPayment($uid);
         $resourcePath = (string) $request->query('resourcePath', $request->input('resourcePath', ''));
@@ -131,12 +138,15 @@ class HyperPayCheckoutController extends Controller
         return $company && (int) $payment->company_id === (int) $company->id;
     }
 
-    protected function finishPaid(HyperPayPayment $payment): RedirectResponse
+    protected function finishPaid(HyperPayPayment $payment): RedirectResponse|View
     {
         if ($payment->source === HyperPayPayment::SOURCE_SAVE_CARD) {
             session()->forget(['hyperpay.checkout_uid', 'hyperpay.checkout_token']);
 
-            return redirect()->away($this->tenantCardsUrl($payment));
+            return view('hyperpay.vault-card-done', [
+                'url' => $this->tenantCardsUrl($payment),
+                'message' => __('fields.hyperpay_payment_success_save_card'),
+            ]);
         }
 
         if ($payment->source === HyperPayPayment::SOURCE_SUBSCRIPTION) {
