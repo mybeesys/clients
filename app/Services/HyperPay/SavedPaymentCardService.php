@@ -25,6 +25,8 @@ class SavedPaymentCardService
             data_get($gatewayResponse, 'registrationId')
             ?: data_get($gatewayResponse, 'registration.id')
             ?: data_get($gatewayResponse, 'registrations.0.id')
+            ?: data_get($payment?->request_payload ?? [], 'registrations[0].id')
+            ?: data_get($payment?->request_payload ?? [], 'registrationId')
             ?: ''
         );
 

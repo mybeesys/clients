@@ -53,6 +53,7 @@ class HyperPayCheckoutService
         array $billing,
         string $intent,
         string $sessionToken,
+        ?SavedPaymentCard $savedCard = null,
     ): HyperPayPayment {
         $quote['checkout_intent'] = match ($intent) {
             'renew' => 'renew',
@@ -64,6 +65,7 @@ class HyperPayCheckoutService
             'company_id' => $company->id,
             'session_token' => $sessionToken,
             'source' => HyperPayPayment::SOURCE_SUBSCRIPTION,
+            'saved_card' => $savedCard,
         ]);
     }
 
@@ -193,7 +195,21 @@ class HyperPayCheckoutService
         $formattedAmount = $this->config->formatAmount($amount);
         $merchantTransactionId = $this->uniqueMerchantTransactionId();
 
-        $payload = $this->checkoutPayload($formattedAmount, $merchantTransactionId, $billing);
+        $savedCard = $attributes['saved_card'] ?? null;
+        if ($savedCard instanceof SavedPaymentCard) {
+            if (! $savedCard->isActive() || blank($savedCard->registration_id)) {
+                throw new RuntimeException(__('fields.hyperpay_saved_card_missing'));
+            }
+
+            $payload = $this->savedCardCheckoutPayload(
+                $formattedAmount,
+                $merchantTransactionId,
+                $billing,
+                $savedCard,
+            );
+        } else {
+            $payload = $this->checkoutPayload($formattedAmount, $merchantTransactionId, $billing);
+        }
 
         $payment = HyperPayPayment::query()->create([
             'session_token' => $attributes['session_token'] ?? null,
@@ -206,6 +222,7 @@ class HyperPayCheckoutService
             'merchant_transaction_id' => $merchantTransactionId,
             'status' => HyperPayPayment::STATUS_PENDING,
             'source' => $attributes['source'] ?? HyperPayPayment::SOURCE_REGISTRATION,
+            'brand' => $savedCard instanceof SavedPaymentCard ? $savedCard->brand : null,
             'billing' => $billing,
             'plan_config' => $planConfig,
             'quote' => $quote,
@@ -432,6 +449,50 @@ class HyperPayCheckoutService
             // Save the card for later MIT renewals / one-click pay.
             'createRegistration' => 'true',
             'standingInstruction.mode' => 'INITIAL',
+            'standingInstruction.type' => 'UNSCHEDULED',
+            'standingInstruction.source' => 'CIT',
+        ];
+
+        if ($this->config->isTest()) {
+            $payload['testMode'] = 'EXTERNAL';
+            $payload['customParameters[3DS2_enrolled]'] = 'true';
+            $payload['customParameters[3DS2_flow]'] = 'challenge';
+        }
+
+        return $payload;
+    }
+
+    /**
+     * COPYandPAY one-click checkout using a stored registration token (shopper CIT).
+     *
+     * @param  array<string, string>  $billing
+     * @return array<string, mixed>
+     *
+     * @see https://developer.peachpayments.com/docs/oppwa-integrations-copyandpay-registration-tokens
+     */
+    public function savedCardCheckoutPayload(
+        string $amount,
+        string $merchantTransactionId,
+        array $billing,
+        SavedPaymentCard $card,
+    ): array {
+        $payload = [
+            'entityId' => $this->config->entityId(),
+            'amount' => $amount,
+            'currency' => $this->config->currency(),
+            'paymentType' => $this->config->paymentType(),
+            'merchantTransactionId' => $merchantTransactionId,
+            'customer.email' => $billing['email'],
+            'customer.givenName' => $billing['given_name'],
+            'customer.surname' => $billing['surname'],
+            'billing.street1' => $billing['street1'],
+            'billing.city' => $billing['city'],
+            'billing.state' => $billing['state'],
+            'billing.country' => strtoupper($billing['country']),
+            'billing.postcode' => $billing['postcode'],
+            'integrity' => 'true',
+            'registrations[0].id' => $card->registration_id,
+            'standingInstruction.mode' => 'REPEATED',
             'standingInstruction.type' => 'UNSCHEDULED',
             'standingInstruction.source' => 'CIT',
         ];

@@ -518,38 +518,18 @@ class ManageSubscription extends Component
                 ->first()
             : null;
 
-        // Charge the selected saved card for renew/addon when chosen.
-        if ($selectedCard && in_array($intent, ['renew', 'addon'], true)) {
-            try {
-                $payment = HyperPayCheckoutService::instance()->chargeSavedCard(
-                    $company,
-                    $planConfig,
-                    $quote,
-                    $billing,
-                    $intent,
-                    $selectedCard,
-                );
+        if ($this->selected_card_id > 0 && ! $selectedCard) {
+            $this->saving = false;
+            $this->addError($errorBag, __('fields.hyperpay_saved_card_missing'));
 
-                if ($payment->isPaid()) {
-                    return $this->redirectToTenant($company);
-                }
-
-                $this->saving = false;
-                $this->addError(
-                    $errorBag,
-                    $payment->result_description ?: __('fields.hyperpay_payment_pending_body')
-                );
-
-                return null;
-            } catch (\Throwable $exception) {
-                report($exception);
-                // Fall through to interactive checkout with a fresh card.
-            }
+            return null;
         }
 
         $token = Str::random(40);
 
         try {
+            // Selected saved card → HyperPay COPYandPAY one-click with that registration.
+            // No card selected → full new-card checkout (also vaults for later MIT renewals).
             $payment = HyperPayCheckoutService::instance()->startSubscription(
                 $company,
                 $planConfig,
@@ -557,6 +537,7 @@ class ManageSubscription extends Component
                 $billing,
                 $intent,
                 $token,
+                $selectedCard,
             );
         } catch (InvalidArgumentException|RuntimeException $exception) {
             $this->saving = false;
