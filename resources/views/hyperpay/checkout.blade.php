@@ -590,31 +590,39 @@
             <aside class="hp-summary">
                 <p class="hp-summary__kicker">{{ __('fields.hyperpay_order_title') }}</p>
                 <h1>{{ $planName }}</h1>
-                <p class="hp-summary__period">{{ __('fields.hyperpay_plan_line', ['plan' => $planName, 'period' => $periodLabel]) }}</p>
-
-                <div class="hp-lines">
-                    <div class="hp-line">
-                        <span>{{ __('fields.subscription_subtotal_ex_tax') }}</span>
-                        <strong>{{ $currency }} {{ $money($subtotal) }}</strong>
+                @if (! empty($isSaveCard))
+                    <p class="hp-summary__period">{{ __('fields.hyperpay_save_card_free_note') }}</p>
+                    <div class="hp-total" style="margin-top:1rem;">
+                        <span>{{ __('fields.total') }}</span>
+                        <b>{{ $currency }} 0.00</b>
                     </div>
-                    @if (! empty($quote['discount_amount']) && (float) $quote['discount_amount'] > 0)
-                        <div class="hp-line">
-                            <span>{{ __('fields.discount') }}</span>
-                            <strong>− {{ $currency }} {{ $money((float) $quote['discount_amount']) }}</strong>
-                        </div>
-                    @endif
-                    @if ($taxAmount > 0)
-                        <div class="hp-line">
-                            <span>{{ __('fields.subscription_tax_amount', ['vat' => rtrim(rtrim(number_format($taxPercent, 2, '.', ''), '0'), '.')]) }}</span>
-                            <strong>{{ $currency }} {{ $money($taxAmount) }}</strong>
-                        </div>
-                    @endif
-                </div>
+                @else
+                    <p class="hp-summary__period">{{ __('fields.hyperpay_plan_line', ['plan' => $planName, 'period' => $periodLabel]) }}</p>
 
-                <div class="hp-total">
-                    <span>{{ __('fields.total') }}</span>
-                    <b>{{ $currency }} {{ $money($total) }}</b>
-                </div>
+                    <div class="hp-lines">
+                        <div class="hp-line">
+                            <span>{{ __('fields.subscription_subtotal_ex_tax') }}</span>
+                            <strong>{{ $currency }} {{ $money($subtotal) }}</strong>
+                        </div>
+                        @if (! empty($quote['discount_amount']) && (float) $quote['discount_amount'] > 0)
+                            <div class="hp-line">
+                                <span>{{ __('fields.discount') }}</span>
+                                <strong>− {{ $currency }} {{ $money((float) $quote['discount_amount']) }}</strong>
+                            </div>
+                        @endif
+                        @if ($taxAmount > 0)
+                            <div class="hp-line">
+                                <span>{{ __('fields.subscription_tax_amount', ['vat' => rtrim(rtrim(number_format($taxPercent, 2, '.', ''), '0'), '.')]) }}</span>
+                                <strong>{{ $currency }} {{ $money($taxAmount) }}</strong>
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="hp-total">
+                        <span>{{ __('fields.total') }}</span>
+                        <b>{{ $currency }} {{ $money($total) }}</b>
+                    </div>
+                @endif
 
                 <div class="hp-badges">
                     <div class="hp-badge">

@@ -68,38 +68,106 @@ class HyperPayCheckoutService
     }
 
     /**
-     * Vault a card via a small verification charge (createRegistration).
+     * Vault a card with a registration-only COPYandPAY session (no charge).
      *
      * @param  array<string, string>  $billing
+     *
+     * @see https://developer.peachpayments.com/docs/oppwa-integrations-copyandpay-registration-tokens
      */
     public function startSaveCard(Company $company, array $billing, string $sessionToken): HyperPayPayment
     {
-        $amount = $this->saveCardVerificationAmount();
+        if (! $this->config->isConfigured()) {
+            throw new RuntimeException(__('fields.hyperpay_not_configured'));
+        }
+
+        $this->assertBilling($billing);
+
         $currency = $this->config->currency();
         $label = __('fields.hyperpay_save_card_line');
+        $merchantTransactionId = $this->uniqueMerchantTransactionId();
 
         $quote = [
             'period' => 'Month',
-            'period_subtotal' => $amount,
-            'period_total' => $amount,
+            'period_subtotal' => 0,
+            'period_total' => 0,
             'discount' => 0,
             'currency' => $currency,
             'checkout_intent' => 'save_card',
             'line_items' => [
-                ['label' => $label, 'amount' => $amount],
+                ['label' => $label, 'amount' => 0],
             ],
         ];
 
-        return $this->startCheckout([], $quote, $billing, [
-            'company_id' => $company->id,
+        $payload = $this->registrationOnlyPayload($billing, $merchantTransactionId);
+
+        $payment = HyperPayPayment::query()->create([
             'session_token' => $sessionToken,
+            'company_id' => $company->id,
+            'config_hash' => HyperPayPayment::hashPlanConfig([]),
+            'billing_period' => 'Month',
+            'coupon_code' => null,
+            'amount' => 0,
+            'currency' => $currency,
+            'merchant_transaction_id' => $merchantTransactionId,
+            'status' => HyperPayPayment::STATUS_PENDING,
             'source' => HyperPayPayment::SOURCE_SAVE_CARD,
+            'billing' => $billing,
+            'plan_config' => [],
+            'quote' => $quote,
+            'request_payload' => $this->safePayload($payload),
         ]);
+
+        try {
+            $checkout = $this->gateway->createCheckout($payload);
+        } catch (\Throwable $exception) {
+            $payment->fill([
+                'status' => HyperPayPayment::STATUS_FAILED,
+                'failed_at' => now(),
+                'result_description' => $exception->getMessage(),
+            ])->save();
+
+            throw $exception;
+        }
+
+        $payment->fill([
+            'checkout_id' => $checkout['id'] ?? null,
+            'integrity' => $checkout['integrity'] ?? null,
+            'status' => HyperPayPayment::STATUS_CHECKOUT,
+            'gateway_response' => $checkout,
+        ])->save();
+
+        return $payment->fresh();
     }
 
-    public function saveCardVerificationAmount(): float
+    /**
+     * @param  array<string, string>  $billing
+     * @return array<string, mixed>
+     */
+    public function registrationOnlyPayload(array $billing, string $merchantTransactionId): array
     {
-        return 1.0;
+        $payload = [
+            'entityId' => $this->config->entityId(),
+            'createRegistration' => 'true',
+            'merchantTransactionId' => $merchantTransactionId,
+            'customer.email' => $billing['email'],
+            'customer.givenName' => $billing['given_name'],
+            'customer.surname' => $billing['surname'],
+            'billing.street1' => $billing['street1'],
+            'billing.city' => $billing['city'],
+            'billing.state' => $billing['state'],
+            'billing.country' => strtoupper($billing['country']),
+            'billing.postcode' => $billing['postcode'],
+            'integrity' => 'true',
+            'standingInstruction.mode' => 'INITIAL',
+            'standingInstruction.type' => 'UNSCHEDULED',
+            'standingInstruction.source' => 'CIT',
+        ];
+
+        if ($this->config->isTest()) {
+            $payload['testMode'] = 'EXTERNAL';
+        }
+
+        return $payload;
     }
 
     /**

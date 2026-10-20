@@ -48,7 +48,7 @@ class HyperPayCheckoutController extends Controller
         ]);
     }
 
-    public function result(Request $request, string $uid): RedirectResponse
+    public function result(Request $request, string $uid): RedirectResponse|View
     {
         $payment = $this->ownedPayment($uid);
         $resourcePath = (string) $request->query('resourcePath', $request->input('resourcePath', ''));
@@ -131,18 +131,15 @@ class HyperPayCheckoutController extends Controller
         return $company && (int) $payment->company_id === (int) $company->id;
     }
 
-    protected function finishPaid(HyperPayPayment $payment): RedirectResponse
+    protected function finishPaid(HyperPayPayment $payment): RedirectResponse|View
     {
         if ($payment->source === HyperPayPayment::SOURCE_SAVE_CARD) {
             session()->forget(['hyperpay.checkout_uid', 'hyperpay.checkout_token']);
 
-            Notification::make()
-                ->title(__('fields.hyperpay_payment_success_title'))
-                ->body(__('fields.hyperpay_payment_success_save_card'))
-                ->success()
-                ->send();
-
-            return redirect()->away($this->tenantCardsUrl($payment));
+            return view('hyperpay.save-card-done', [
+                'url' => $this->tenantCardsUrl($payment),
+                'message' => __('fields.hyperpay_payment_success_save_card'),
+            ]);
         }
 
         if ($payment->source === HyperPayPayment::SOURCE_SUBSCRIPTION) {

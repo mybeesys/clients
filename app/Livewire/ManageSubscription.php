@@ -37,6 +37,9 @@ class ManageSubscription extends Component
 
     public bool $saving = false;
 
+    /** Selected saved card id, or 0 to force a new card at HyperPay. */
+    public int $selected_card_id = 0;
+
     public function mount(): void
     {
         if (request()->boolean('embed')) {
@@ -74,6 +77,35 @@ class ManageSubscription extends Component
         } elseif ($requestedMode === 'add-card') {
             $this->mode = 'add-card';
         }
+
+        $default = app(SavedPaymentCardService::class)->defaultFor($company);
+        $this->selected_card_id = $default?->id ? (int) $default->id : 0;
+    }
+
+    public function selectSavedCard(int $cardId): void
+    {
+        $this->selected_card_id = max(0, $cardId);
+    }
+
+    public function setDefaultSavedCard(int $cardId): void
+    {
+        $company = $this->company();
+        if (! $company) {
+            return;
+        }
+
+        $card = \App\Models\SavedPaymentCard::query()
+            ->where('company_id', $company->id)
+            ->where('id', $cardId)
+            ->where('status', 'active')
+            ->first();
+
+        if (! $card) {
+            return;
+        }
+
+        app(SavedPaymentCardService::class)->setDefault($company, $card);
+        $this->selected_card_id = (int) $card->id;
     }
 
     public function startAddCard(): mixed
@@ -378,6 +410,14 @@ class ManageSubscription extends Component
             'yearlyMonthsGifted' => $catalog->yearlyMonthsGifted(),
             'hasActiveCoupon' => app(CouponApplicator::class)->hasActive(),
             'isEmbed' => $this->isEmbed(),
+            'savedCards' => $company
+                ? \App\Models\SavedPaymentCard::query()
+                    ->where('company_id', $company->id)
+                    ->where('status', 'active')
+                    ->orderByDesc('is_default')
+                    ->orderByDesc('id')
+                    ->get()
+                : collect(),
             'defaultSavedCard' => $company
                 ? app(SavedPaymentCardService::class)->defaultFor($company)
                 : null,
@@ -470,10 +510,16 @@ class ManageSubscription extends Component
         }
 
         $billing = HyperPayCheckoutService::billingFromCompany($company, Auth::user());
-        $defaultCard = app(SavedPaymentCardService::class)->defaultFor($company);
+        $selectedCard = $this->selected_card_id > 0
+            ? \App\Models\SavedPaymentCard::query()
+                ->where('company_id', $company->id)
+                ->where('id', $this->selected_card_id)
+                ->where('status', 'active')
+                ->first()
+            : null;
 
-        // Prefer the company's default saved card for renew/addon (automatic MIT charge).
-        if ($defaultCard && in_array($intent, ['renew', 'addon'], true)) {
+        // Charge the selected saved card for renew/addon when chosen.
+        if ($selectedCard && in_array($intent, ['renew', 'addon'], true)) {
             try {
                 $payment = HyperPayCheckoutService::instance()->chargeSavedCard(
                     $company,
@@ -481,7 +527,7 @@ class ManageSubscription extends Component
                     $quote,
                     $billing,
                     $intent,
-                    $defaultCard,
+                    $selectedCard,
                 );
 
                 if ($payment->isPaid()) {

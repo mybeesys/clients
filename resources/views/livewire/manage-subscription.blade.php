@@ -620,6 +620,123 @@
                 transition: none;
             }
         }
+
+        .ms-card-pick { margin: 1rem 0 0.35rem; }
+        .ms-card-pick__head {
+            font-size: 0.82rem;
+            font-weight: 800;
+            color: var(--ms-muted);
+            margin-bottom: 0.55rem;
+        }
+        .ms-card-pick__grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+            gap: 0.7rem;
+        }
+        .ms-vault {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            text-align: start;
+            border: 1px solid var(--ms-line);
+            border-radius: 1rem;
+            padding: 0.85rem 0.9rem 0.75rem;
+            min-height: 7.2rem;
+            background:
+                radial-gradient(circle at 85% 15%, rgba(235, 184, 30, 0.35), transparent 42%),
+                linear-gradient(145deg, #2a2418 0%, #1a1a1a 55%, #3a2f18 100%);
+            color: #fffdf8;
+            box-shadow: 0 10px 24px rgba(26, 26, 26, 0.12);
+            cursor: pointer;
+            overflow: hidden;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+        }
+        .ms-vault:hover { transform: translateY(-2px); }
+        .ms-vault.is-selected {
+            border-color: var(--ms-accent);
+            box-shadow: 0 0 0 2px rgba(235, 184, 30, 0.45), 0 12px 28px rgba(26, 26, 26, 0.16);
+        }
+        .ms-vault__hex {
+            position: absolute;
+            inset-inline-end: -8%;
+            bottom: -18%;
+            width: 72px;
+            height: 72px;
+            background: rgba(235, 184, 30, 0.18);
+            clip-path: polygon(25% 6%, 75% 6%, 100% 50%, 75% 94%, 25% 94%, 0 50%);
+            pointer-events: none;
+        }
+        .ms-vault__top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.4rem;
+            position: relative;
+            z-index: 1;
+        }
+        .ms-vault__brand {
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            font-style: normal;
+            opacity: 0.92;
+        }
+        .ms-vault__star {
+            color: var(--ms-accent);
+            font-size: 0.95rem;
+            line-height: 1;
+        }
+        .ms-vault__pan {
+            position: relative;
+            z-index: 1;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 0.95rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            margin-top: 0.15rem;
+        }
+        .ms-vault__meta {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            justify-content: space-between;
+            gap: 0.4rem;
+            font-size: 0.68rem;
+            opacity: 0.78;
+        }
+        .ms-vault__default-btn {
+            position: relative;
+            z-index: 2;
+            align-self: flex-start;
+            margin-top: 0.2rem;
+            font-size: 0.68rem;
+            font-weight: 800;
+            color: #1a1a1a;
+            background: linear-gradient(135deg, #F0C43A, var(--ms-accent));
+            border-radius: 999px;
+            padding: 0.22rem 0.55rem;
+        }
+        .ms-vault--new {
+            background: linear-gradient(160deg, #fffdf8, #f7f1e3);
+            color: var(--ms-ink);
+            border-style: dashed;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .ms-vault--new .ms-vault__pan { font-family: inherit; font-size: 0.82rem; letter-spacing: 0; }
+        .ms-vault__plus {
+            width: 2rem;
+            height: 2rem;
+            display: grid;
+            place-items: center;
+            border-radius: 999px;
+            background: var(--ms-accent-soft);
+            color: var(--ms-accent-2);
+            font-size: 1.25rem;
+            font-weight: 800;
+        }
     </style>
 
     <div class="ms-shell">
@@ -801,14 +918,22 @@
                 @error('renew') <div class="ms-error">{{ $message }}</div> @enderror
                 @error('renew_coupon') <div class="ms-error">{{ $message }}</div> @enderror
 
+                @include('livewire.partials.saved-card-picker', [
+                    'savedCards' => $savedCards ?? collect(),
+                    'selected_card_id' => $selected_card_id ?? 0,
+                    'saving' => $saving,
+                ])
+
                 <div class="ms-actions">
                     <button type="button" class="ms-btn ms-btn-secondary" wire:click="showChoose" @disabled($saving)>
                         @lang('main.subscribe.back')
                     </button>
                     <button type="button" class="ms-btn ms-btn-primary" wire:click="renewCurrent" wire:loading.attr="disabled">
                         <span wire:loading.remove wire:target="renewCurrent">
-                            @if (! empty($defaultSavedCard))
-                                @lang('main.subscribe.confirm_renew_saved', ['card' => $defaultSavedCard->label()])
+                            @if (($selected_card_id ?? 0) > 0 && ! empty($defaultSavedCard))
+                                @lang('main.subscribe.pay_with_saved')
+                            @elseif (($selected_card_id ?? 0) > 0)
+                                @lang('main.subscribe.pay_with_saved')
                             @else
                                 @lang('main.subscribe.confirm_renew')
                             @endif
@@ -873,6 +998,12 @@
 
                 @error('addon') <div class="ms-error">{{ $message }}</div> @enderror
 
+                @include('livewire.partials.saved-card-picker', [
+                    'savedCards' => $savedCards ?? collect(),
+                    'selected_card_id' => $selected_card_id ?? 0,
+                    'saving' => $saving,
+                ])
+
                 <div class="ms-actions">
                     <button type="button" class="ms-btn ms-btn-secondary" wire:click="showChoose" @disabled($saving)>
                         @lang('main.subscribe.back')
@@ -885,8 +1016,8 @@
                         @disabled(! $addonQuote || $saving)
                     >
                         <span wire:loading.remove wire:target="buyAddon">
-                            @if (! empty($defaultSavedCard))
-                                @lang('main.subscribe.confirm_addon_saved', ['card' => $defaultSavedCard->label()])
+                            @if (($selected_card_id ?? 0) > 0)
+                                @lang('main.subscribe.pay_with_saved')
                             @else
                                 @lang('main.subscribe.confirm_addon')
                             @endif

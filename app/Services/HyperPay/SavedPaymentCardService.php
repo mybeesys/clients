@@ -28,6 +28,11 @@ class SavedPaymentCardService
             ?: ''
         );
 
+        // Standalone registration responses often use `id` as the registration token.
+        if ($registrationId === '' && $payment?->source === HyperPayPayment::SOURCE_SAVE_CARD) {
+            $registrationId = (string) data_get($gatewayResponse, 'id', '');
+        }
+
         if ($registrationId === '') {
             return null;
         }
