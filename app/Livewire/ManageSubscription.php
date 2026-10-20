@@ -410,18 +410,30 @@ class ManageSubscription extends Component
             'yearlyMonthsGifted' => $catalog->yearlyMonthsGifted(),
             'hasActiveCoupon' => app(CouponApplicator::class)->hasActive(),
             'isEmbed' => $this->isEmbed(),
-            'savedCards' => $company
-                ? \App\Models\SavedPaymentCard::query()
-                    ->where('company_id', $company->id)
-                    ->where('status', 'active')
-                    ->orderByDesc('is_default')
-                    ->orderByDesc('id')
-                    ->get()
-                : collect(),
+            'savedCards' => $this->savedCardsForView($company),
             'defaultSavedCard' => $company
                 ? app(SavedPaymentCardService::class)->defaultFor($company)
                 : null,
         ])->layout($this->isEmbed() ? 'layouts.subscribe-embed' : 'layouts.subscribe');
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection<int, \App\Models\SavedPaymentCard>
+     */
+    protected function savedCardsForView(?Company $company)
+    {
+        if (! $company) {
+            return collect();
+        }
+
+        app(SavedPaymentCardService::class)->dedupeForCompany($company);
+
+        return \App\Models\SavedPaymentCard::query()
+            ->where('company_id', $company->id)
+            ->where('status', 'active')
+            ->orderByDesc('is_default')
+            ->orderByDesc('id')
+            ->get();
     }
 
     protected function isEmbed(): bool
