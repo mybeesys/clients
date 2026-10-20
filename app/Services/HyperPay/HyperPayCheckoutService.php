@@ -287,9 +287,10 @@ class HyperPayCheckoutService
             return $locked->fresh();
         });
 
-        $this->rememberSavedCard($paid, $status);
-
+        // Only vault cards from real subscription charges (not standalone registration).
         if ($paid->source === HyperPayPayment::SOURCE_SUBSCRIPTION) {
+            $this->rememberSavedCard($paid, $status);
+
             try {
                 return $this->fulfillSubscription($paid);
             } catch (\Throwable $exception) {
@@ -307,7 +308,7 @@ class HyperPayCheckoutService
      */
     protected function rememberSavedCard(HyperPayPayment $payment, array $gatewayResponse): void
     {
-        if (! $payment->company_id) {
+        if (! $payment->company_id || $payment->source !== HyperPayPayment::SOURCE_SUBSCRIPTION) {
             return;
         }
 
@@ -552,6 +553,12 @@ class HyperPayCheckoutService
         ])->save();
 
         $paid = $payment->fresh();
+
+        try {
+            app(SavedPaymentCardService::class)->setDefault($company, $card);
+        } catch (\Throwable $exception) {
+            report($exception);
+        }
 
         try {
             return $this->fulfillSubscription($paid);

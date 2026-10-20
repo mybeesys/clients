@@ -43,17 +43,10 @@ class SavedPaymentCardService
                 ->where('registration_id', $registrationId)
                 ->first();
 
-            $hasDefault = SavedPaymentCard::query()
+            // Last successfully charged card becomes the company default for auto-renew.
+            SavedPaymentCard::query()
                 ->where('company_id', $company->id)
-                ->where('is_default', true)
-                ->where('status', 'active')
-                ->when($existing && ! $existing->trashed(), fn ($q) => $q->where('id', '!=', $existing->id))
-                ->exists();
-
-            // Keep active card's default flag; restore/create only promotes when none exists.
-            $isDefault = ($existing && ! $existing->trashed())
-                ? (bool) $existing->is_default
-                : ! $hasDefault;
+                ->update(['is_default' => false]);
 
             $card = SavedPaymentCard::withTrashed()->updateOrCreate(
                 [
@@ -70,7 +63,7 @@ class SavedPaymentCardService
                     'holder' => data_get($gatewayResponse, 'card.holder'),
                     'expiry_month' => data_get($gatewayResponse, 'card.expiryMonth'),
                     'expiry_year' => data_get($gatewayResponse, 'card.expiryYear'),
-                    'is_default' => $isDefault,
+                    'is_default' => true,
                     'status' => 'active',
                     'gateway_payload' => [
                         'registrationId' => $registrationId,

@@ -1028,20 +1028,6 @@
             </div>
         @endif
 
-        @if ($mode === 'add-card')
-            <div class="ms-summary" wire:init="startAddCard">
-                <h3>@lang('main.subscribe.add_card_title')</h3>
-                <p class="ms-note" style="margin-top:0;">@lang('main.subscribe.add_card_hint')</p>
-                @error('add_card') <div class="ms-error">{{ $message }}</div> @enderror
-                <div class="ms-actions" style="margin-top:1rem;">
-                    <button type="button" class="ms-btn ms-btn-primary" wire:click="startAddCard" wire:loading.attr="disabled">
-                        <span wire:loading.remove wire:target="startAddCard">@lang('main.subscribe.add_card_cta')</span>
-                        <span wire:loading wire:target="startAddCard">@lang('main.wizard.saving')</span>
-                    </button>
-                </div>
-            </div>
-        @endif
-
         @if ($mode === 'customize')
             <div class="ms-actions" style="margin-top:0.35rem;margin-bottom:0.35rem;">
                 <button type="button" class="ms-btn ms-btn-secondary" wire:click="showChoose" @disabled($saving)>
