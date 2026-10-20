@@ -54,6 +54,10 @@ Route::get('/subscribe', ManageSubscription::class)
     ->middleware([LocalizationMiddleware::class, AllowSubscribeFrame::class, 'auth'])
     ->name('subscribe');
 
+Route::get('/subscribe/vault-card', \App\Http\Controllers\VaultCardController::class)
+    ->middleware([LocalizationMiddleware::class, AllowSubscribeFrame::class, 'auth'])
+    ->name('subscribe.vault-card');
+
 Route::post('/plan/subscribe', [SubscriptionController::class, 'store'])->middleware('auth');
 Route::post('/switch-plan', [SubscriptionController::class, 'switchPlan'])->middleware('auth');
 
