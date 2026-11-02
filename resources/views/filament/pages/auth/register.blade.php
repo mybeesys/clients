@@ -10,12 +10,6 @@
                 <h1 class="mybee-auth-topbar__heading">
                     {{ __('main.wizard.register_heading') }}
                 </h1>
-                @if (filament()->hasLogin())
-                    <p class="mybee-auth-topbar__switch">
-                        {{ __('filament-panels::pages/auth/register.actions.login.before') }}
-                        {{ $this->loginAction }}
-                    </p>
-                @endif
             </div>
         </div>
 
