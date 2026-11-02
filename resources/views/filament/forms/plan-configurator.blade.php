@@ -278,8 +278,8 @@
         .pc-price-was {
             text-decoration: line-through;
             text-decoration-thickness: 1.5px;
-            text-decoration-color: rgba(156, 163, 175, 0.9);
-            color: #9ca3af;
+            text-decoration-color: rgba(185, 28, 28, 0.85);
+            color: #b91c1c;
             font-size: inherit;
             font-weight: 700;
             line-height: 1;
@@ -1220,7 +1220,7 @@
         </span>
         <div>
             <h4 x-text="labels.gift_banner_title"></h4>
-            <p x-text="labels.gift_banner_body"></p>
+            <p x-show="labels.gift_banner_body" x-text="labels.gift_banner_body"></p>
         </div>
     </div>
 

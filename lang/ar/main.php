@@ -91,7 +91,7 @@ return [
         'plan_yearly_effective' => 'يعادل شهرياً',
         'plan_yearly_effective_hint' => '',
         'plan_gift_banner_title' => 'هدية شهرين على السنوي',
-        'plan_gift_banner_body' => 'ادفع قيمة 10 أشهر واحصل على سنة كاملة. الرقم المشطوب هو السعر الأصلي، والأخضر بعد هدية الشهرين.',
+        'plan_gift_banner_body' => 'ادفع قيمة 10 أشهر واحصل على سنة كاملة.',
         'plan_extra_employees' => 'موظفون إضافيون (:count)',
         'plan_extra_branches' => 'فروع إضافية (:count)',
         'plan_extra_screen_devices' => 'أجهزة شاشات إضافية (:count)',

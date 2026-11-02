@@ -279,6 +279,7 @@ class EntitlementCatalog
                     'locked' => false,
                     'always_included' => false,
                     'depends_on_platform' => false,
+                    'builder_hidden' => (bool) ($module['builder_hidden'] ?? $module['meta']['builder_hidden'] ?? config("entitlements.modules.{$key}.builder_hidden", false)),
                     'inline_quota' => $this->resolveInlineQuotaKey((string) $key, $module),
                 ];
             })->values()->all(),

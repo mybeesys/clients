@@ -332,10 +332,12 @@ return [
             'group' => 'growth',
             'name_en' => 'Advanced reports',
             'name_ar' => 'التقارير المتقدمة',
-            'description_en' => 'Operational reports for the modules you buy. Not useful alone.',
-            'description_ar' => 'التقارير التشغيلية للوحدات التي تشتريها. لا تعمل وحدها بدون وحدات بيانات.',
+            'description_en' => 'Operational reports for the modules you buy. Bundled automatically with data packages.',
+            'description_ar' => 'التقارير التشغيلية للوحدات التي تشتريها. تُضاف تلقائياً مع باقات البيانات.',
             'price_month' => 99,
             'icon' => 'chart',
+            // Sold via packages / auto-bundled — not shown as a standalone builder card.
+            'builder_hidden' => true,
             'requires' => [],
             'requires_any' => [
                 'finance_business',

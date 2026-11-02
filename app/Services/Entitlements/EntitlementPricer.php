@@ -54,6 +54,7 @@ class EntitlementPricer
     {
         $period = ($input['period'] ?? 'Month') === 'Year' ? 'Year' : 'Month';
         $modules = $this->catalog->resolveDependencies($input['modules'] ?? []);
+        $modules = $this->bundleReportsWithDataModules($modules);
 
         if ($modules === []) {
             throw ValidationException::withMessages([
@@ -80,6 +81,9 @@ class EntitlementPricer
         $posDevices = 0;
         if (in_array('cashier_pos', $modules, true)) {
             $posDevices = $this->clampQuota('pos_devices', (int) ($input['pos_devices'] ?? 0));
+            // One branch seat per cashier device — bill both extras separately.
+            $establishments = max($establishments, $posDevices);
+            $establishments = $this->clampQuota('establishments', $establishments);
         }
 
         $waiterSeats = 0;
@@ -483,6 +487,46 @@ class EntitlementPricer
         };
 
         return $base.' · '.__('main.subscribe.addon_months_suffix', ['months' => $months]);
+    }
+
+    /**
+     * Reports are not a standalone builder card — attach them whenever a data module is present.
+     *
+     * @param  list<string>  $modules
+     * @return list<string>
+     */
+    protected function bundleReportsWithDataModules(array $modules): array
+    {
+        $dataKeys = $this->catalog->moduleRequiresAny('reports');
+        if ($dataKeys === []) {
+            $dataKeys = [
+                'finance_business',
+                'inventory',
+                'manufacturing',
+                'cashier_pos',
+                'sales',
+                'purchases',
+                'accounting',
+            ];
+        }
+
+        $hasData = false;
+        foreach ($dataKeys as $key) {
+            if (in_array($key, $modules, true)) {
+                $hasData = true;
+                break;
+            }
+        }
+
+        if ($hasData && ! in_array('reports', $modules, true) && $this->catalog->hasModule('reports')) {
+            $modules[] = 'reports';
+        }
+
+        if (! $hasData) {
+            $modules = array_values(array_filter($modules, fn ($key) => $key !== 'reports'));
+        }
+
+        return array_values(array_unique($modules));
     }
 
     protected function clampQuota(string $key, int $value): int

@@ -27,6 +27,8 @@
                 this.pos_devices = this.clampPlainQuota('pos_devices', this.pos_devices);
                 this.waiter_seats = this.clampPlainQuota('waiter_seats', this.waiter_seats);
                 this.kitchen_devices = this.clampPlainQuota('kitchen_devices', this.kitchen_devices);
+                this.ensureReportsBundled();
+                this.syncBranchesForPosDevices();
                 this.syncToWire();
                 this.$watch('modules', () => { this.refreshCouponDiscount(); this.syncToWire(); });
                 this.$watch('employees', () => { this.refreshCouponDiscount(); this.syncToWire(); });
@@ -53,6 +55,7 @@
                     });
                 });
                 this.modules = Array.from(new Set(selected));
+                this.ensureReportsBundled();
                 this.activeRecommendation = rec.key;
 
                 const quotas = rec.quotas || {};
@@ -68,6 +71,7 @@
                 } else {
                     this.employees = this.clampEmployees(this.includedEmployees() + extras);
                 }
+                this.syncBranchesForPosDevices();
             },
             clearRecommendation() {
                 this.activeRecommendation = null;
@@ -79,7 +83,43 @@
                 this.employees = this.clampEmployees(this.includedEmployees());
             },
             modulesFor(groupKey) {
-                return (this.catalog.modules || []).filter(m => m.group === groupKey && !m.locked && m.key !== 'platform');
+                return (this.catalog.modules || []).filter(m => (
+                    m.group === groupKey
+                    && !m.locked
+                    && m.key !== 'platform'
+                    && !m.builder_hidden
+                ));
+            },
+            reportsDataKeys() {
+                const reports = (this.catalog.modules || []).find(m => m.key === 'reports');
+                return Array.isArray(reports?.requires_any) ? reports.requires_any : [
+                    'finance_business', 'inventory', 'manufacturing', 'cashier_pos', 'sales', 'purchases', 'accounting',
+                ];
+            },
+            ensureReportsBundled() {
+                const hasData = this.reportsDataKeys().some(k => this.modules.includes(k));
+                const hasReports = this.modules.includes('reports');
+                if (hasData && !hasReports) {
+                    this.modules = [...this.modules, 'reports'];
+                } else if (!hasData && hasReports) {
+                    this.modules = this.modules.filter(k => k !== 'reports');
+                }
+            },
+            /**
+             * Each cashier device needs a branch seat — keep establishments ≥ pos_devices
+             * so both extras are billed as separate line amounts.
+             */
+            syncBranchesForPosDevices() {
+                if (!this.modules.includes('cashier_pos')) return;
+                const pos = Number(this.pos_devices || 0);
+                if (pos <= 0) return;
+                const quota = (this.catalog.quotas || []).find(q => q.key === 'establishments') || {};
+                const max = Number(quota.max ?? 9999);
+                const min = Number(quota.min ?? 1);
+                const needed = Math.min(max, Math.max(min, pos));
+                if (Number(this.establishments || 0) < needed) {
+                    this.establishments = needed;
+                }
             },
             isCore(modOrKey) {
                 return false;
@@ -289,16 +329,22 @@
                         this.kitchen_devices = this.clampPlainQuota('kitchen_devices', this.kitchen_devices);
                     }
                 }
+                this.ensureReportsBundled();
                 this.employees = this.clampEmployees(this.includedEmployees() + extras);
+                this.syncBranchesForPosDevices();
             },
             bump(key, delta) {
                 this.activeRecommendation = null;
                 const quota = (this.catalog.quotas || []).find(q => q.key === key);
                 if (!quota) return;
                 const current = this.quotaValue(key);
-                const min = key === 'employees'
+                let min = key === 'employees'
                     ? Math.max(Number(quota.min ?? 0), this.includedEmployees())
                     : Number(quota.min ?? 0);
+                // Cannot drop branches below active cashier devices.
+                if (key === 'establishments' && this.modules.includes('cashier_pos')) {
+                    min = Math.max(min, Number(this.pos_devices || 0));
+                }
                 const max = Number(quota.max ?? 9999);
                 if (delta > 0 && current >= max) {
                     this.quotaCapKey = key;
@@ -307,6 +353,9 @@
                 const next = Math.min(max, Math.max(min, current + delta));
                 this.quotaCapKey = next >= max ? key : null;
                 this.setQuotaValue(key, next);
+                if (key === 'pos_devices') {
+                    this.syncBranchesForPosDevices();
+                }
             },
             setPeriod(period) {
                 this.period = period;
@@ -366,12 +415,16 @@
                 const pushQuotaExtra = (quota) => {
                     if (!quota) return;
                     const count = this.quotaValue(quota.key);
-                    const extra = Math.max(0, count - this.quotaIncluded(quota));
+                    const included = this.quotaIncluded(quota);
+                    const extra = Math.max(0, count - included);
                     if (extra <= 0) return;
+                    const unit = Number(quota.price_per_extra_month || 0);
                     items.push({
                         key: quota.key + '_extra',
                         label: quota.name + ' (+' + extra + ')',
-                        total: extra * quota.price_per_extra_month,
+                        quantity: extra,
+                        unit_price: unit,
+                        total: extra * unit,
                         type: 'quota',
                     });
                 };
@@ -388,12 +441,21 @@
                 const months = this.period === 'Year' ? this.yearlyMonthsCharged() : 1;
                 return this.baseLineItems.map(line => {
                     const monthly = Number(line.total || 0);
+                    const qty = Number(line.quantity || 1);
+                    const unit = Number(line.unit_price ?? (qty > 0 ? monthly / qty : monthly));
+                    let meta = `/ ${this.labels.per_month}`;
+                    // Quota extras: always show unit × qty so each device/branch is billed clearly.
+                    if (line.type === 'quota' && qty >= 1) {
+                        meta = this.period === 'Year'
+                            ? `${this.format(unit)} × ${qty} × ${months}`
+                            : `${this.format(unit)} × ${qty}`;
+                    } else if (this.period === 'Year') {
+                        meta = `${this.format(monthly)} × ${months}`;
+                    }
                     return {
                         ...line,
                         total: monthly * months,
-                        meta: this.period === 'Year'
-                            ? `${this.format(monthly)} × ${months}`
-                            : `/ ${this.labels.per_month}`,
+                        meta,
                     };
                 });
             },

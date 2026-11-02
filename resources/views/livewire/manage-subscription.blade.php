@@ -344,7 +344,8 @@
 
         .ms-price-was {
             text-decoration: line-through;
-            color: var(--ms-muted);
+            text-decoration-color: rgba(185, 28, 28, 0.85);
+            color: #b91c1c;
             font-weight: 700;
         }
 
@@ -934,7 +935,9 @@
                     <div class="ms-gift-banner">
                         <div>
                             <strong>@lang('main.wizard.plan_gift_banner_title')</strong>
-                            <span>@lang('main.wizard.plan_gift_banner_body')</span>
+                            @if (__('main.wizard.plan_gift_banner_body') !== '')
+                                <span>@lang('main.wizard.plan_gift_banner_body')</span>
+                            @endif
                         </div>
                     </div>
                 @endif

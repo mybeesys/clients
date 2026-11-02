@@ -91,7 +91,7 @@ return [
         'plan_yearly_effective' => 'Equals per month',
         'plan_yearly_effective_hint' => '',
         'plan_gift_banner_title' => 'Two-month gift on annual',
-        'plan_gift_banner_body' => 'Pay 10 months, get a full year. The struck price is the original; green is after the two-month gift.',
+        'plan_gift_banner_body' => 'Pay 10 months, get a full year.',
         'plan_extra_employees' => 'Extra employees (:count)',
         'plan_extra_branches' => 'Extra branches (:count)',
         'plan_extra_screen_devices' => 'Extra screen devices (:count)',
