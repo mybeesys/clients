@@ -248,6 +248,134 @@
             box-shadow: none;
         }
 
+        .ms-card.choice.is-armed {
+            border-color: var(--ms-accent);
+            box-shadow: 0 16px 36px rgba(184, 137, 18, 0.2);
+            transform: translateY(-2px);
+            pointer-events: none;
+        }
+
+        .ms-card.choice.is-armed::before {
+            transform: scale(1.1) rotate(6deg);
+            background: rgba(235, 184, 30, 0.38);
+        }
+
+        .ms-card.choice.is-dimmed {
+            opacity: 0.42;
+            filter: grayscale(0.15);
+            pointer-events: none;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .ms-choice-stage {
+            position: relative;
+        }
+
+        .ms-choice-stage.is-busy .ms-summary {
+            opacity: 0.45;
+            filter: saturate(0.85);
+            transition: opacity 0.2s ease, filter 0.2s ease;
+        }
+
+        .ms-choice-veil {
+            position: absolute;
+            inset: 0;
+            z-index: 8;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1.25rem;
+            border-radius: 1.25rem;
+            background:
+                linear-gradient(180deg, rgba(255, 253, 247, 0.52), rgba(250, 248, 242, 0.72));
+            backdrop-filter: blur(7px);
+            -webkit-backdrop-filter: blur(7px);
+            pointer-events: none;
+        }
+
+        .ms-choice-veil.is-on {
+            display: flex;
+            animation: ms-veil-in 0.18s ease both;
+        }
+
+        .ms-choice-veil__card {
+            display: grid;
+            justify-items: center;
+            gap: 0.55rem;
+            min-width: min(18rem, 100%);
+            padding: 1.05rem 1.25rem 1.15rem;
+            border-radius: 1.05rem;
+            border: 1px solid rgba(184, 137, 18, 0.28);
+            background: rgba(255, 253, 247, 0.94);
+            box-shadow: 0 18px 40px rgba(26, 26, 26, 0.1);
+            text-align: center;
+        }
+
+        .ms-choice-veil__card strong {
+            font-size: 0.95rem;
+            font-weight: 800;
+            letter-spacing: -0.01em;
+            color: var(--ms-ink);
+        }
+
+        .ms-choice-veil__card span {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--ms-muted);
+            line-height: 1.45;
+        }
+
+        .ms-hex-spin {
+            width: 2.35rem;
+            height: 2.35rem;
+            display: grid;
+            place-items: center;
+            margin-bottom: 0.15rem;
+            background: var(--ms-accent-soft);
+            clip-path: polygon(25% 6%, 75% 6%, 100% 50%, 75% 94%, 25% 94%, 0 50%);
+            animation: ms-hex-spin 0.9s linear infinite;
+        }
+
+        .ms-hex-spin i {
+            width: 0.85rem;
+            height: 0.85rem;
+            border-radius: 999px;
+            border: 2px solid rgba(184, 137, 18, 0.25);
+            border-top-color: var(--ms-accent-2);
+            animation: ms-dot-spin 0.7s linear infinite;
+        }
+
+        .ms-panel-enter {
+            animation: ms-panel-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        @keyframes ms-veil-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes ms-hex-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes ms-dot-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes ms-panel-in {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
         .ms-badge {
             position: relative;
             display: inline-flex;
@@ -620,9 +748,13 @@
             .ms-page::before,
             .ms-page::after,
             .ms-card.choice,
-            .ms-btn {
-                animation: none;
-                transition: none;
+            .ms-btn,
+            .ms-hex-spin,
+            .ms-hex-spin i,
+            .ms-choice-veil,
+            .ms-panel-enter {
+                animation: none !important;
+                transition: none !important;
             }
         }
 
@@ -842,66 +974,122 @@
         @endif
 
         @if ($mode === 'choose')
-            <div class="ms-grid ms-grid-3">
-                <button type="button" class="ms-card choice" wire:click="showRenew" @disabled(! $hasCustomPackage)>
-                    <span class="ms-badge">@lang('main.subscribe.renew_badge')</span>
-                    <h2>@lang('main.subscribe.renew_title')</h2>
-                    <p>@lang('main.subscribe.renew_desc')</p>
-                    @unless ($hasCustomPackage)
-                        <p class="ms-note">@lang('main.subscribe.renew_requires_custom_package')</p>
-                    @endunless
-                </button>
+            <div
+                class="ms-choice-stage"
+                x-data="{
+                    pending: null,
+                    init() {
+                        if (typeof Livewire === 'undefined' || ! Livewire.hook) return;
+                        Livewire.hook('commit', ({ succeed, fail }) => {
+                            succeed(() => { this.pending = null });
+                            fail(() => { this.pending = null });
+                        });
+                    },
+                }"
+                :class="{ 'is-busy': pending }"
+            >
+                <div class="ms-grid ms-grid-3">
+                    <button
+                        type="button"
+                        class="ms-card choice"
+                        wire:click="showRenew"
+                        wire:loading.attr="disabled"
+                        wire:target="showRenew,showAddon,showCustomize"
+                        x-on:click="if (! $el.disabled) pending = 'renew'"
+                        :class="{ 'is-armed': pending === 'renew', 'is-dimmed': pending && pending !== 'renew' }"
+                        @disabled(! $hasCustomPackage)
+                    >
+                        <span class="ms-badge">@lang('main.subscribe.renew_badge')</span>
+                        <h2>@lang('main.subscribe.renew_title')</h2>
+                        <p>@lang('main.subscribe.renew_desc')</p>
+                        @unless ($hasCustomPackage)
+                            <p class="ms-note">@lang('main.subscribe.renew_requires_custom_package')</p>
+                        @endunless
+                    </button>
 
-                <button type="button" class="ms-card choice" wire:click="showAddon" @disabled(! $hasCustomPackage)>
-                    <span class="ms-badge">@lang('main.subscribe.addon_badge')</span>
-                    <h2>@lang('main.subscribe.addon_title')</h2>
-                    <p>@lang('main.subscribe.addon_desc')</p>
-                    @unless ($hasCustomPackage)
-                        <p class="ms-note">@lang('main.subscribe.addon_requires_package')</p>
-                    @endunless
-                </button>
+                    <button
+                        type="button"
+                        class="ms-card choice"
+                        wire:click="showAddon"
+                        wire:loading.attr="disabled"
+                        wire:target="showRenew,showAddon,showCustomize"
+                        x-on:click="if (! $el.disabled) pending = 'addon'"
+                        :class="{ 'is-armed': pending === 'addon', 'is-dimmed': pending && pending !== 'addon' }"
+                        @disabled(! $hasCustomPackage)
+                    >
+                        <span class="ms-badge">@lang('main.subscribe.addon_badge')</span>
+                        <h2>@lang('main.subscribe.addon_title')</h2>
+                        <p>@lang('main.subscribe.addon_desc')</p>
+                        @unless ($hasCustomPackage)
+                            <p class="ms-note">@lang('main.subscribe.addon_requires_package')</p>
+                        @endunless
+                    </button>
 
-                <button type="button" class="ms-card choice" wire:click="showCustomize">
-                    <span class="ms-badge">@lang('main.subscribe.customize_badge')</span>
-                    <h2>@lang('main.subscribe.customize_title')</h2>
-                    <p>@lang('main.subscribe.customize_desc')</p>
-                </button>
-            </div>
-
-            @if ($entitlement || $subscription)
-                <div class="ms-summary">
-                    <h3>@lang('main.subscribe.current_summary')</h3>
-                    <div class="ms-kv">
-                        <span>@lang('main.subscribe.package')</span>
-                        <strong>{{ $hasCustomPackage ? __('main.subscribe.custom_package') : ($subscription?->plan?->name_ar ?: $subscription?->plan?->name) }}</strong>
-                    </div>
-                    <div class="ms-kv">
-                        <span>@lang('main.subscribe.period')</span>
-                        <strong>
-                            {{ ($entitlement?->period === 'Year') ? __('general.annual') : __('general.monthly') }}
-                        </strong>
-                    </div>
-                    <div class="ms-kv">
-                        <span>@lang('main.subscribe.expires')</span>
-                        <strong>{{ $subscription?->expired_at ? $subscription->expired_at->format('Y-m-d') : '—' }}</strong>
-                    </div>
-                    @if ($entitlement)
-                        <div class="ms-kv">
-                            <span>@lang('main.subscribe.price')</span>
-                            <strong>{{ number_format((float) $entitlement->period_total, 0) }} {{ __('general.sar') }}</strong>
-                        </div>
-                        <div class="ms-modules">
-                            @foreach ($moduleLabels as $label)
-                                <span>{{ $label }}</span>
-                            @endforeach
-                        </div>
-                    @endif
+                    <button
+                        type="button"
+                        class="ms-card choice"
+                        wire:click="showCustomize"
+                        wire:loading.attr="disabled"
+                        wire:target="showRenew,showAddon,showCustomize"
+                        x-on:click="pending = 'customize'"
+                        :class="{ 'is-armed': pending === 'customize', 'is-dimmed': pending && pending !== 'customize' }"
+                    >
+                        <span class="ms-badge">@lang('main.subscribe.customize_badge')</span>
+                        <h2>@lang('main.subscribe.customize_title')</h2>
+                        <p>@lang('main.subscribe.customize_desc')</p>
+                    </button>
                 </div>
-            @endif
+
+                @if ($entitlement || $subscription)
+                    <div class="ms-summary">
+                        <h3>@lang('main.subscribe.current_summary')</h3>
+                        <div class="ms-kv">
+                            <span>@lang('main.subscribe.package')</span>
+                            <strong>{{ $hasCustomPackage ? __('main.subscribe.custom_package') : ($subscription?->plan?->name_ar ?: $subscription?->plan?->name) }}</strong>
+                        </div>
+                        <div class="ms-kv">
+                            <span>@lang('main.subscribe.period')</span>
+                            <strong>
+                                {{ ($entitlement?->period === 'Year') ? __('general.annual') : __('general.monthly') }}
+                            </strong>
+                        </div>
+                        <div class="ms-kv">
+                            <span>@lang('main.subscribe.expires')</span>
+                            <strong>{{ $subscription?->expired_at ? $subscription->expired_at->format('Y-m-d') : '—' }}</strong>
+                        </div>
+                        @if ($entitlement)
+                            <div class="ms-kv">
+                                <span>@lang('main.subscribe.price')</span>
+                                <strong>{{ number_format((float) $entitlement->period_total, 0) }} {{ __('general.sar') }}</strong>
+                            </div>
+                            <div class="ms-modules">
+                                @foreach ($moduleLabels as $label)
+                                    <span>{{ $label }}</span>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+                @endif
+
+                <div
+                    class="ms-choice-veil"
+                    :class="{ 'is-on': pending }"
+                    wire:loading.class="is-on"
+                    wire:target="showRenew,showAddon,showCustomize"
+                    aria-live="polite"
+                    aria-busy="true"
+                >
+                    <div class="ms-choice-veil__card">
+                        <div class="ms-hex-spin" aria-hidden="true"><i></i></div>
+                        <strong>@lang('main.subscribe.choice_opening')</strong>
+                        <span>@lang('main.subscribe.choice_opening_hint')</span>
+                    </div>
+                </div>
+            </div>
         @endif
 
         @if ($mode === 'renew')
-            <div class="ms-summary">
+            <div class="ms-summary ms-panel-enter">
                 <h3>@lang('main.subscribe.renew_title')</h3>
                 <p class="ms-note" style="margin-top:0;">@lang('main.subscribe.renew_confirm_hint')</p>
 
@@ -1016,7 +1204,7 @@
         @endif
 
         @if ($mode === 'addon')
-            <div class="ms-summary">
+            <div class="ms-summary ms-panel-enter">
                 <h3>@lang('main.subscribe.addon_title')</h3>
                 <p class="ms-note" style="margin-top:0;">@lang('main.subscribe.addon_hint')</p>
 
@@ -1114,36 +1302,38 @@
         @endif
 
         @if ($mode === 'customize')
-            <div class="ms-actions" style="margin-top:0.35rem;margin-bottom:0.35rem;">
-                <button type="button" class="ms-btn ms-btn-secondary" wire:click="showChoose" @disabled($saving)>
-                    @lang('main.subscribe.back')
-                </button>
-            </div>
+            <div class="ms-panel-enter">
+                <div class="ms-actions" style="margin-top:0.35rem;margin-bottom:0.35rem;">
+                    <button type="button" class="ms-btn ms-btn-secondary" wire:click="showChoose" @disabled($saving)>
+                        @lang('main.subscribe.back')
+                    </button>
+                </div>
 
-            {{-- Mount only in customize mode so catalog is fresh; wire:ignore keeps Alpine state on coupon preview re-renders. --}}
-            <div
-                class="ms-customize"
-                wire:ignore
-                wire:key="plan-config-{{ count($catalog['modules'] ?? []) }}-{{ count($catalog['quotas'] ?? []) }}-{{ count($catalog['recommendations'] ?? []) }}"
-            >
-                @include('filament.forms.plan-configurator', [
-                    'catalog' => $catalog,
-                    'required' => true,
-                    'wirePath' => 'plan_config',
-                    'initial' => $plan_config,
-                    'hasActiveCoupon' => $hasActiveCoupon,
-                ])
-            </div>
+                {{-- Mount only in customize mode so catalog is fresh; wire:ignore keeps Alpine state on coupon preview re-renders. --}}
+                <div
+                    class="ms-customize"
+                    wire:ignore
+                    wire:key="plan-config-{{ count($catalog['modules'] ?? []) }}-{{ count($catalog['quotas'] ?? []) }}-{{ count($catalog['recommendations'] ?? []) }}"
+                >
+                    @include('filament.forms.plan-configurator', [
+                        'catalog' => $catalog,
+                        'required' => true,
+                        'wirePath' => 'plan_config',
+                        'initial' => $plan_config,
+                        'hasActiveCoupon' => $hasActiveCoupon,
+                    ])
+                </div>
 
-            @error('plan_config') <div class="ms-error">{{ $message }}</div> @enderror
-            @error('plan_config.modules') <div class="ms-error">{{ $message }}</div> @enderror
-            @error('plan_config.coupon_code') <div class="ms-error">{{ $message }}</div> @enderror
+                @error('plan_config') <div class="ms-error">{{ $message }}</div> @enderror
+                @error('plan_config.modules') <div class="ms-error">{{ $message }}</div> @enderror
+                @error('plan_config.coupon_code') <div class="ms-error">{{ $message }}</div> @enderror
 
-            <div class="ms-actions">
-                <button type="button" class="ms-btn ms-btn-primary" wire:click="saveNewPackage" wire:loading.attr="disabled">
-                    <span wire:loading.remove wire:target="saveNewPackage">@lang('main.subscribe.confirm_new_package')</span>
-                    <span wire:loading wire:target="saveNewPackage">@lang('main.wizard.saving')</span>
-                </button>
+                <div class="ms-actions">
+                    <button type="button" class="ms-btn ms-btn-primary" wire:click="saveNewPackage" wire:loading.attr="disabled">
+                        <span wire:loading.remove wire:target="saveNewPackage">@lang('main.subscribe.confirm_new_package')</span>
+                        <span wire:loading wire:target="saveNewPackage">@lang('main.wizard.saving')</span>
+                    </button>
+                </div>
             </div>
         @endif
     </div>

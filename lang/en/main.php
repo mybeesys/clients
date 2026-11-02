@@ -253,6 +253,8 @@ return [
         'back_to_system' => 'Back to system',
         'back_to_subscriptions' => 'Back to subscriptions',
         'back' => 'Back',
+        'choice_opening' => 'Preparing…',
+        'choice_opening_hint' => 'Opening your selection',
         'renew_badge' => 'Renew',
         'renew_title' => 'Renew same subscription',
         'renew_desc' => 'Keep the same modules and quotas for another period, preserving remaining days when applicable.',

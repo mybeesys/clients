@@ -324,8 +324,9 @@ class ManageSubscription extends Component
         $pricer = app(EntitlementPricer::class);
         $localeIsAr = app()->getLocale() === 'ar';
 
+        // Price/catalog work only for the active panel — keeps choice-card clicks snappy.
         $renewQuote = null;
-        if ($entitlement) {
+        if ($this->mode === 'renew' && $entitlement) {
             try {
                 $renewQuote = $pricer->quote([
                     'period' => $this->renew_period === 'Month' ? 'Month' : 'Year',
@@ -345,6 +346,7 @@ class ManageSubscription extends Component
 
         $addonQuote = null;
         $addonError = null;
+        $addonRows = [];
         if ($this->mode === 'addon' && $entitlement) {
             try {
                 $addonQuote = $pricer->quoteAddon($company, $this->addon_quotas);
@@ -353,52 +355,56 @@ class ManageSubscription extends Component
             } catch (\Throwable $e) {
                 $addonError = $e->getMessage();
             }
-        }
 
-        $moduleLabels = collect($entitlement?->modules ?? [])
-            ->map(function (string $key) use ($catalog, $localeIsAr) {
-                try {
-                    $module = $catalog->module($key);
-
-                    return $localeIsAr
-                        ? ($module['name_ar'] ?? $module['name_en'] ?? $key)
-                        : ($module['name_en'] ?? $module['name_ar'] ?? $key);
-                } catch (\Throwable) {
-                    return $key;
+            $modules = array_values(array_unique(array_merge(['platform'], $entitlement->modules ?? [])));
+            foreach (EntitlementPricer::ADDON_QUOTA_KEYS as $key) {
+                $quota = $catalog->quota($key);
+                if (! $quota) {
+                    continue;
                 }
-            })
-            ->values()
-            ->all();
-
-        $modules = array_values(array_unique(array_merge(['platform'], $entitlement?->modules ?? [])));
-        $addonRows = [];
-        foreach (EntitlementPricer::ADDON_QUOTA_KEYS as $key) {
-            $quota = $catalog->quota($key);
-            if (! $quota) {
-                continue;
+                $linked = $quota['linked_module'] ?? null;
+                $requiresModule = in_array($key, ['screen_devices', 'pos_devices', 'waiter_seats', 'kitchen_devices'], true);
+                if ($requiresModule && $linked && ! in_array($linked, $modules, true)) {
+                    continue;
+                }
+                $addonRows[] = [
+                    'key' => $key,
+                    'name' => $localeIsAr
+                        ? ($quota['name_ar'] ?? $quota['name_en'] ?? $key)
+                        : ($quota['name_en'] ?? $quota['name_ar'] ?? $key),
+                    'unit' => (float) ($quota['price_per_extra_month'] ?? 0),
+                    'max' => (int) ($quota['max'] ?? 9999),
+                    'floor' => (int) ($this->addon_floors[$key] ?? 0),
+                    'value' => (int) ($this->addon_quotas[$key] ?? 0),
+                ];
             }
-            $linked = $quota['linked_module'] ?? null;
-            $requiresModule = in_array($key, ['screen_devices', 'pos_devices', 'waiter_seats', 'kitchen_devices'], true);
-            if ($requiresModule && $linked && ! in_array($linked, $modules, true)) {
-                continue;
-            }
-            $addonRows[] = [
-                'key' => $key,
-                'name' => $localeIsAr
-                    ? ($quota['name_ar'] ?? $quota['name_en'] ?? $key)
-                    : ($quota['name_en'] ?? $quota['name_ar'] ?? $key),
-                'unit' => (float) ($quota['price_per_extra_month'] ?? 0),
-                'max' => (int) ($quota['max'] ?? 9999),
-                'floor' => (int) ($this->addon_floors[$key] ?? 0),
-                'value' => (int) ($this->addon_quotas[$key] ?? 0),
-            ];
         }
+
+        $moduleLabels = [];
+        if ($this->mode === 'choose' && $entitlement) {
+            $moduleLabels = collect($entitlement->modules ?? [])
+                ->map(function (string $key) use ($catalog, $localeIsAr) {
+                    try {
+                        $module = $catalog->module($key);
+
+                        return $localeIsAr
+                            ? ($module['name_ar'] ?? $module['name_en'] ?? $key)
+                            : ($module['name_en'] ?? $module['name_ar'] ?? $key);
+                    } catch (\Throwable) {
+                        return $key;
+                    }
+                })
+                ->values()
+                ->all();
+        }
+
+        $needsSavedCards = in_array($this->mode, ['renew', 'addon', 'add-card'], true);
 
         return view('livewire.manage-subscription', [
             'company' => $company,
             'entitlement' => $entitlement,
             'subscription' => $subscription,
-            'catalog' => $catalog->toFrontend(),
+            'catalog' => $this->mode === 'customize' ? $catalog->toFrontend() : [],
             'renewQuote' => $renewQuote,
             'addonQuote' => $addonQuote,
             'addonError' => $addonError,
@@ -408,10 +414,12 @@ class ManageSubscription extends Component
             'hasCustomPackage' => (bool) $entitlement,
             'yearlyMonthsCharged' => $catalog->yearlyMonthsCharged(),
             'yearlyMonthsGifted' => $catalog->yearlyMonthsGifted(),
-            'hasActiveCoupon' => app(CouponApplicator::class)->hasActive(),
+            'hasActiveCoupon' => $this->mode === 'customize'
+                ? app(CouponApplicator::class)->hasActive()
+                : false,
             'isEmbed' => $this->isEmbed(),
-            'savedCards' => $this->savedCardsForView($company),
-            'defaultSavedCard' => $company
+            'savedCards' => $needsSavedCards ? $this->savedCardsForView($company) : collect(),
+            'defaultSavedCard' => $needsSavedCards && $company
                 ? app(SavedPaymentCardService::class)->defaultFor($company)
                 : null,
         ])->layout($this->isEmbed() ? 'layouts.subscribe-embed' : 'layouts.subscribe');
