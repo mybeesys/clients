@@ -34,6 +34,7 @@
     {{ $slot }}
     @include('partials.plan-configurator-script')
     @livewireScripts
+    @include('partials.livewire-session-guard')
     <script>
         (function () {
             function reportHeight() {

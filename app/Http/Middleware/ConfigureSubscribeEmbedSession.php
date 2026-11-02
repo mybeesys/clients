@@ -17,7 +17,13 @@ class ConfigureSubscribeEmbedSession
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if ($this->shouldUseNoneSameSite($request)) {
+        // A Secure cookie is dropped by the browser on plain HTTP, so the next
+        // Livewire call has no session and the customer gets a 419 "page expired" prompt.
+        if (! $request->isSecure()) {
+            config(['session.secure' => false]);
+        }
+
+        if ($this->shouldUseNoneSameSite($request) && $request->isSecure()) {
             config([
                 'session.same_site' => 'none',
                 'session.secure' => true,

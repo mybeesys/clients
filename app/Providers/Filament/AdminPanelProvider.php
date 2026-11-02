@@ -52,6 +52,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->middleware([
+                \App\Http\Middleware\ConfigureSubscribeEmbedSession::class,
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,
@@ -112,6 +113,10 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->sidebarFullyCollapsibleOnDesktop()
             ->viteTheme('resources/css/filament/admin/theme.css')
+            ->renderHook(
+                PanelsRenderHook::SCRIPTS_AFTER,
+                fn (): string => view('partials.livewire-session-guard')->render(),
+            )
             ->renderHook(
                 PanelsRenderHook::BODY_START,
                 fn (): string => Blade::render('<div class="mybee-auth-honeycomb" aria-hidden="true"></div><div class="mybee-auth-glow" aria-hidden="true"></div>'),

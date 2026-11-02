@@ -44,5 +44,6 @@
     {{-- Must load before Livewire/Alpine so customize-mode morph can call planConfigurator() --}}
     @include('partials.plan-configurator-script')
     @livewireScripts
+    @include('partials.livewire-session-guard')
 </body>
 </html>
