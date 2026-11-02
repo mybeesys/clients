@@ -414,7 +414,7 @@ class ManageSubscription extends Component
             'hasCustomPackage' => (bool) $entitlement,
             'yearlyMonthsCharged' => $catalog->yearlyMonthsCharged(),
             'yearlyMonthsGifted' => $catalog->yearlyMonthsGifted(),
-            'hasActiveCoupon' => $this->mode === 'customize'
+            'hasActiveCoupon' => in_array($this->mode, ['renew', 'customize'], true)
                 ? app(CouponApplicator::class)->hasActive()
                 : false,
             'isEmbed' => $this->isEmbed(),
