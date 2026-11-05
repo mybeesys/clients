@@ -44,9 +44,24 @@ class MigrateTenantDatabase extends MigrateDatabase
         $this->assertMigrateProcessSucceeded($result);
 
         $this->tenant->run(function (): void {
-            if (! Schema::hasTable('est_establishments')) {
+            $required = [
+                'est_establishments',
+                'emp_activity_logs',
+                'franchise_companies',
+                'screen_devices',
+                'reservation_areas',
+                'expenses',
+                'zatca_settings',
+            ];
+
+            $missing = array_values(array_filter(
+                $required,
+                static fn (string $table): bool => ! Schema::hasTable($table),
+            ));
+
+            if ($missing !== []) {
                 throw new RuntimeException(
-                    'Tenant migrations did not create required tables (est_establishments). '.
+                    'Tenant migrations did not create required tables ('.implode(', ', $missing).'). '.
                     'Check TENANT_APP_PATH and mybeeCompany module migration folders.'
                 );
             }

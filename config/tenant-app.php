@@ -13,7 +13,13 @@ return [
     */
     'path' => env('TENANT_APP_PATH', base_path('../my-bee-company')),
 
+    /*
+    | Keep this list identical to my-bee-company config/tenancy.php
+    | migration_parameters.--path. Folder names are case-sensitive on Linux.
+    | A missing folder must fail provisioning, not create a half-migrated tenant.
+    */
     'migration_paths' => [
+        'Modules/Franchise/database/migrations/tenant',
         'Modules/Employee/database/migrations/tenant',
         'Modules/Establishment/database/migrations/tenant',
         'Modules/Product/database/migrations/tenant',
@@ -22,7 +28,12 @@ return [
         'Modules/ClientsAndSuppliers/database/migrations/tenant',
         'Modules/Sales/database/migrations/tenant',
         'Modules/General/database/migrations/tenant',
-        'Modules/purchases/database/migrations/tenant',
+        'Modules/Purchases/database/migrations/tenant',
+        'Modules/Screen/database/migrations/tenant',
+        'Modules/Reservation/database/migrations/tenant',
+        'Modules/Expense/database/migrations/tenant',
+        'Modules/Zatca/database/migrations/tenant',
+        'Modules/Report/database/migrations/tenant',
     ],
 
     'permission_data_paths' => [
