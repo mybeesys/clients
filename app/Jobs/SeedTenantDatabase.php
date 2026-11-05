@@ -7,7 +7,6 @@ use App\Models\User;
 use App\Services\GrantTenantAdminPermissionsService;
 use App\Support\TenantAppAutoloader;
 use DB;
-use Hash;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -41,7 +40,6 @@ class SeedTenantDatabase implements ShouldQueue
             $this->tenant->run(function () use ($ownerUser) {
                 $this->insertDefaultEstablishment();
                 $this->insertPermissions();
-                $this->insertEmployee();
                 $this->insertOwnerEmployee($ownerUser);
                 $this->insertCountries();
             });
@@ -53,38 +51,9 @@ class SeedTenantDatabase implements ShouldQueue
         }
     }
 
-    private function insertEmployee(): void
-    {
-        try {
-            $default_est_id = DB::table('est_establishments')->whereNotNull('parent_id')->first()?->id;
-
-            DB::table('emp_employees')->updateOrInsert([
-                'email' => 'admin@admin.com',
-            ], [
-                'name' => 'آدمن',
-                'name_en' => 'admin',
-                'user_name' => 'admin',
-                'establishment_id' => $default_est_id,
-                'password' => Hash::make('123456789'),
-                'pin' => 99913,
-                'ems_access' => true,
-                'pos_is_active' => true,
-            ]);
-
-            $employee_id = DB::table('emp_employees')->where('email', 'admin@admin.com')->value('id');
-
-            if ($employee_id) {
-                app(GrantTenantAdminPermissionsService::class)->grantAdminEmployee('admin@admin.com');
-            }
-        } catch (\Exception $e) {
-            \Log::error('Employee insertion failed: ' . $e->getMessage());
-            throw $e;
-        }
-    }
-
     private function insertOwnerEmployee(?User $ownerUser): void
     {
-        if ($ownerUser === null || $ownerUser->email === 'admin@admin.com') {
+        if ($ownerUser === null || ! filled($ownerUser->email)) {
             return;
         }
 
