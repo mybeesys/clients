@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Mail\CompanyReadyMail;
 use App\Models\Company;
 use App\Models\Country;
 use App\Models\HyperPayPayment;
@@ -10,10 +11,13 @@ use App\Models\Subscription;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\Entitlements\EntitlementPricer;
+use App\Services\RegistrationEmailVerifier;
 use App\Services\Entitlements\EntitlementProvisioner;
 use App\Services\ReferralService;
+use App\Support\TenantApplicationUrl;
 use App\Support\TenantKeyGenerator;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -36,6 +40,8 @@ class RegistrationService
             'phone_number' => __('fields.phone_number'),
             'password' => __('fields.password'),
         ])->validate();
+
+        app(RegistrationEmailVerifier::class)->assertVerified((string) $data['email']);
 
         $payload = $this->mapCompanyPayload($data);
         $payment = $this->requirePaidPlanIfNeeded($data);
@@ -62,11 +68,31 @@ class RegistrationService
                 request: request(),
             );
 
+            $this->sendWelcomeEmail($user, $company, (string) $data['password']);
+
             return $user;
         } catch (Throwable $e) {
             $this->rollback($user);
 
             throw $e;
+        }
+    }
+
+    protected function sendWelcomeEmail(User $user, Company $company, string $password): void
+    {
+        try {
+            $user->unsetRelation('company');
+            $user->load(['company.tenant.domains', 'tenant.domains']);
+
+            Mail::to($user->email)->send(new CompanyReadyMail(
+                ownerName: $user->name,
+                companyName: (string) $company->name,
+                tenantUrl: TenantApplicationUrl::forUser($user),
+                username: $user->email,
+                password: $password,
+            ));
+        } catch (Throwable $exception) {
+            report($exception);
         }
     }
 

@@ -4,7 +4,9 @@ namespace App\Filament\Forms;
 
 use App\Models\User;
 use App\Services\CompanyAction;
+use App\Services\RegistrationEmailVerifier;
 use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Wizard;
@@ -16,6 +18,10 @@ class RegistrationWizard
 {
     public static function configure(Form $form): Form
     {
+        $livewire = $form->getLivewire();
+        $email = is_object($livewire) ? (string) data_get($livewire->data ?? [], 'email', '') : '';
+        $emailVerified = $email !== '' && app(RegistrationEmailVerifier::class)->isVerified($email);
+
         return $form
             ->schema([
                 Wizard::make([
@@ -34,20 +40,30 @@ class RegistrationWizard
                     ->skippable(false)
                     ->persistStepInQueryString()
                     ->submitAction(new HtmlString(Blade::render(<<<'BLADE'
-                        <x-filament::button
-                            type="submit"
-                            size="lg"
-                            wire:loading.attr="disabled"
-                            wire:target="register"
-                        >
-                            <span wire:loading.remove wire:target="register">
-                                @lang('general.register')
-                            </span>
-                            <span wire:loading wire:target="register">
-                                @lang('main.wizard.saving')
-                            </span>
-                        </x-filament::button>
-                    BLADE))),
+                        <div class="mb-register-submit">
+                            <x-filament::button
+                                type="submit"
+                                size="lg"
+                                :disabled="! $emailVerified"
+                                wire:loading.attr="disabled"
+                                wire:target="register"
+                            >
+                                <span wire:loading.remove wire:target="register">
+                                    @lang('general.register')
+                                </span>
+                                <span wire:loading wire:target="register">
+                                    @lang('main.wizard.saving')
+                                </span>
+                            </x-filament::button>
+                            @unless ($emailVerified)
+                                <p class="mb-register-submit__lock">@lang('main.wizard.email_verify_required')</p>
+                            @endunless
+                        </div>
+                        <style>
+                            .mb-register-submit { display: flex; flex-direction: column; align-items: flex-start; gap: .45rem; }
+                            .mb-register-submit__lock { margin: 0; color: #b88912; font-weight: 700; font-size: .85rem; line-height: 1.6; }
+                        </style>
+                    BLADE, ['emailVerified' => $emailVerified]))),
             ]);
     }
 
@@ -74,7 +90,32 @@ class RegistrationWizard
                             ->email()
                             ->required()
                             ->maxLength(255)
-                            ->unique(User::class, 'email'),
+                            ->unique(User::class, 'email')
+                            ->live(onBlur: true)
+                            ->rule(function (): \Closure {
+                                return function (string $attribute, mixed $value, \Closure $fail): void {
+                                    if (! app(RegistrationEmailVerifier::class)->isVerified((string) $value)) {
+                                        $fail(__('main.wizard.email_verify_required'));
+                                    }
+                                };
+                            })
+                            ->afterStateUpdated(function ($state, $livewire): void {
+                                if (isset($livewire->accountEmailVerificationError)) {
+                                    $livewire->accountEmailVerificationError = null;
+                                }
+
+                                if (method_exists($livewire, 'sendAccountVerificationCode')) {
+                                    $livewire->sendAccountVerificationCode(automatic: true);
+                                }
+                            }),
+                        Placeholder::make('email_verification_panel')
+                            ->hiddenLabel()
+                            ->columnSpanFull()
+                            ->content(function ($livewire): HtmlString {
+                                return new HtmlString(view('filament.forms.registration-email-verification', [
+                                    'page' => $livewire,
+                                ])->render());
+                            }),
                         TextInput::make('phone_number')
                             ->label(__('fields.phone_number'))
                             ->tel()

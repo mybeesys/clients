@@ -8,6 +8,7 @@ use App\Services\Entitlements\CouponApplicator;
 use App\Services\Entitlements\EntitlementPricer;
 use App\Services\HyperPay\HyperPayCheckoutService;
 use App\Services\HyperPay\HyperPayConfig;
+use App\Services\RegistrationEmailVerifier;
 use App\Services\RegistrationService;
 use App\Support\TenantApplicationUrl;
 use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
@@ -20,6 +21,7 @@ use Filament\Pages\Auth\Register;
 use Filament\Support\Exceptions\Halt;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 use RuntimeException;
 
@@ -28,6 +30,8 @@ class Registration extends Register
     protected static string $view = 'filament.pages.auth.register';
 
     protected ?string $maxWidth = '7xl';
+
+    public ?string $accountEmailVerificationError = null;
 
     public function mount(): void
     {
@@ -234,6 +238,19 @@ class Registration extends Register
 
         $data = $this->form->getState();
 
+        try {
+            app(RegistrationEmailVerifier::class)->assertVerified((string) ($data['email'] ?? ''));
+        } catch (ValidationException $exception) {
+            $this->accountEmailVerificationError = (string) collect($exception->errors())->flatten()->first();
+
+            Notification::make()
+                ->title($this->accountEmailVerificationError)
+                ->danger()
+                ->send();
+
+            return null;
+        }
+
         $user = app(RegistrationService::class)->register($data);
 
         $user->load(['company', 'tenant.domains']);
@@ -248,6 +265,76 @@ class Registration extends Register
         ]);
 
         return app(RegistrationResponse::class);
+    }
+
+    public function sendAccountVerificationCode(bool $automatic = false): void
+    {
+        $this->accountEmailVerificationError = null;
+        $verifier = app(RegistrationEmailVerifier::class);
+        $email = $verifier->normalize((string) data_get($this->data, 'email', ''));
+
+        if ($email === '') {
+            return;
+        }
+
+        if ($verifier->isVerified($email) || ($automatic && $verifier->hasOpenChallenge($email))) {
+            return;
+        }
+
+        try {
+            $verifier->send($email);
+        } catch (ValidationException $exception) {
+            $this->accountEmailVerificationError = (string) collect($exception->errors())->flatten()->first();
+
+            Notification::make()
+                ->title($this->accountEmailVerificationError)
+                ->danger()
+                ->send();
+
+            return;
+        }
+
+        Notification::make()
+            ->title(__('main.wizard.email_verify_sent', ['email' => $email]))
+            ->success()
+            ->send();
+    }
+
+    public function confirmAccountVerificationCode(?string $code = null): void
+    {
+        $this->accountEmailVerificationError = null;
+        $verifier = app(RegistrationEmailVerifier::class);
+        $email = $verifier->normalize((string) data_get($this->data, 'email', ''));
+
+        if ($verifier->isVerified($email)) {
+            Notification::make()
+                ->title(__('main.wizard.email_verify_verified'))
+                ->success()
+                ->send();
+
+            return;
+        }
+
+        try {
+            $verifier->confirm(
+                $email,
+                $code ?? (string) data_get($this->data, 'email_verification_code', ''),
+            );
+        } catch (ValidationException $exception) {
+            $this->accountEmailVerificationError = (string) collect($exception->errors())->flatten()->first();
+
+            Notification::make()
+                ->title($this->accountEmailVerificationError)
+                ->danger()
+                ->send();
+
+            return;
+        }
+
+        Notification::make()
+            ->title(__('main.wizard.email_verify_verified'))
+            ->success()
+            ->send();
     }
 
     public function getFormActions(): array
