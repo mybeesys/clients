@@ -16,6 +16,8 @@ use App\Services\Entitlements\EntitlementProvisioner;
 use App\Services\ReferralService;
 use App\Support\TenantApplicationUrl;
 use App\Support\TenantKeyGenerator;
+use App\Support\TenantProvisioner;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
@@ -27,6 +29,10 @@ class RegistrationService
 {
     public function register(array $data): User
     {
+        if (! array_key_exists('password_confirmation', $data) && array_key_exists('passwordConfirmation', $data)) {
+            $data['password_confirmation'] = $data['passwordConfirmation'];
+        }
+
         Validator::make($data, [
             'userName' => ['required', 'string', 'min:2', 'max:255', Rule::unique('users', 'name')],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')],
@@ -68,7 +74,9 @@ class RegistrationService
                 request: request(),
             );
 
+            $tenantId = (string) ($company->tenant?->getKey() ?? '');
             $this->queueWelcomeEmail($user, $company, (string) $data['password']);
+            TenantProvisioner::start($tenantId);
 
             return $user;
         } catch (Throwable $e) {
@@ -84,21 +92,28 @@ class RegistrationService
      */
     protected function queueWelcomeEmail(User $user, Company $company, string $password): void
     {
-        app()->instance('registration.welcome_email', [
-            'user_id' => $user->id,
-            'company_id' => $company->id,
-            'password' => $password,
-        ]);
-    }
+        $tenantId = (string) ($company->tenant?->getKey() ?? '');
 
-    public function deliverQueuedWelcomeEmail(): void
-    {
-        if (! app()->bound('registration.welcome_email')) {
+        if ($tenantId === '') {
             return;
         }
 
-        $payload = app('registration.welcome_email');
-        app()->forgetInstance('registration.welcome_email');
+        Cache::put(self::welcomeCacheKey($tenantId), [
+            'user_id' => $user->id,
+            'company_id' => $company->id,
+            'password' => $password,
+        ], now()->addMinutes(30));
+    }
+
+    public function deliverQueuedWelcomeEmail(?string $tenantId = null): void
+    {
+        $payload = is_string($tenantId) && $tenantId !== ''
+            ? Cache::pull(self::welcomeCacheKey($tenantId))
+            : null;
+
+        if (! is_array($payload)) {
+            return;
+        }
 
         $user = User::query()->find($payload['user_id'] ?? null);
         $company = Company::query()->find($payload['company_id'] ?? null);
@@ -108,6 +123,11 @@ class RegistrationService
         }
 
         $this->sendWelcomeEmail($user, $company, $payload['password']);
+    }
+
+    public static function welcomeCacheKey(string $tenantId): string
+    {
+        return 'registration.welcome.'.$tenantId;
     }
 
     protected function sendWelcomeEmail(User $user, Company $company, string $password): void

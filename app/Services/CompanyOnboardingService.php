@@ -9,6 +9,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Services\Entitlements\EntitlementProvisioner;
 use App\Support\TenantKeyGenerator;
+use App\Support\TenantProvisioner;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -25,6 +26,8 @@ class CompanyOnboardingService
             $company = (new CompanyAction($user))->storeCompany($payload);
 
             $this->createSubscription($company, $data);
+
+            TenantProvisioner::start((string) ($company->tenant?->getKey() ?? ''));
 
             return $company;
         } catch (Throwable $e) {

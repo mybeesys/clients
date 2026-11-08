@@ -24,6 +24,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 use RuntimeException;
+use Throwable;
 
 class Registration extends Register
 {
@@ -219,7 +220,7 @@ class Registration extends Register
     public function register(): ?RegistrationResponse
     {
         try {
-            $this->rateLimit(2);
+            $this->rateLimit(10);
         } catch (TooManyRequestsException $exception) {
             Notification::make()
                 ->title(__('filament-panels::pages/auth/register.notifications.throttled.title', [
@@ -236,22 +237,41 @@ class Registration extends Register
             return null;
         }
 
-        $data = $this->form->getState();
+        try {
+            $data = $this->form->getState();
+        } catch (ValidationException $exception) {
+            $this->notifyRegistrationError($exception);
+
+            return null;
+        }
+
+        $data['password_confirmation'] = $this->data['passwordConfirmation'] ?? ($data['password_confirmation'] ?? null);
 
         try {
             app(RegistrationEmailVerifier::class)->assertVerified((string) ($data['email'] ?? ''));
         } catch (ValidationException $exception) {
             $this->accountEmailVerificationError = (string) collect($exception->errors())->flatten()->first();
+            $this->notifyRegistrationError($exception);
+
+            return null;
+        }
+
+        try {
+            $user = app(RegistrationService::class)->register($data);
+        } catch (ValidationException $exception) {
+            $this->notifyRegistrationError($exception);
+
+            return null;
+        } catch (Throwable $exception) {
+            report($exception);
 
             Notification::make()
-                ->title($this->accountEmailVerificationError)
+                ->title(__('main.wizard.register_failed'))
                 ->danger()
                 ->send();
 
             return null;
         }
-
-        $user = app(RegistrationService::class)->register($data);
 
         $user->load(['company', 'tenant.domains']);
 
@@ -265,6 +285,20 @@ class Registration extends Register
         ]);
 
         return app(RegistrationResponse::class);
+    }
+
+    protected function notifyRegistrationError(ValidationException $exception): void
+    {
+        $message = (string) collect($exception->errors())->flatten()->first();
+
+        if ($message === '') {
+            return;
+        }
+
+        Notification::make()
+            ->title($message)
+            ->danger()
+            ->send();
     }
 
     public function sendAccountVerificationCode(bool $automatic = false): void

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
-use App\Jobs\ProvisionTenantDatabase;
 use App\Support\TenantAppAutoloader;
 use App\Support\TenantMigrationPaths;
 use Illuminate\Support\Facades\Event;
@@ -26,13 +25,7 @@ class TenancyServiceProvider extends ServiceProvider
         return [
             // Tenant events
             Events\CreatingTenant::class => [],
-            Events\TenantCreated::class => [
-                function (Events\TenantCreated $event) {
-                    // The browser must not wait on module migrations and seeding.
-                    dispatch(new ProvisionTenantDatabase((string) $event->tenant->getTenantKey()))
-                        ->afterResponse();
-                },
-            ],
+            Events\TenantCreated::class => [],
             Events\SavingTenant::class => [],
             Events\TenantSaved::class => [],
             Events\UpdatingTenant::class => [],

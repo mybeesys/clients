@@ -125,6 +125,7 @@ return [
         'tenant_key_taken' => 'The tenant identifier derived from the English name is already in use. Please change the English name.',
         'complete_setup' => 'Complete setup',
         'saving' => 'Saving...',
+        'register_failed' => 'The company could not be created. Please try again in a moment.',
         'account_information' => 'Account',
         'account_information_hint' => 'Create the company owner login. We verify the email with a code before the company is created.',
         'email_verify_title' => 'Verify email',

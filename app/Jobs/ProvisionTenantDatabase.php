@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Models\Tenant;
 use App\Services\RegistrationService;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Stancl\Tenancy\Jobs\CreateDatabase;
 use Throwable;
@@ -22,17 +23,25 @@ class ProvisionTenantDatabase
 
     public function handle(): void
     {
-        set_time_limit(0);
+        $lockKey = 'tenant-provisioning:'.$this->tenantId;
 
-        $tenant = Tenant::query()->find($this->tenantId);
+        if (! Cache::add($lockKey, now()->toIso8601String(), now()->addMinutes(20))) {
+            Log::info('Tenant provisioning already running.', ['tenant' => $this->tenantId]);
 
-        if (! $tenant) {
             return;
         }
 
-        Log::info('Tenant provisioning started.', ['tenant' => $this->tenantId]);
+        set_time_limit(0);
 
         try {
+            $tenant = Tenant::query()->find($this->tenantId);
+
+            if (! $tenant) {
+                return;
+            }
+
+            Log::info('Tenant provisioning started.', ['tenant' => $this->tenantId]);
+
             $created = app()->call([new CreateDatabase($tenant), 'handle']);
 
             if ($created !== false) {
@@ -42,10 +51,12 @@ class ProvisionTenantDatabase
             }
         } catch (Throwable $exception) {
             report($exception);
+        } finally {
+            Cache::forget($lockKey);
         }
 
         try {
-            app(RegistrationService::class)->deliverQueuedWelcomeEmail();
+            app(RegistrationService::class)->deliverQueuedWelcomeEmail($this->tenantId);
         } catch (Throwable $exception) {
             report($exception);
         }
