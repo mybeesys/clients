@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\Tenant;
 use App\Services\RegistrationService;
+use BadMethodCallException;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -25,10 +26,14 @@ class ProvisionTenantDatabase
     {
         $lockKey = 'tenant-provisioning:'.$this->tenantId;
 
-        if (! Cache::add($lockKey, now()->toIso8601String(), now()->addMinutes(20))) {
-            Log::info('Tenant provisioning already running.', ['tenant' => $this->tenantId]);
+        try {
+            if (! Cache::add($lockKey, now()->toIso8601String(), now()->addMinutes(20))) {
+                Log::info('Tenant provisioning already running.', ['tenant' => $this->tenantId]);
 
-            return;
+                return;
+            }
+        } catch (BadMethodCallException) {
+            $lockKey = null;
         }
 
         set_time_limit(0);
@@ -52,7 +57,13 @@ class ProvisionTenantDatabase
         } catch (Throwable $exception) {
             report($exception);
         } finally {
-            Cache::forget($lockKey);
+            if ($lockKey !== null) {
+                try {
+                    Cache::forget($lockKey);
+                } catch (BadMethodCallException) {
+                    //
+                }
+            }
         }
 
         try {

@@ -16,6 +16,7 @@ use App\Services\Entitlements\EntitlementProvisioner;
 use App\Services\ReferralService;
 use App\Support\TenantApplicationUrl;
 use App\Support\TenantKeyGenerator;
+use BadMethodCallException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -26,6 +27,9 @@ use Throwable;
 
 class RegistrationService
 {
+    /** @var array<string, array{user_id: int, company_id: int, password: string}> */
+    protected static array $pendingWelcome = [];
+
     public function register(array $data): User
     {
         if (! array_key_exists('password_confirmation', $data) && array_key_exists('passwordConfirmation', $data)) {
@@ -102,18 +106,36 @@ class RegistrationService
             return;
         }
 
-        Cache::put(self::welcomeCacheKey($tenantId), [
+        $payload = [
             'user_id' => $user->id,
             'company_id' => $company->id,
             'password' => $password,
-        ], now()->addMinutes(30));
+        ];
+        self::$pendingWelcome[$tenantId] = $payload;
+
+        try {
+            Cache::put(self::welcomeCacheKey($tenantId), $payload, now()->addMinutes(30));
+        } catch (BadMethodCallException) {
+            // Database and file stores cannot tag cache entries.
+        }
     }
 
     public function deliverQueuedWelcomeEmail(?string $tenantId = null): void
     {
-        $payload = is_string($tenantId) && $tenantId !== ''
-            ? Cache::pull(self::welcomeCacheKey($tenantId))
-            : null;
+        $payload = null;
+
+        if (is_string($tenantId) && $tenantId !== '') {
+            $payload = self::$pendingWelcome[$tenantId] ?? null;
+            unset(self::$pendingWelcome[$tenantId]);
+
+            if (! is_array($payload)) {
+                try {
+                    $payload = Cache::pull(self::welcomeCacheKey($tenantId));
+                } catch (BadMethodCallException) {
+                    $payload = null;
+                }
+            }
+        }
 
         if (! is_array($payload)) {
             return;

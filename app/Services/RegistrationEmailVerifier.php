@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Mail\RegistrationEmailCodeMail;
-use Illuminate\Support\Facades\Cache;
+use BadMethodCallException;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
@@ -36,7 +36,7 @@ class RegistrationEmailVerifier
 
         $sessionId = $this->sessionId();
         $key = $this->challengeKey($sessionId, $email);
-        $previous = Cache::get($key);
+        $previous = $this->readState($key);
         $sends = (is_array($previous) ? (int) ($previous['sends'] ?? 0) : 0) + 1;
         $code = (string) random_int(100000, 999999);
         $payload = [
@@ -59,7 +59,7 @@ class RegistrationEmailVerifier
             if (is_array($previous)) {
                 $this->rememberChallenge($key, $previous);
             } else {
-                Cache::forget($key);
+                $this->forgetState($key);
             }
 
             report($exception);
@@ -69,8 +69,7 @@ class RegistrationEmailVerifier
             ]);
         }
 
-        RateLimiter::hit($this->emailQuotaKey($email), 3600);
-        RateLimiter::hit($this->ipQuotaKey(), 3600);
+        $this->hitSendQuota($email);
     }
 
     public function confirm(string $email, string $code): void
@@ -91,7 +90,7 @@ class RegistrationEmailVerifier
         }
 
         $key = $this->challengeKey($sessionId, $email);
-        $payload = Cache::get($key);
+        $payload = $this->readState($key);
 
         if (! is_array($payload) || ! isset($payload['code_hash'])) {
             throw ValidationException::withMessages([
@@ -113,7 +112,7 @@ class RegistrationEmailVerifier
             $payload['attempts'] = (int) ($payload['attempts'] ?? 0) + 1;
 
             if ($payload['attempts'] >= self::MAX_ATTEMPTS) {
-                Cache::forget($key);
+                $this->forgetState($key);
 
                 throw ValidationException::withMessages([
                     'email_verification_code' => __('main.wizard.email_verify_too_many'),
@@ -140,12 +139,12 @@ class RegistrationEmailVerifier
             ]);
         }
 
-        Cache::put(
+        $this->writeState(
             $this->verifiedKey($sessionId, $email),
             true,
-            now()->addMinutes(self::VERIFIED_TTL_MINUTES),
+            self::VERIFIED_TTL_MINUTES * 60,
         );
-        Cache::forget($this->challengeKey($sessionId, $email));
+        $this->forgetState($this->challengeKey($sessionId, $email));
     }
 
     public function isVerified(string $email): bool
@@ -157,7 +156,7 @@ class RegistrationEmailVerifier
             return false;
         }
 
-        return Cache::get($this->verifiedKey($sessionId, $email)) === true;
+        return $this->readState($this->verifiedKey($sessionId, $email)) === true;
     }
 
     public function assertVerified(string $email): void
@@ -180,7 +179,7 @@ class RegistrationEmailVerifier
             return false;
         }
 
-        return is_array(Cache::get($this->challengeKey($sessionId, $email)));
+        return is_array($this->readState($this->challengeKey($sessionId, $email)));
     }
 
     public function retryAfterSeconds(string $email): int
@@ -192,7 +191,7 @@ class RegistrationEmailVerifier
             return 0;
         }
 
-        $payload = Cache::get($this->challengeKey($sessionId, $email));
+        $payload = $this->readState($this->challengeKey($sessionId, $email));
 
         if (! is_array($payload)) {
             return 0;
@@ -215,7 +214,7 @@ class RegistrationEmailVerifier
             return null;
         }
 
-        $payload = Cache::get($this->challengeKey($sessionId, $email));
+        $payload = $this->readState($this->challengeKey($sessionId, $email));
 
         return is_array($payload) ? $payload : null;
     }
@@ -306,7 +305,7 @@ class RegistrationEmailVerifier
             ]);
         }
 
-        if (RateLimiter::tooManyAttempts($this->emailQuotaKey($email), 5) || RateLimiter::tooManyAttempts($this->ipQuotaKey(), 8)) {
+        if ($this->tooManySends($email)) {
             throw ValidationException::withMessages([
                 'email' => __('main.wizard.email_verify_limited'),
             ]);
@@ -367,7 +366,77 @@ class RegistrationEmailVerifier
         $cooldown = (int) ($payload['cooldown'] ?? self::FIRST_RESEND_SECONDS);
         $expiresAt = $sentAt + $cooldown;
 
-        Cache::put($key, $payload, now()->addSeconds(max(1, $expiresAt - time())));
+        $this->writeState($key, $payload, max(1, $expiresAt - time()));
+    }
+
+    protected function readState(string $key): mixed
+    {
+        $entry = $this->state()[$key] ?? null;
+
+        if (! is_array($entry)) {
+            return null;
+        }
+
+        $expiresAt = $entry['expires_at'] ?? null;
+
+        if (is_int($expiresAt) && $expiresAt < time()) {
+            $this->forgetState($key);
+
+            return null;
+        }
+
+        return $entry['value'] ?? null;
+    }
+
+    protected function writeState(string $key, mixed $value, int $ttlSeconds): void
+    {
+        $state = $this->state();
+        $state[$key] = [
+            'value' => $value,
+            'expires_at' => time() + max(1, $ttlSeconds),
+        ];
+        session(['registration.email_state' => $state]);
+    }
+
+    protected function forgetState(string $key): void
+    {
+        $state = $this->state();
+        unset($state[$key]);
+        session(['registration.email_state' => $state]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function state(): array
+    {
+        if (! session()->isStarted()) {
+            session()->start();
+        }
+
+        $state = session('registration.email_state', []);
+
+        return is_array($state) ? $state : [];
+    }
+
+    protected function tooManySends(string $email): bool
+    {
+        try {
+            return RateLimiter::tooManyAttempts($this->emailQuotaKey($email), 5)
+                || RateLimiter::tooManyAttempts($this->ipQuotaKey(), 8);
+        } catch (BadMethodCallException) {
+            return false;
+        }
+    }
+
+    protected function hitSendQuota(string $email): void
+    {
+        try {
+            RateLimiter::hit($this->emailQuotaKey($email), 3600);
+            RateLimiter::hit($this->ipQuotaKey(), 3600);
+        } catch (BadMethodCallException) {
+            // The database cache store cannot tag entries. Sending still proceeds.
+        }
     }
 
     protected function sessionId(bool $create = true): ?string
