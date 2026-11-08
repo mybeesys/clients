@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
-use App\Jobs\MigrateTenantDatabase;
-use App\Jobs\SeedTenantDatabase;
+use App\Jobs\ProvisionTenantDatabase;
 use App\Support\TenantAppAutoloader;
 use App\Support\TenantMigrationPaths;
 use Illuminate\Support\Facades\Event;
@@ -28,13 +27,11 @@ class TenancyServiceProvider extends ServiceProvider
             // Tenant events
             Events\CreatingTenant::class => [],
             Events\TenantCreated::class => [
-                JobPipeline::make([
-                    Jobs\CreateDatabase::class,
-                    MigrateTenantDatabase::class,
-                    SeedTenantDatabase::class,
-                ])->send(function (Events\TenantCreated $event) {
-                    return $event->tenant;
-                })->shouldBeQueued(false), // `false` by default, but you probably want to make this `true` for production.
+                function (Events\TenantCreated $event) {
+                    // The browser must not wait on module migrations and seeding.
+                    dispatch(new ProvisionTenantDatabase((string) $event->tenant->getTenantKey()))
+                        ->afterResponse();
+                },
             ],
             Events\SavingTenant::class => [],
             Events\TenantSaved::class => [],

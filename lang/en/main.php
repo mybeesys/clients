@@ -186,14 +186,14 @@ return [
 
     'company_created' => [
         'title' => 'Company created successfully',
-        'body' => 'Company â€œ:nameâ€ has been created and its system is ready.',
+        'body' => 'Company ":name" was created. The system database takes about a minute to finish, then you can open it.',
         'open_system' => 'Open company system',
         'close' => 'Close',
     ],
 
     'registration_thank_you' => [
         'title' => 'Registration complete',
-        'message' => 'Thank you for signing up. Your company has been created and your system is ready.',
+        'message' => 'Your company has been created. The system database takes about a minute to finish, then sign in from the link.',
         'link_intro' => 'You can access your system using this link:',
         'open_system' => 'Open company system',
         'back_to_login' => 'Back to login',

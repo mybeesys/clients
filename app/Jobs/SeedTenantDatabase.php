@@ -174,35 +174,43 @@ class SeedTenantDatabase implements ShouldQueue
             $filePath = base_path('/data/countries.json');
             $countriesData = json_decode(file_get_contents($filePath), true);
 
+            if (! is_array($countriesData)) {
+                return;
+            }
+
+            $timestamp = now();
+            $rows = [];
+
             foreach ($countriesData as $country) {
-                $nameEn = $country['name']['common'] ?? null;
-                $nameAr = $country['translations']['ara']['common'] ?? null;
-                $isoCode = $country['cca2'] ?? null;
-                $dialCode = isset($country['idd']['root']) && isset($country['idd']['suffixes'])
-                    ? $country['idd']['root'] . $country['idd']['suffixes'][0]
-                    : '+000';
                 $currencyData = $country['currencies'] ?? [];
                 $currencyNameEn = $currencySymbolEn = $currencyNameAr = $currencySymbolAr = null;
 
-                if (!empty($currencyData)) {
+                if (! empty($currencyData)) {
                     $firstCurrency = array_values($currencyData)[0];
                     $currencyNameEn = $firstCurrency['name'] ?? null;
                     $currencySymbolEn = $firstCurrency['symbol'] ?? null;
                     $currencyNameAr = $firstCurrency['translations']['ara']['name'] ?? null;
                     $currencySymbolAr = $firstCurrency['translations']['ara']['symbol'] ?? null;
                 }
-                DB::table('countries')->insert([
-                    [
-                        'iso_code' => $isoCode,
-                        'name_en' => $nameEn,
-                        'name_ar' => $nameAr,
-                        'dial_code' => $dialCode,
-                        'currency_name_en' => $currencyNameEn,
-                        'currency_symbol_en' => $currencySymbolEn,
-                        'currency_name_ar' => $currencyNameAr,
-                        'currency_symbol_ar' => $currencySymbolAr,
-                    ]
-                ]);
+
+                $rows[] = [
+                    'iso_code' => $country['cca2'] ?? null,
+                    'name_en' => $country['name']['common'] ?? null,
+                    'name_ar' => $country['translations']['ara']['common'] ?? null,
+                    'dial_code' => isset($country['idd']['root'], $country['idd']['suffixes'])
+                        ? $country['idd']['root'].$country['idd']['suffixes'][0]
+                        : '+000',
+                    'currency_name_en' => $currencyNameEn,
+                    'currency_symbol_en' => $currencySymbolEn,
+                    'currency_name_ar' => $currencyNameAr,
+                    'currency_symbol_ar' => $currencySymbolAr,
+                    'created_at' => $timestamp,
+                    'updated_at' => $timestamp,
+                ];
+            }
+
+            foreach (array_chunk($rows, 100) as $chunk) {
+                DB::table('countries')->insert($chunk);
             }
         } catch (\Exception $e) {
             \Log::error('Countries insertion failed: ' . $e->getMessage());

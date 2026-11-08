@@ -68,7 +68,7 @@ class RegistrationService
                 request: request(),
             );
 
-            $this->sendWelcomeEmail($user, $company, (string) $data['password']);
+            $this->queueWelcomeEmail($user, $company, (string) $data['password']);
 
             return $user;
         } catch (Throwable $e) {
@@ -76,6 +76,38 @@ class RegistrationService
 
             throw $e;
         }
+    }
+
+    /**
+     * The mail is delivered after the tenant database is provisioned, which
+     * itself runs after the registration response is sent.
+     */
+    protected function queueWelcomeEmail(User $user, Company $company, string $password): void
+    {
+        app()->instance('registration.welcome_email', [
+            'user_id' => $user->id,
+            'company_id' => $company->id,
+            'password' => $password,
+        ]);
+    }
+
+    public function deliverQueuedWelcomeEmail(): void
+    {
+        if (! app()->bound('registration.welcome_email')) {
+            return;
+        }
+
+        $payload = app('registration.welcome_email');
+        app()->forgetInstance('registration.welcome_email');
+
+        $user = User::query()->find($payload['user_id'] ?? null);
+        $company = Company::query()->find($payload['company_id'] ?? null);
+
+        if (! $user || ! $company || ! is_string($payload['password'] ?? null)) {
+            return;
+        }
+
+        $this->sendWelcomeEmail($user, $company, $payload['password']);
     }
 
     protected function sendWelcomeEmail(User $user, Company $company, string $password): void
