@@ -295,7 +295,10 @@ class Registration extends Register
         }
 
         Notification::make()
-            ->title(__('main.wizard.email_verify_sent', ['email' => $email]))
+            ->title(__('main.wizard.email_verify_sent', [
+                'email' => $email,
+                'duration' => $verifier->validityLabel($email),
+            ]))
             ->success()
             ->send();
     }

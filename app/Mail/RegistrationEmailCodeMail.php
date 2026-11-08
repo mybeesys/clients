@@ -15,6 +15,7 @@ class RegistrationEmailCodeMail extends Mailable
     public function __construct(
         public string $code,
         public string $confirmUrl,
+        public string $validFor,
     ) {}
 
     public function envelope(): Envelope

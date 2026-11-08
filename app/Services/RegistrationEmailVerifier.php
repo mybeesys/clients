@@ -15,8 +15,6 @@ use Throwable;
 
 class RegistrationEmailVerifier
 {
-    public const CODE_TTL_MINUTES = 10;
-
     public const VERIFIED_TTL_MINUTES = 30;
 
     public const FIRST_RESEND_SECONDS = 180;
@@ -54,7 +52,8 @@ class RegistrationEmailVerifier
         try {
             Mail::to($email)->send(new RegistrationEmailCodeMail(
                 code: $code,
-                confirmUrl: $this->confirmUrl($sessionId, $email),
+                confirmUrl: $this->confirmUrl($sessionId, $email, (int) $payload['cooldown']),
+                validFor: $this->minutesPhrase((int) ceil(((int) $payload['cooldown']) / 60)),
             ));
         } catch (Throwable $exception) {
             if (is_array($previous)) {
@@ -100,7 +99,9 @@ class RegistrationEmailVerifier
             ]);
         }
 
-        if (time() - (int) ($payload['sent_at'] ?? 0) > self::CODE_TTL_MINUTES * 60) {
+        $ttl = (int) ($payload['cooldown'] ?? self::FIRST_RESEND_SECONDS);
+
+        if (time() - (int) ($payload['sent_at'] ?? 0) > $ttl) {
             throw ValidationException::withMessages([
                 'email_verification_code' => __('main.wizard.email_verify_invalid'),
             ]);
@@ -202,6 +203,51 @@ class RegistrationEmailVerifier
         return max(0, $cooldown - (time() - (int) ($payload['sent_at'] ?? 0)));
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
+    protected function challengePayload(string $email): ?array
+    {
+        $email = $this->normalize($email);
+        $sessionId = $this->sessionId(create: false);
+
+        if ($email === '' || $sessionId === null) {
+            return null;
+        }
+
+        $payload = Cache::get($this->challengeKey($sessionId, $email));
+
+        return is_array($payload) ? $payload : null;
+    }
+
+    public function validityLabel(string $email): string
+    {
+        $seconds = self::FIRST_RESEND_SECONDS;
+        $payload = $this->challengePayload($email);
+
+        if (is_array($payload)) {
+            $seconds = (int) ($payload['cooldown'] ?? $seconds);
+        }
+
+        return $this->minutesPhrase(max(1, (int) ceil($seconds / 60)));
+    }
+
+    public function minutesPhrase(int $minutes): string
+    {
+        $minutes = max(1, $minutes);
+
+        if (app()->getLocale() === 'ar') {
+            return match (true) {
+                $minutes === 1 => 'دقيقة',
+                $minutes === 2 => 'دقيقتين',
+                $minutes <= 10 => $minutes.' دقائق',
+                default => $minutes.' دقيقة',
+            };
+        }
+
+        return $minutes === 1 ? '1 minute' : $minutes.' minutes';
+    }
+
     public function cooldownForSendCount(int $sends): int
     {
         $sends = max(1, $sends);
@@ -254,7 +300,9 @@ class RegistrationEmailVerifier
 
         if ($wait > 0) {
             throw ValidationException::withMessages([
-                'email' => __('main.wizard.email_verify_wait', ['seconds' => $wait]),
+                'email' => __('main.wizard.email_verify_wait', [
+                    'duration' => $this->minutesPhrase(max(1, (int) ceil($wait / 60))),
+                ]),
             ]);
         }
 
@@ -296,7 +344,7 @@ class RegistrationEmailVerifier
         ], true);
     }
 
-    protected function confirmUrl(string $sessionId, string $email): string
+    protected function confirmUrl(string $sessionId, string $email, int $validForSeconds): string
     {
         $root = request()->getSchemeAndHttpHost();
 
@@ -304,7 +352,7 @@ class RegistrationEmailVerifier
             URL::forceRootUrl($root);
         }
 
-        return URL::temporarySignedRoute('register.email.confirm', now()->addMinutes(self::CODE_TTL_MINUTES), [
+        return URL::temporarySignedRoute('register.email.confirm', now()->addSeconds(max(1, $validForSeconds)), [
             'email' => $email,
             'sid' => $sessionId,
         ]);
@@ -317,7 +365,7 @@ class RegistrationEmailVerifier
     {
         $sentAt = (int) ($payload['sent_at'] ?? time());
         $cooldown = (int) ($payload['cooldown'] ?? self::FIRST_RESEND_SECONDS);
-        $expiresAt = max($sentAt + $cooldown, $sentAt + (self::CODE_TTL_MINUTES * 60));
+        $expiresAt = $sentAt + $cooldown;
 
         Cache::put($key, $payload, now()->addSeconds(max(1, $expiresAt - time())));
     }

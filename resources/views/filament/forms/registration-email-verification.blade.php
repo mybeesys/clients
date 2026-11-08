@@ -16,7 +16,7 @@
             @if ($verified)
                 <span dir="ltr">{{ $email }}</span>
             @elseif ($pending)
-                {{ __('main.wizard.email_verify_sent', ['email' => $email]) }}
+                {{ __('main.wizard.email_verify_sent', ['email' => $email, 'duration' => $verifier->validityLabel($email)]) }}
             @else
                 {{ __('main.wizard.email_verify_body') }}
             @endif

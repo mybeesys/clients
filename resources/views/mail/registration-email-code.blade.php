@@ -34,7 +34,7 @@
                                     @endforeach
                                 </tr>
                             </table>
-                            <p style="margin:14px 0 0;font-size:13px;line-height:1.7;color:#6b7280;">{{ __('main.wizard.email_verify_mail_expire') }}</p>
+                            <p style="margin:14px 0 0;font-size:13px;line-height:1.7;color:#6b7280;">{{ __('main.wizard.email_verify_mail_expire', ['duration' => $validFor]) }}</p>
                         </td>
                     </tr>
                     <tr>
