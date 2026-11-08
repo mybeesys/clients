@@ -270,6 +270,8 @@ class CompanyAction
 
     public function storeCompany($data)
     {
+        set_time_limit(0);
+
         $tenant = null;
         $company = null;
 

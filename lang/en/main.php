@@ -124,7 +124,7 @@ return [
         'company_url_preview_hint' => 'This is the link you will use to open your company system.',
         'tenant_key_taken' => 'The tenant identifier derived from the English name is already in use. Please change the English name.',
         'complete_setup' => 'Complete setup',
-        'saving' => 'Saving...',
+        'saving' => 'Preparing the company database, please wait...',
         'register_failed' => 'The company could not be created. Please try again in a moment.',
         'account_information' => 'Account',
         'account_information_hint' => 'Create the company owner login. We verify the email with a code before the company is created.',
@@ -187,14 +187,17 @@ return [
 
     'company_created' => [
         'title' => 'Company created successfully',
-        'body' => 'Company ":name" was created. The system database takes about a minute to finish, then you can open it.',
+        'body' => 'Company ":name" was created and its database is ready.',
+        'provision_database' => 'Prepare company database',
+        'provision_database_done' => 'The company database has been created.',
+        'provision_database_confirm' => 'This creates the company database now. Wait until it finishes.',
         'open_system' => 'Open company system',
         'close' => 'Close',
     ],
 
     'registration_thank_you' => [
         'title' => 'Registration complete',
-        'message' => 'Your company has been created. The system database takes about a minute to finish, then sign in from the link.',
+        'message' => 'Your company and its database are ready. Sign in from the link.',
         'link_intro' => 'You can access your system using this link:',
         'open_system' => 'Open company system',
         'back_to_login' => 'Back to login',

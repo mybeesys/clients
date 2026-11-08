@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Jobs\MigrateTenantDatabase;
+use App\Jobs\SeedTenantDatabase;
 use App\Support\TenantAppAutoloader;
 use App\Support\TenantMigrationPaths;
 use Illuminate\Support\Facades\Event;
@@ -25,7 +27,15 @@ class TenancyServiceProvider extends ServiceProvider
         return [
             // Tenant events
             Events\CreatingTenant::class => [],
-            Events\TenantCreated::class => [],
+            Events\TenantCreated::class => [
+                JobPipeline::make([
+                    Jobs\CreateDatabase::class,
+                    MigrateTenantDatabase::class,
+                    SeedTenantDatabase::class,
+                ])->send(function (Events\TenantCreated $event) {
+                    return $event->tenant;
+                })->shouldBeQueued(false),
+            ],
             Events\SavingTenant::class => [],
             Events\TenantSaved::class => [],
             Events\UpdatingTenant::class => [],

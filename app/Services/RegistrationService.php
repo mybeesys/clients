@@ -16,7 +16,6 @@ use App\Services\Entitlements\EntitlementProvisioner;
 use App\Services\ReferralService;
 use App\Support\TenantApplicationUrl;
 use App\Support\TenantKeyGenerator;
-use App\Support\TenantProvisioner;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -76,7 +75,12 @@ class RegistrationService
 
             $tenantId = (string) ($company->tenant?->getKey() ?? '');
             $this->queueWelcomeEmail($user, $company, (string) $data['password']);
-            TenantProvisioner::start($tenantId);
+
+            if ($tenantId !== '') {
+                dispatch(function () use ($tenantId) {
+                    app(self::class)->deliverQueuedWelcomeEmail($tenantId);
+                })->afterResponse();
+            }
 
             return $user;
         } catch (Throwable $e) {

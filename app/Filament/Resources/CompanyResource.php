@@ -3,9 +3,11 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\CompanyResource\Pages;
+use App\Jobs\ProvisionTenantDatabase;
 use App\Models\Company;
 use App\Services\CompanyAction;
 use App\Support\TenantApplicationUrl;
+use Illuminate\Support\Facades\Cache;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -114,6 +116,61 @@ class CompanyResource extends Resource
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
+                Tables\Actions\Action::make('provisionTenant')
+                    ->label(__('main.company_created.provision_database'))
+                    ->icon('heroicon-o-circle-stack')
+                    ->requiresConfirmation()
+                    ->modalDescription(__('main.company_created.provision_database_confirm'))
+                    ->visible(function (Company $record): bool {
+                        $tenant = $record->tenant;
+
+                        if ($tenant === null) {
+                            return false;
+                        }
+
+                        try {
+                            $name = $tenant->database()->getName();
+
+                            return ! $tenant->database()->manager()->databaseExists($name);
+                        } catch (\Throwable) {
+                            return true;
+                        }
+                    })
+                    ->action(function (Company $record): void {
+                        $tenantId = (string) ($record->tenant?->getKey() ?? '');
+
+                        if ($tenantId === '') {
+                            return;
+                        }
+
+                        set_time_limit(0);
+                        Cache::forget('tenant-provisioning:'.$tenantId);
+                        (new ProvisionTenantDatabase($tenantId))->handle();
+
+                        $tenant = $record->tenant?->fresh();
+                        $ready = false;
+
+                        if ($tenant !== null) {
+                            try {
+                                $ready = $tenant->database()->manager()->databaseExists($tenant->database()->getName());
+                            } catch (\Throwable) {
+                                $ready = false;
+                            }
+                        }
+
+                        $notification = Notification::make()
+                            ->title($ready
+                                ? __('main.company_created.provision_database_done')
+                                : __('main.wizard.register_failed'));
+
+                        if ($ready) {
+                            $notification->success();
+                        } else {
+                            $notification->danger();
+                        }
+
+                        $notification->send();
+                    }),
                 Tables\Actions\Action::make('openTenant')
                     ->label(__('main.company_created.open_system'))
                     ->icon('heroicon-o-arrow-top-right-on-square')
