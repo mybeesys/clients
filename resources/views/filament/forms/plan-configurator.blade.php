@@ -6,6 +6,12 @@
     $yearlyGifted = (int) ($catalog['yearly_months_gifted'] ?? max(0, 12 - $yearlyMonths));
     $wirePath = $wirePath ?? 'data.plan_config';
     $initial = is_array($initial ?? null) ? $initial : [];
+    if (($initial['modules'] ?? []) === [] && isset($get) && is_callable($get)) {
+        $savedPlan = $get('plan_config');
+        if (is_array($savedPlan)) {
+            $initial = $savedPlan;
+        }
+    }
 @endphp
 
 <link rel="preconnect" href="https://fonts.googleapis.com">

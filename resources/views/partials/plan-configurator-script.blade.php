@@ -22,7 +22,9 @@
             coupon_message: '',
             coupon_ok: false,
             coupon_loading: false,
+            allowEmpty: false,
             init() {
+                this.hydrateSavedPlan();
                 this.employees = this.clampEmployees(this.employees);
                 this.pos_devices = this.clampPlainQuota('pos_devices', this.pos_devices);
                 this.waiter_seats = this.clampPlainQuota('waiter_seats', this.waiter_seats);
@@ -74,6 +76,7 @@
                 this.syncBranchesForPosDevices();
             },
             clearRecommendation() {
+                this.allowEmpty = true;
                 this.activeRecommendation = null;
                 this.modules = [];
                 (this.catalog.quotas || []).forEach(q => {
@@ -531,7 +534,45 @@
                 if (clearInput) this.coupon_input = '';
                 this.syncToWire();
             },
+            savedPlan() {
+                try {
+                    const saved = this.$wire.get(this.wirePath);
+                    if (saved && Array.isArray(saved.modules) && saved.modules.length) {
+                        return saved;
+                    }
+                } catch (e) {}
+                return null;
+            },
+            applyPlan(source) {
+                if (!source || !Array.isArray(source.modules)) return;
+                this.period = source.period || this.period;
+                this.modules = [...source.modules];
+                this.employees = source.employees ?? this.employees;
+                this.establishments = source.establishments ?? this.establishments;
+                this.screen_devices = source.screen_devices ?? this.screen_devices;
+                this.pos_devices = source.pos_devices ?? this.pos_devices;
+                this.waiter_seats = source.waiter_seats ?? this.waiter_seats;
+                this.kitchen_devices = source.kitchen_devices ?? this.kitchen_devices;
+                if (source.coupon_code) {
+                    this.coupon_input = source.coupon_code;
+                    this.coupon_code = source.coupon_code;
+                }
+            },
+            hydrateSavedPlan() {
+                if (this.modules.length) return;
+                const saved = this.savedPlan();
+                if (saved) this.applyPlan(saved);
+            },
             syncToWire() {
+                if (!this.modules.length && !this.allowEmpty) {
+                    const saved = this.savedPlan();
+                    if (saved) {
+                        this.applyPlan(saved);
+                        return;
+                    }
+                    return;
+                }
+                this.allowEmpty = false;
                 try {
                     this.$wire.set(this.wirePath, {
                         period: this.period,

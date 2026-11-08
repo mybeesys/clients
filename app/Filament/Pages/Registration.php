@@ -45,10 +45,13 @@ class Registration extends Register
         }
 
         $paid = $this->paidRegistrationPayment();
+        $planConfig = $this->rememberedPlanConfig(
+            ($paid && is_array($paid->plan_config)) ? $paid->plan_config : null,
+        );
 
-        if ($paid && is_array($paid->plan_config)) {
+        if ($planConfig !== null) {
             $this->form->fill([
-                'plan_config' => $paid->plan_config,
+                'plan_config' => $planConfig,
             ]);
         }
 
@@ -59,9 +62,31 @@ class Registration extends Register
         }
     }
 
+    public function hydrate(): void
+    {
+        $current = data_get($this->data, 'plan_config');
+        $planConfig = $this->rememberedPlanConfig(is_array($current) ? $current : null);
+
+        if ($planConfig === null) {
+            return;
+        }
+
+        data_set($this->data, 'plan_config', $planConfig);
+    }
+
+    public function updated(string $name, mixed $value): void
+    {
+        if ($name !== 'data.plan_config' || ! is_array($value)) {
+            return;
+        }
+
+        $this->rememberPlanConfig($value);
+    }
+
     public function startRegistrationPayment(): void
     {
-        $planConfig = data_get($this->data, 'plan_config', []);
+        $planConfig = $this->currentPlanConfig();
+        data_set($this->data, 'plan_config', $planConfig);
 
         try {
             $quote = app(EntitlementPricer::class)->quote(is_array($planConfig) ? $planConfig : []);
@@ -132,10 +157,58 @@ class Registration extends Register
         throw new Halt();
     }
 
+    /**
+     * @param  array<string, mixed>|null  $candidate
+     * @return array<string, mixed>|null
+     */
+    protected function rememberedPlanConfig(?array $candidate = null): ?array
+    {
+        if (is_array($candidate) && is_array($candidate['modules'] ?? null) && $candidate['modules'] !== []) {
+            return $candidate;
+        }
+
+        $stored = session('registration.plan_config');
+
+        if (is_array($stored) && is_array($stored['modules'] ?? null) && $stored['modules'] !== []) {
+            return $stored;
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $candidate
+     * @return array<string, mixed>
+     */
+    protected function currentPlanConfig(?array $candidate = null): array
+    {
+        $candidate ??= data_get($this->data, 'plan_config');
+        $planConfig = $this->rememberedPlanConfig(is_array($candidate) ? $candidate : null);
+
+        if ($planConfig === null) {
+            return is_array($candidate) ? $candidate : [];
+        }
+
+        $this->rememberPlanConfig($planConfig);
+
+        return $planConfig;
+    }
+
+    /**
+     * @param  array<string, mixed>  $planConfig
+     */
+    protected function rememberPlanConfig(array $planConfig): void
+    {
+        if (! is_array($planConfig['modules'] ?? null) || $planConfig['modules'] === []) {
+            return;
+        }
+
+        session(['registration.plan_config' => $planConfig]);
+    }
+
     public function hasSatisfiedPlanPayment(): bool
     {
-        $planConfig = data_get($this->data, 'plan_config')
-            ?? session('registration.plan_config');
+        $planConfig = $this->currentPlanConfig();
 
         if (! is_array($planConfig) || empty($planConfig['modules'])) {
             $planConfig = session('registration.plan_config');
@@ -237,6 +310,11 @@ class Registration extends Register
             return null;
         }
 
+        $rememberedPlan = $this->currentPlanConfig();
+        if (is_array($rememberedPlan['modules'] ?? null) && $rememberedPlan['modules'] !== []) {
+            data_set($this->data, 'plan_config', $rememberedPlan);
+        }
+
         try {
             $data = $this->form->getState();
         } catch (ValidationException $exception) {
@@ -246,6 +324,8 @@ class Registration extends Register
         }
 
         $data['password_confirmation'] = $this->data['passwordConfirmation'] ?? ($data['password_confirmation'] ?? null);
+        $data['plan_config'] = $this->currentPlanConfig(is_array($data['plan_config'] ?? null) ? $data['plan_config'] : null);
+        data_set($this->data, 'plan_config', $data['plan_config']);
 
         try {
             app(RegistrationEmailVerifier::class)->assertVerified((string) ($data['email'] ?? ''));
