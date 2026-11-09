@@ -35,6 +35,7 @@ class TenantProvisionSteps
 
         $deadline = microtime(true) + max(5, $budgetSeconds);
         $completed = 0;
+        $tenant = $this->useOrderedPlan($tenant);
 
         try {
             do {
@@ -82,16 +83,6 @@ class TenantProvisionSteps
             return (string) __('main.registration_progress.step_database');
         }
 
-        if (str_starts_with($step, 'migrate:')) {
-            $number = ((int) substr($step, 8)) + 1;
-            $total = count(array_filter($plan, fn (string $item): bool => str_starts_with($item, 'migrate:')));
-
-            return (string) __('main.registration_progress.step_migrate', [
-                'current' => $number,
-                'total' => $total,
-            ]);
-        }
-
         return (string) __("main.registration_progress.step_{$step}");
     }
 
@@ -100,13 +91,7 @@ class TenantProvisionSteps
      */
     public function plan(): array
     {
-        $steps = ['database'];
-
-        foreach (array_keys(TenantMigrationPaths::resolveOrFail()) as $index) {
-            $steps[] = 'migrate:'.$index;
-        }
-
-        $steps[] = 'verify';
+        $steps = ['database', 'migrate', 'verify'];
         $steps[] = 'seed';
         $steps[] = 'domain';
 
@@ -126,10 +111,10 @@ class TenantProvisionSteps
         try {
             if ($step === 'database') {
                 $this->createDatabase($tenant);
-            } elseif (str_starts_with($step, 'migrate:')) {
-                $pathIndex = (int) substr($step, 8);
-                $paths = TenantMigrationPaths::resolveOrFail();
-                $this->migratePath($tenant, $paths[$pathIndex]);
+            } elseif ($step === 'migrate') {
+                if (! $this->migratePending($tenant)) {
+                    return false;
+                }
             } elseif ($step === 'verify') {
                 $this->assertRequiredTables($tenant);
             } elseif ($step === 'seed') {
@@ -147,6 +132,69 @@ class TenantProvisionSteps
         $tenant->save();
 
         return $step === 'domain';
+    }
+
+    /**
+     * Folder-by-folder migration ran a foreign key before the referenced table existed.
+     * Restart those companies from the beginning; already applied files are skipped.
+     */
+    protected function useOrderedPlan(Tenant $tenant): Tenant
+    {
+        if (($tenant->provision_plan ?? null) === 'ordered') {
+            return $tenant;
+        }
+
+        $tenant->provision_plan = 'ordered';
+        $tenant->provision_step = 0;
+        $tenant->provision_status = 'queued';
+        $tenant->provision_error = null;
+        $tenant->save();
+
+        return $tenant->fresh() ?? $tenant;
+    }
+
+    protected function migratePending(Tenant $tenant): bool
+    {
+        $deadline = microtime(true) + 12;
+
+        do {
+            $next = $this->nextPendingFile($tenant);
+
+            if ($next === null) {
+                return true;
+            }
+
+            $this->migratePath($tenant, $next);
+        } while (microtime(true) < $deadline);
+
+        return false;
+    }
+
+    protected function nextPendingFile(Tenant $tenant): ?string
+    {
+        $ran = $tenant->run(function (): array {
+            if (! Schema::hasTable('migrations')) {
+                return [];
+            }
+
+            return \Illuminate\Support\Facades\DB::table('migrations')->pluck('migration')->all();
+        });
+
+        if (function_exists('tenancy') && tenancy()->initialized) {
+            tenancy()->end();
+        }
+
+        $done = array_fill_keys($ran, true);
+
+        foreach (TenantMigrationPaths::files() as $file) {
+            $name = pathinfo($file, PATHINFO_FILENAME);
+
+            if (! isset($done[$name])) {
+                return $file;
+            }
+        }
+
+        return null;
     }
 
     protected function createDatabase(Tenant $tenant): void

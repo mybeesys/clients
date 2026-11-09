@@ -220,7 +220,7 @@ return [
         'failed' => 'The company system could not be prepared. Try again, and do not open a link before it appears here.',
         'retry' => 'Prepare again',
         'step_database' => 'Preparing the company system',
-        'step_migrate' => 'Setting up system sections :current of :total',
+        'step_migrate' => 'Setting up the system sections',
         'step_verify' => 'Reviewing the system',
         'step_seed' => 'Adding the basic information',
         'step_domain' => 'Preparing the sign-in link',

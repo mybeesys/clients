@@ -75,6 +75,31 @@ class TenantMigrationPaths
     }
 
     /**
+     * Every tenant migration file, oldest timestamp first.
+     * A foreign key in a later module must not run before the table it references.
+     *
+     * @return list<string>
+     */
+    public static function files(): array
+    {
+        $files = [];
+
+        foreach (static::resolveOrFail() as $directory) {
+            foreach (scandir($directory) ?: [] as $entry) {
+                if (str_ends_with($entry, '.php')) {
+                    $files[] = $directory.DIRECTORY_SEPARATOR.$entry;
+                }
+            }
+        }
+
+        usort($files, static function (string $left, string $right): int {
+            return [basename($left), $left] <=> [basename($right), $right];
+        });
+
+        return $files;
+    }
+
+    /**
      * Walk the configured relative path with exact segment names.
      * realpath() on Windows accepts the wrong case, which then silently drops the folder on Linux.
      */
