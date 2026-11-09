@@ -19,7 +19,6 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Illuminate\Support\HtmlString;
-use Stancl\Tenancy\Database\Models\Domain;
 
 class CompanyAction
 {
@@ -272,7 +271,6 @@ class CompanyAction
     {
         set_time_limit(0);
 
-        $tenant = null;
         $company = null;
 
         $tenantKey = $data['tenant_key']
@@ -296,16 +294,11 @@ class CompanyAction
             'logo' => $data['logo'] ?? null,
         ]);
 
-        $tenant = Tenant::create([
+        Tenant::create([
             'id' => $tenantKey,
             'company_id' => $company->id,
             'user_id' => $this->user->id,
             'owner_phone_number' => $data['owner_phone_number'] ?? null,
-        ]);
-
-        Domain::create([
-            'domain' => $tenantKey.'.'.str_replace(['http://', 'https://'], '', config('app.url')),
-            'tenant_id' => $tenantKey,
         ]);
 
         app(CompanyMembershipService::class)->attachOwner($this->user, $company);

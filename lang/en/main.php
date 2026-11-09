@@ -188,9 +188,11 @@ return [
     'company_created' => [
         'title' => 'Company created successfully',
         'body' => 'Company ":name" was created and its database is ready.',
+        'body_preparing' => 'Company ":name" was saved. Its database is being prepared, and the link appears in the list when that finishes.',
         'provision_database' => 'Prepare company database',
         'provision_database_done' => 'The company database has been created.',
-        'provision_database_confirm' => 'This creates the company database now. Wait until it finishes.',
+        'provision_database_started' => 'Database preparation started. Refresh in a moment to see the link.',
+        'provision_database_confirm' => 'Preparation continues in the background. Refresh in a moment to see the link.',
         'open_system' => 'Open company system',
         'close' => 'Close',
     ],
@@ -202,7 +204,16 @@ return [
         'open_system' => 'Open company system',
         'back_to_login' => 'Back to login',
         'verify_email_note' => 'Email :email was verified before the company was created.',
-        'no_link_yet' => 'Your system link is still being prepared. Contact support if it does not appear shortly.',
+        'no_link_yet' => 'The system database is still being prepared. Refresh in a moment to see the link.',
+    ],
+
+    'registration_progress' => [
+        'title' => 'Preparing the company',
+        'message' => 'The company is saved. Its database is being prepared, and the link appears on this page only when that finishes.',
+        'hint' => 'Keep this page open. If you leave, the link is emailed after the database is ready.',
+        'failed_title' => 'The database was not finished',
+        'failed' => 'The company database could not be prepared. Try again, and do not open a link before it appears here.',
+        'retry' => 'Prepare again',
     ],
 
 

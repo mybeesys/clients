@@ -69,7 +69,7 @@ class CreateCompany extends CreateRecord
                 .e($tenantUrl)
                 .'</span>'
             )
-            : __('main.company_created.body', ['name' => $company->name]);
+            : __('main.company_created.body_preparing', ['name' => $company->name]);
 
         $notification = Notification::make()
             ->success()

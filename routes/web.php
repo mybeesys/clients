@@ -4,6 +4,7 @@ use App\Http\Controllers\ConfirmRegistrationEmailController;
 use App\Http\Controllers\HyperPayCheckoutController;
 use App\Http\Controllers\Internal\GrantTenantAdminPermissionsController;
 use App\Http\Controllers\InviteLandingController;
+use App\Http\Controllers\RegistrationProgressController;
 use App\Http\Controllers\RegistrationThankYouController;
 use App\Http\Controllers\SubscribeEmbedErrorController;
 use App\Http\Controllers\SubscribeHandoffController;
@@ -29,6 +30,15 @@ Route::get('/login', function () {
 
 Route::get('/register/thank-you', RegistrationThankYouController::class)
     ->name('register.thank-you');
+
+Route::middleware(LocalizationMiddleware::class)->group(function () {
+    Route::get('/register/progress', [RegistrationProgressController::class, 'show'])
+        ->name('register.pending');
+    Route::get('/register/progress/status', [RegistrationProgressController::class, 'status'])
+        ->name('register.pending.status');
+    Route::post('/register/progress/retry', [RegistrationProgressController::class, 'retry'])
+        ->name('register.pending.retry');
+});
 
 Route::get('/register/email/confirm', ConfirmRegistrationEmailController::class)
     ->middleware('signed')

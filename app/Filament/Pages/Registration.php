@@ -10,7 +10,6 @@ use App\Services\HyperPay\HyperPayCheckoutService;
 use App\Services\HyperPay\HyperPayConfig;
 use App\Services\RegistrationEmailVerifier;
 use App\Services\RegistrationService;
-use App\Support\TenantApplicationUrl;
 use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
 use Filament\Actions\Action;
 use Filament\Events\Auth\Registered;
@@ -353,14 +352,15 @@ class Registration extends Register
             return null;
         }
 
-        $user->load(['company', 'tenant.domains']);
+        $user->unsetRelation('company');
+        $company = $user->company()->with('tenant')->first();
 
         event(new Registered($user));
         $this->sendEmailVerificationNotification($user);
 
-        session()->flash('registration_thank_you', [
-            'company_name' => $user->company?->name,
-            'tenant_url' => TenantApplicationUrl::forUser($user),
+        session()->put('registration.pending', [
+            'tenant_id' => (string) ($company?->tenant?->getKey() ?? ''),
+            'company_name' => $company?->name,
             'email' => $user->email,
         ]);
 

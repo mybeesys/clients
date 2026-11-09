@@ -6,7 +6,7 @@
 <div class="space-y-4 text-sm text-gray-600 dark:text-gray-400">
     @if ($companyName)
         <p class="text-base text-gray-950 dark:text-white">
-            {{ __('main.company_created.body', ['name' => $companyName]) }}
+            {{ __($tenantUrl ? 'main.company_created.body' : 'main.company_created.body_preparing', ['name' => $companyName]) }}
         </p>
     @endif
 

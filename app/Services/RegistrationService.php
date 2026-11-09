@@ -77,14 +77,7 @@ class RegistrationService
                 request: request(),
             );
 
-            $tenantId = (string) ($company->tenant?->getKey() ?? '');
             $this->queueWelcomeEmail($user, $company, (string) $data['password']);
-
-            if ($tenantId !== '') {
-                dispatch(function () use ($tenantId) {
-                    app(self::class)->deliverQueuedWelcomeEmail($tenantId);
-                })->afterResponse();
-            }
 
             return $user;
         } catch (Throwable $e) {
@@ -95,14 +88,14 @@ class RegistrationService
     }
 
     /**
-     * The mail is delivered after the tenant database is provisioned, which
-     * itself runs after the registration response is sent.
+     * The message is sent by the provisioning process after the tenant
+     * database is seeded and its domain exists.
      */
     protected function queueWelcomeEmail(User $user, Company $company, string $password): void
     {
         $tenantId = (string) ($company->tenant?->getKey() ?? '');
 
-        if ($tenantId === '') {
+        if ($tenantId === '' || ! preg_match('/^[a-z0-9]{1,64}$/', $tenantId)) {
             return;
         }
 
@@ -118,13 +111,15 @@ class RegistrationService
         } catch (BadMethodCallException) {
             // Database and file stores cannot tag cache entries.
         }
+
+        $this->writeWelcomeFile($tenantId, $payload);
     }
 
     public function deliverQueuedWelcomeEmail(?string $tenantId = null): void
     {
         $payload = null;
 
-        if (is_string($tenantId) && $tenantId !== '') {
+        if (is_string($tenantId) && $tenantId !== '' && preg_match('/^[a-z0-9]{1,64}$/', $tenantId)) {
             $payload = self::$pendingWelcome[$tenantId] ?? null;
             unset(self::$pendingWelcome[$tenantId]);
 
@@ -134,6 +129,12 @@ class RegistrationService
                 } catch (BadMethodCallException) {
                     $payload = null;
                 }
+            }
+
+            if (! is_array($payload)) {
+                $payload = $this->pullWelcomeFile($tenantId);
+            } else {
+                $this->deleteWelcomeFile($tenantId);
             }
         }
 
@@ -154,6 +155,50 @@ class RegistrationService
     public static function welcomeCacheKey(string $tenantId): string
     {
         return 'registration.welcome.'.$tenantId;
+    }
+
+    /**
+     * @param  array{user_id: int, company_id: int, password: string}  $payload
+     */
+    protected function writeWelcomeFile(string $tenantId, array $payload): void
+    {
+        $directory = storage_path('framework/registration-welcome');
+
+        if (! is_dir($directory)) {
+            mkdir($directory, 0775, true);
+        }
+
+        file_put_contents(
+            $directory.DIRECTORY_SEPARATOR.$tenantId.'.json',
+            json_encode($payload),
+            LOCK_EX
+        );
+    }
+
+    /**
+     * @return array{user_id: int, company_id: int, password: string}|null
+     */
+    protected function pullWelcomeFile(string $tenantId): ?array
+    {
+        $path = storage_path('framework/registration-welcome/'.$tenantId.'.json');
+
+        if (! is_file($path)) {
+            return null;
+        }
+
+        $payload = json_decode((string) file_get_contents($path), true);
+        $this->deleteWelcomeFile($tenantId);
+
+        return is_array($payload) ? $payload : null;
+    }
+
+    protected function deleteWelcomeFile(string $tenantId): void
+    {
+        $path = storage_path('framework/registration-welcome/'.$tenantId.'.json');
+
+        if (is_file($path)) {
+            unlink($path);
+        }
     }
 
     protected function sendWelcomeEmail(User $user, Company $company, string $password): void

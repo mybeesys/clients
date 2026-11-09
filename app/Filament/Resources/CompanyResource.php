@@ -3,11 +3,10 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\CompanyResource\Pages;
-use App\Jobs\ProvisionTenantDatabase;
 use App\Models\Company;
 use App\Services\CompanyAction;
 use App\Support\TenantApplicationUrl;
-use Illuminate\Support\Facades\Cache;
+use App\Support\TenantProvisioner;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -128,6 +127,10 @@ class CompanyResource extends Resource
                             return false;
                         }
 
+                        if ($tenant->domains->isEmpty()) {
+                            return true;
+                        }
+
                         try {
                             $name = $tenant->database()->getName();
 
@@ -143,27 +146,14 @@ class CompanyResource extends Resource
                             return;
                         }
 
-                        set_time_limit(0);
-                        Cache::forget('tenant-provisioning:'.$tenantId);
-                        (new ProvisionTenantDatabase($tenantId))->handle();
-
-                        $tenant = $record->tenant?->fresh();
-                        $ready = false;
-
-                        if ($tenant !== null) {
-                            try {
-                                $ready = $tenant->database()->manager()->databaseExists($tenant->database()->getName());
-                            } catch (\Throwable) {
-                                $ready = false;
-                            }
-                        }
+                        $started = TenantProvisioner::start($tenantId);
 
                         $notification = Notification::make()
-                            ->title($ready
-                                ? __('main.company_created.provision_database_done')
+                            ->title($started
+                                ? __('main.company_created.provision_database_started')
                                 : __('main.wizard.register_failed'));
 
-                        if ($ready) {
+                        if ($started) {
                             $notification->success();
                         } else {
                             $notification->danger();
