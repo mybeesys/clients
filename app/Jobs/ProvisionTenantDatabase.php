@@ -3,22 +3,14 @@
 namespace App\Jobs;
 
 use App\Models\Tenant;
-use App\Services\RegistrationService;
-use App\Support\TenantDomainName;
+use App\Services\TenantProvisionSteps;
 use App\Support\TenantProvisioner;
-use BadMethodCallException;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
-use RuntimeException;
-use Stancl\Tenancy\Database\Models\Domain;
-use Stancl\Tenancy\Jobs\CreateDatabase;
-use Throwable;
 
 /**
- * Creates, migrates, and seeds a tenant database, then publishes its domain.
- * The public registration page starts this in a separate process so a web
- * server timeout cannot stop it halfway through.
+ * Finishes every provisioning step in this process.
+ * The registration page uses the same steps, a few seconds at a time,
+ * so a web timeout cannot stop a new company halfway through.
  */
 class ProvisionTenantDatabase
 {
@@ -33,97 +25,26 @@ class ProvisionTenantDatabase
         }
 
         ignore_user_abort(true);
-
-        $lockKey = 'tenant-provisioning:'.$this->tenantId;
-        $locked = false;
-
-        try {
-            $locked = Cache::add($lockKey, now()->toIso8601String(), now()->addMinutes(20));
-        } catch (BadMethodCallException) {
-            $locked = true;
-        }
-
-        if ($locked !== true) {
-            Log::info('Tenant provisioning already running.', ['tenant' => $this->tenantId]);
-
-            return;
-        }
-
-        $this->writePid();
         set_time_limit(0);
-        $ready = false;
+        $this->writePid();
 
         try {
             $tenant = Tenant::query()->find($this->tenantId);
 
-            if (! $tenant) {
+            if (! $tenant || (string) $tenant->provision_status === 'ready') {
                 return;
             }
 
-            $this->mark($tenant, 'running');
-            Log::info('Tenant provisioning started.', ['tenant' => $this->tenantId]);
-
-            $created = app()->call([new CreateDatabase($tenant), 'handle']);
-
-            if ($created === false) {
-                throw new RuntimeException('Tenant database creation was skipped.');
+            if ((string) $tenant->provision_status === 'failed') {
+                $tenant->provision_status = 'queued';
+                $tenant->provision_error = null;
+                $tenant->save();
             }
 
-            app()->call([new MigrateTenantDatabase($tenant), 'handle']);
-            app()->call([new SeedTenantDatabase($tenant), 'handle']);
-            $this->ensureDomain($tenant->fresh() ?? $tenant);
-            $this->mark($tenant->fresh() ?? $tenant, 'ready');
-            $ready = true;
-            Log::info('Tenant provisioning finished.', ['tenant' => $this->tenantId]);
-        } catch (Throwable $exception) {
-            report($exception);
-            $tenant = Tenant::query()->find($this->tenantId);
-
-            if ($tenant) {
-                $this->mark($tenant, 'failed', $exception->getMessage());
-            }
+            app(TenantProvisionSteps::class)->advance($tenant, 600, 100);
         } finally {
-            try {
-                Cache::forget($lockKey);
-            } catch (BadMethodCallException) {
-                //
-            }
-
             $this->clearOwnPid();
         }
-
-        if (! $ready) {
-            return;
-        }
-
-        try {
-            app(RegistrationService::class)->deliverQueuedWelcomeEmail($this->tenantId);
-        } catch (Throwable $exception) {
-            report($exception);
-        }
-    }
-
-    protected function ensureDomain(Tenant $tenant): void
-    {
-        $tenant->load('domains');
-
-        if ($tenant->domains->isNotEmpty()) {
-            return;
-        }
-
-        $tenantKey = (string) $tenant->getTenantKey();
-
-        Domain::create([
-            'domain' => TenantDomainName::forTenantKey($tenantKey),
-            'tenant_id' => $tenantKey,
-        ]);
-    }
-
-    protected function mark(Tenant $tenant, string $status, ?string $error = null): void
-    {
-        $tenant->provision_status = $status;
-        $tenant->provision_error = $error === null ? null : mb_substr($error, 0, 500);
-        $tenant->save();
     }
 
     protected function writePid(): void

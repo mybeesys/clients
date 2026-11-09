@@ -214,6 +214,11 @@ return [
         'failed_title' => 'The database was not finished',
         'failed' => 'The company database could not be prepared. Try again, and do not open a link before it appears here.',
         'retry' => 'Prepare again',
+        'step_database' => 'Creating the database',
+        'step_migrate' => 'Migrating tables :current of :total',
+        'step_verify' => 'Checking the tables',
+        'step_seed' => 'Preparing company data',
+        'step_domain' => 'Publishing the company link',
     ],
 
 

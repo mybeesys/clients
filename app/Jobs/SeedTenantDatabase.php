@@ -171,6 +171,10 @@ class SeedTenantDatabase implements ShouldQueue
     private function insertCountries()
     {
         try {
+            if (Schema::hasTable('countries') && DB::table('countries')->exists()) {
+                return;
+            }
+
             $filePath = base_path('/data/countries.json');
             $countriesData = json_decode(file_get_contents($filePath), true);
 

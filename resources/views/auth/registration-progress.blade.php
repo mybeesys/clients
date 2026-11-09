@@ -112,6 +112,9 @@
             <div class="icon" aria-hidden="true">!</div>
             <h1>{{ __('main.registration_progress.failed_title') }}</h1>
             <p>{{ __('main.registration_progress.failed') }}</p>
+            @if (! empty($error))
+                <p class="url-box">{{ $error }}</p>
+            @endif
             @if (! empty($companyName))
                 <p class="company">{{ $companyName }}</p>
             @endif
@@ -126,21 +129,33 @@
             @if (! empty($companyName))
                 <p class="company">{{ $companyName }}</p>
             @endif
+            <p class="note" id="progress-detail">{{ $detail ?? '' }}</p>
             <p class="note">{{ __('main.registration_progress.hint') }}</p>
             <noscript><meta http-equiv="refresh" content="5"></noscript>
             <script>
-                setInterval(function () {
+                function pollProgress() {
                     fetch(@json(route('register.pending.status')), {
                         headers: { 'Accept': 'application/json' },
                         credentials: 'same-origin'
                     }).then(function (response) {
                         return response.ok ? response.json() : null;
                     }).then(function (body) {
-                        if (body && (body.status === 'ready' || body.status === 'failed')) {
-                            window.location.reload();
+                        if (! body) {
+                            return;
                         }
-                    }).catch(function () {});
-                }, 4000);
+                        var detail = document.getElementById('progress-detail');
+                        if (detail && body.detail) {
+                            detail.textContent = body.detail;
+                        }
+                        if (body.status === 'ready' || body.status === 'failed') {
+                            window.location.reload();
+                            return;
+                        }
+                    }).catch(function () {}).finally(function () {
+                        setTimeout(pollProgress, 1000);
+                    });
+                }
+                pollProgress();
             </script>
         @endif
     </div>
