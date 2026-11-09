@@ -8,6 +8,7 @@ use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Wizard;
 use Filament\Forms\Form;
 use Illuminate\Support\Facades\Blade;
@@ -112,6 +113,11 @@ class CompanyOnboardingWizard
                     ->required(fn (callable $get) => $get('user.link_mode') !== 'existing')
                     ->visible(fn (callable $get) => $get('user.link_mode') !== 'existing')
                     ->maxLength(255)
+                    ->columnSpanFull(),
+                Toggle::make('user.send_welcome_email')
+                    ->label(__('main.wizard.send_welcome_email'))
+                    ->helperText(__('main.wizard.send_welcome_email_help'))
+                    ->default(true)
                     ->columnSpanFull(),
                 Hidden::make('user.is_company')->default(true),
                 Hidden::make('user.email_verified_at')->default(now()),

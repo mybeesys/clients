@@ -19,6 +19,7 @@ use App\Support\TenantKeyGenerator;
 use BadMethodCallException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -88,10 +89,9 @@ class RegistrationService
     }
 
     /**
-     * The message is sent by the provisioning process after the tenant
-     * database is seeded and its domain exists.
+     * The message is sent after the company system is ready and its link exists.
      */
-    protected function queueWelcomeEmail(User $user, Company $company, string $password): void
+    public function queueWelcomeEmail(User $user, Company $company, string $password): void
     {
         $tenantId = (string) ($company->tenant?->getKey() ?? '');
 
@@ -106,6 +106,13 @@ class RegistrationService
         ];
         self::$pendingWelcome[$tenantId] = $payload;
 
+        $tenant = Tenant::query()->find($tenantId);
+
+        if ($tenant) {
+            $tenant->welcome_email = $payload;
+            $tenant->save();
+        }
+
         try {
             Cache::put(self::welcomeCacheKey($tenantId), $payload, now()->addMinutes(30));
         } catch (BadMethodCallException) {
@@ -117,39 +124,31 @@ class RegistrationService
 
     public function deliverQueuedWelcomeEmail(?string $tenantId = null): void
     {
-        $payload = null;
-
-        if (is_string($tenantId) && $tenantId !== '' && preg_match('/^[a-z0-9]{1,64}$/', $tenantId)) {
-            $payload = self::$pendingWelcome[$tenantId] ?? null;
-            unset(self::$pendingWelcome[$tenantId]);
-
-            if (! is_array($payload)) {
-                try {
-                    $payload = Cache::pull(self::welcomeCacheKey($tenantId));
-                } catch (BadMethodCallException) {
-                    $payload = null;
-                }
-            }
-
-            if (! is_array($payload)) {
-                $payload = $this->pullWelcomeFile($tenantId);
-            } else {
-                $this->deleteWelcomeFile($tenantId);
-            }
+        if (! is_string($tenantId) || $tenantId === '' || ! preg_match('/^[a-z0-9]{1,64}$/', $tenantId)) {
+            return;
         }
 
+        $payload = $this->readWelcomePayload($tenantId);
+
         if (! is_array($payload)) {
+            Log::warning('Welcome email was not queued for the company.', ['tenant' => $tenantId]);
+
             return;
         }
 
         $user = User::query()->find($payload['user_id'] ?? null);
         $company = Company::query()->find($payload['company_id'] ?? null);
+        $password = is_string($payload['password'] ?? null) ? $payload['password'] : '';
 
-        if (! $user || ! $company || ! is_string($payload['password'] ?? null)) {
+        if (! $user || ! $company) {
             return;
         }
 
-        $this->sendWelcomeEmail($user, $company, $payload['password']);
+        if (! $this->sendWelcomeEmail($user, $company, $password)) {
+            return;
+        }
+
+        $this->forgetWelcomePayload($tenantId);
     }
 
     public static function welcomeCacheKey(string $tenantId): string
@@ -175,23 +174,6 @@ class RegistrationService
         );
     }
 
-    /**
-     * @return array{user_id: int, company_id: int, password: string}|null
-     */
-    protected function pullWelcomeFile(string $tenantId): ?array
-    {
-        $path = storage_path('framework/registration-welcome/'.$tenantId.'.json');
-
-        if (! is_file($path)) {
-            return null;
-        }
-
-        $payload = json_decode((string) file_get_contents($path), true);
-        $this->deleteWelcomeFile($tenantId);
-
-        return is_array($payload) ? $payload : null;
-    }
-
     protected function deleteWelcomeFile(string $tenantId): void
     {
         $path = storage_path('framework/registration-welcome/'.$tenantId.'.json');
@@ -201,7 +183,65 @@ class RegistrationService
         }
     }
 
-    protected function sendWelcomeEmail(User $user, Company $company, string $password): void
+    /**
+     * @return array{user_id: int, company_id: int, password: string}|null
+     */
+    protected function readWelcomePayload(string $tenantId): ?array
+    {
+        $pending = self::$pendingWelcome[$tenantId] ?? null;
+
+        if (is_array($pending)) {
+            return $pending;
+        }
+
+        $stored = Tenant::query()->find($tenantId)?->welcome_email;
+
+        if (is_array($stored)) {
+            return $stored;
+        }
+
+        try {
+            $cached = Cache::get(self::welcomeCacheKey($tenantId));
+        } catch (BadMethodCallException) {
+            $cached = null;
+        }
+
+        if (is_array($cached)) {
+            return $cached;
+        }
+
+        $path = storage_path('framework/registration-welcome/'.$tenantId.'.json');
+
+        if (! is_file($path)) {
+            return null;
+        }
+
+        $decoded = json_decode((string) file_get_contents($path), true);
+
+        return is_array($decoded) ? $decoded : null;
+    }
+
+    protected function forgetWelcomePayload(string $tenantId): void
+    {
+        unset(self::$pendingWelcome[$tenantId]);
+
+        $tenant = Tenant::query()->find($tenantId);
+
+        if ($tenant) {
+            $tenant->welcome_email = null;
+            $tenant->save();
+        }
+
+        try {
+            Cache::forget(self::welcomeCacheKey($tenantId));
+        } catch (BadMethodCallException) {
+            //
+        }
+
+        $this->deleteWelcomeFile($tenantId);
+    }
+
+    protected function sendWelcomeEmail(User $user, Company $company, string $password): bool
     {
         try {
             $user->unsetRelation('company');
@@ -214,8 +254,17 @@ class RegistrationService
                 username: $user->email,
                 password: $password,
             ));
+
+            return true;
         } catch (Throwable $exception) {
+            Log::error('Welcome email could not be sent.', [
+                'email' => $user->email,
+                'company_id' => $company->id,
+                'message' => $exception->getMessage(),
+            ]);
             report($exception);
+
+            return false;
         }
     }
 

@@ -37,7 +37,11 @@
                                         <div dir="ltr" style="margin-top:6px;font-size:16px;font-weight:800;">{{ $username }}</div>
 
                                         <div style="margin-top:14px;font-size:12px;font-weight:700;color:#b88912;">{{ __('main.wizard.company_ready_password') }}</div>
-                                        <div dir="ltr" style="margin-top:6px;font-size:16px;font-weight:800;">{{ $password }}</div>
+                                        @if (filled($password))
+                                            <div dir="ltr" style="margin-top:6px;font-size:16px;font-weight:800;">{{ $password }}</div>
+                                        @else
+                                            <div style="margin-top:6px;font-size:14px;line-height:1.7;color:#4b5563;">{{ __('main.wizard.company_ready_existing_password') }}</div>
+                                        @endif
                                     </td>
                                 </tr>
                             </table>

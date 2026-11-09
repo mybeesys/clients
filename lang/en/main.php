@@ -166,6 +166,9 @@ return [
         'company_ready_link' => 'Company link',
         'company_ready_username' => 'Username',
         'company_ready_password' => 'Password',
+        'company_ready_existing_password' => 'Use the current password for this account.',
+        'send_welcome_email' => 'Send a welcome email',
+        'send_welcome_email_help' => 'Sent to the company owner after the system is ready. It includes the sign-in link and username. The password is included only when a new user is created.',
         'company_ready_open' => 'Open the company system',
         'company_ready_missing_link' => 'The system link is still being prepared. Contact support if it does not arrive shortly.',
         'company_information_hint_register' => 'Your company basics - the English name is used to build your system URL.',
@@ -199,7 +202,9 @@ return [
 
     'registration_thank_you' => [
         'title' => 'Registration complete',
-        'message' => 'Your company and its database are ready. Sign in from the link.',
+        'message' => 'Your company system is ready. Sign in from the link.',
+        'copy_link' => 'Copy link',
+        'copied' => 'Copied',
         'link_intro' => 'You can access your system using this link:',
         'open_system' => 'Open company system',
         'back_to_login' => 'Back to login',
@@ -208,17 +213,17 @@ return [
     ],
 
     'registration_progress' => [
-        'title' => 'Preparing the company',
-        'message' => 'The company is saved. Its database is being prepared, and the link appears on this page only when that finishes.',
-        'hint' => 'Keep this page open. If you leave, the link is emailed after the database is ready.',
-        'failed_title' => 'The database was not finished',
-        'failed' => 'The company database could not be prepared. Try again, and do not open a link before it appears here.',
+        'title' => 'Preparing the company system',
+        'message' => 'The company is saved. Its system is being prepared, and the sign-in link appears on this page when that finishes.',
+        'hint' => 'Keep this page open. When preparation finishes, a welcome email brings the sign-in link and account details.',
+        'failed_title' => 'Preparation did not finish',
+        'failed' => 'The company system could not be prepared. Try again, and do not open a link before it appears here.',
         'retry' => 'Prepare again',
-        'step_database' => 'Creating the database',
-        'step_migrate' => 'Migrating tables :current of :total',
-        'step_verify' => 'Checking the tables',
-        'step_seed' => 'Preparing company data',
-        'step_domain' => 'Publishing the company link',
+        'step_database' => 'Preparing the company system',
+        'step_migrate' => 'Setting up system sections :current of :total',
+        'step_verify' => 'Reviewing the system',
+        'step_seed' => 'Adding the basic information',
+        'step_domain' => 'Preparing the sign-in link',
     ],
 
 

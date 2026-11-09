@@ -25,6 +25,7 @@ class CompanyOnboardingService
             $company = (new CompanyAction($user))->storeCompany($payload);
 
             $this->createSubscription($company, $data);
+            $this->queueWelcomeIfRequested($user, $company, $data);
 
             return $company;
         } catch (Throwable $e) {
@@ -130,6 +131,20 @@ class CompanyOnboardingService
             'logo' => $company['logo'] ?? null,
             'owner_phone_number' => $data['user']['phone_number'] ?? null,
         ];
+    }
+
+    protected function queueWelcomeIfRequested(User $user, Company $company, array $data): void
+    {
+        $requested = filter_var($data['user']['send_welcome_email'] ?? false, FILTER_VALIDATE_BOOLEAN);
+
+        if (! $requested) {
+            return;
+        }
+
+        $existingUser = filled($data['user']['existing_user_id'] ?? null);
+        $password = $existingUser ? '' : (string) ($data['user']['password'] ?? '');
+
+        app(RegistrationService::class)->queueWelcomeEmail($user, $company, $password);
     }
 
     protected function createSubscription(Company $company, array $data): void
