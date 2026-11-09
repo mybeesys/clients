@@ -48,14 +48,19 @@ class TenantAppAutoloader
                 return;
             }
 
-            $file = $modulesPath
-                .DIRECTORY_SEPARATOR.$matches[1]
-                .DIRECTORY_SEPARATOR.'app'
-                .DIRECTORY_SEPARATOR.str_replace('\\', DIRECTORY_SEPARATOR, $matches[2])
-                .'.php';
+            $relative = str_replace('\\', DIRECTORY_SEPARATOR, $matches[2]).'.php';
+            $moduleRoot = $modulesPath.DIRECTORY_SEPARATOR.$matches[1].DIRECTORY_SEPARATOR;
 
-            if (is_file($file)) {
-                require_once $file;
+            // composer.json maps "Modules\\" to "Modules/", so
+            // Modules\Franchise\Support\FranchisePermissions is
+            // Modules/Franchise/Support/FranchisePermissions.php.
+            // Some modules also keep classes under app/.
+            foreach ([$moduleRoot.$relative, $moduleRoot.'app'.DIRECTORY_SEPARATOR.$relative] as $file) {
+                if (is_file($file)) {
+                    require_once $file;
+
+                    return;
+                }
             }
         });
     }

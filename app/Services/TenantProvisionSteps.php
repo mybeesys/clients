@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Tenant;
+use App\Support\TenantAppAutoloader;
 use App\Support\TenantDomainName;
 use App\Support\TenantMigrationPaths;
 use BadMethodCallException;
@@ -167,6 +168,8 @@ class TenantProvisionSteps
 
     protected function migratePath(Tenant $tenant, string $path): void
     {
+        TenantAppAutoloader::register();
+
         try {
             $exitCode = Artisan::call('tenants:migrate', [
                 '--tenants' => [(string) $tenant->getTenantKey()],

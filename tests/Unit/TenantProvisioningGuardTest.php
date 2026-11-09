@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\TenantAppAutoloader;
 use App\Support\TenantDomainName;
 use App\Support\TenantProvisioner;
 
@@ -9,6 +10,12 @@ it('builds the company link from the central host', function () {
     config(['app.url' => 'https://mybeesystem.net']);
 
     expect(TenantDomainName::forTenantKey('bnhsyb2'))->toBe('bnhsyb2.mybeesystem.net');
+});
+
+it('loads tenant module classes from the module root during provisioning', function () {
+    TenantAppAutoloader::register(base_path('../my-bee-company'));
+
+    expect(class_exists(\Modules\Franchise\Support\FranchisePermissions::class))->toBeTrue();
 });
 
 it('rejects a tenant id that must never reach a shell command', function () {
