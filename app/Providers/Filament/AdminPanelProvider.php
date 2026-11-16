@@ -2,12 +2,11 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\Pages\Auth\Login;
 use App\Filament\Pages\Registration;
 use App\Http\Middleware\EnsureSubscription;
+use App\Http\Middleware\FilamentAuthenticate;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\FontProviders\GoogleFontProvider;
-use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\NavigationGroup;
@@ -33,7 +32,6 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->registration(Registration::class)
-            ->login(Login::class)
             ->brandName('My Bee')
             ->brandLogo(asset('images/brand/mybee-lockup.png'))
             ->darkModeBrandLogo(asset('images/brand/mybee-lockup.png'))
@@ -64,7 +62,7 @@ class AdminPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
             ->authMiddleware([
-                Authenticate::class,
+                FilamentAuthenticate::class,
                 EnsureSubscription::class,
             ])
             ->navigationGroups([
@@ -122,7 +120,6 @@ class AdminPanelProvider extends PanelProvider
                 fn (): string => Blade::render('<div class="mybee-auth-honeycomb" aria-hidden="true"></div><div class="mybee-auth-glow" aria-hidden="true"></div>'),
                 scopes: [
                     Registration::class,
-                    Login::class,
                 ],
             );
     }

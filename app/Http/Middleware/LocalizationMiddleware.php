@@ -15,7 +15,11 @@ class LocalizationMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $locale = session('locale', config('app.locale'));
+        $locale = session('locale', config('app.locale', 'ar'));
+
+        if (! in_array($locale, ['ar', 'en'], true)) {
+            $locale = 'ar';
+        }
 
         session()->put('locale', $locale);
         app()->setLocale($locale);

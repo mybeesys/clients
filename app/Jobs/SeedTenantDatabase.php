@@ -127,9 +127,9 @@ class SeedTenantDatabase implements ShouldQueue
         }
 
         DB::table('est_establishments')->updateOrInsert(
-            ['name_en' => 'main'],
+            ['name_en' => 'main', 'parent_id' => null],
             [
-                'name' => 'رئيسي',
+                'name' => 'الفرع الرئيسي',
                 'is_main' => true,
             ]
         );
@@ -138,10 +138,10 @@ class SeedTenantDatabase implements ShouldQueue
             ->value('id');
         if ($id) {
             DB::table('est_establishments')->updateOrInsert([
-                'parent_id' => $id
-            ], [
-                'name' => 'رئيسي',
+                'parent_id' => $id,
                 'name_en' => 'main',
+            ], [
+                'name' => 'الفرع الرئيسي',
                 'is_main' => false,
             ]);
         }

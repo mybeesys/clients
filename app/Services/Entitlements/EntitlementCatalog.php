@@ -28,6 +28,13 @@ class EntitlementCatalog
         return max(0, 12 - $this->yearlyMonthsCharged());
     }
 
+    public function vatRate(): float
+    {
+        $rate = (float) $this->setting('vat_rate', config('entitlements.vat_rate', 0.15));
+
+        return max(0, min(1, $rate));
+    }
+
     public function platform(): array
     {
         $fromDb = $this->products()
@@ -226,6 +233,7 @@ class EntitlementCatalog
 
         return [
             'currency' => $this->currency(),
+            'vat_rate' => $this->vatRate(),
             'yearly_months_charged' => $this->yearlyMonthsCharged(),
             'yearly_months_gifted' => $this->yearlyMonthsGifted(),
             'platform' => [

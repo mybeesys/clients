@@ -34,6 +34,8 @@
         'invoice_amount' => __('main.wizard.plan_invoice_amount'),
         'invoice_subtotal' => __('main.wizard.plan_invoice_subtotal'),
         'invoice_discount' => __('main.wizard.plan_invoice_discount'),
+        'invoice_vat' => __('main.wizard.plan_invoice_vat'),
+        'price_ex_tax' => __('main.wizard.plan_price_ex_tax'),
         'invoice_period_month' => __('general.monthly'),
         'invoice_period_year' => __('general.annual'),
         'yearly_note' => __('main.wizard.plan_yearly_note', ['months' => $yearlyMonths, 'gifted' => $yearlyGifted]),
@@ -489,6 +491,16 @@
 
         .pc-quota-price small {
             font-size: 0.62rem;
+        }
+
+        .pc-price-ex-tax {
+            display: block;
+            margin-top: 0.2rem;
+            font-size: 0.68rem;
+            font-weight: 600;
+            color: #9ca3af;
+            line-height: 1.35;
+            letter-spacing: 0;
         }
 
         .pc-module-foot {
@@ -1292,6 +1304,7 @@
                                                 <span :class="isYearlyDeal() ? 'pc-price-now' : ''" x-text="displayMonthly(mod.price_month)"></span>
                                                 <small x-text="' / ' + labels.per_month"></small>
                                             </span>
+                                            <span class="pc-price-ex-tax" x-text="labels.price_ex_tax"></span>
                                         </div>
                                     </div>
                                     <p x-text="mod.description"></p>
@@ -1336,6 +1349,7 @@
                                                 ></span>
                                                 <small>/ +1</small>
                                             </span>
+                                            <span class="pc-price-ex-tax" x-text="labels.price_ex_tax"></span>
                                         </div>
                                         <div
                                             class="pc-stepper"
@@ -1406,6 +1420,7 @@
                                     ></span>
                                     <small>/ +1</small>
                                 </span>
+                                <span class="pc-price-ex-tax" x-text="labels.price_ex_tax"></span>
                             </div>
                         </div>
                         <div class="pc-stepper">
@@ -1454,6 +1469,10 @@
                     <div class="pc-total-row is-discount" x-show="coupon_discount > 0">
                         <span x-text="labels.invoice_discount"></span>
                         <strong x-text="'−' + format(coupon_discount)"></strong>
+                    </div>
+                    <div class="pc-total-row" x-show="vatAmount > 0">
+                        <span x-text="labels.invoice_vat"></span>
+                        <strong x-text="format(vatAmount)"></strong>
                     </div>
                 </div>
 

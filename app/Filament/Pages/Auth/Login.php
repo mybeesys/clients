@@ -2,13 +2,14 @@
 
 namespace App\Filament\Pages\Auth;
 
-use App\Models\User;
+use App\Http\Controllers\CompanyPortalController;
+use App\Services\CompanyPortalAuth;
+use App\Support\CompanyPortalHandoff;
 use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
 use Filament\Facades\Filament;
 use Filament\Http\Responses\Auth\Contracts\LoginResponse;
 use Filament\Models\Contracts\FilamentUser;
 use Illuminate\Contracts\Support\Htmlable;
-use Illuminate\Support\Facades\Hash;
 
 class Login extends \Filament\Pages\Auth\Login
 {
@@ -40,37 +41,93 @@ class Login extends \Filament\Pages\Auth\Login
         }
 
         $data = $this->form->getState();
+        $result = app(CompanyPortalAuth::class)->attempt(
+            (string) ($data['email'] ?? ''),
+            (string) ($data['password'] ?? ''),
+        );
 
-        $user = User::findByLoginIdentifier($data['email']);
-
-        if (! $user || ! Hash::check($data['password'], $user->password)) {
+        if ($result === null) {
             $this->throwFailureValidationException();
         }
 
-        Filament::auth()->login($user, $data['remember'] ?? false);
-        if (($user instanceof FilamentUser) && (! $user->canAccessPanel(Filament::getCurrentPanel()))) {
-            Filament::auth()->logout();
-            $this->throwFailureValidationException();
+        $remember = (bool) ($data['remember'] ?? false);
+        $user = $result['user'];
+        $companies = $result['companies'];
+
+        if ($result['central_staff']) {
+            Filament::auth()->login($user, $remember);
+
+            if (($user instanceof FilamentUser) && (! $user->canAccessPanel(Filament::getCurrentPanel()))) {
+                Filament::auth()->logout();
+                $this->throwFailureValidationException();
+            }
+
+            session()->regenerate();
+
+            return app(LoginResponse::class);
         }
 
-        session()->regenerate();
-
-        $company = $user->defaultCompany();
-        $domain = $user->defaultTenant()?->domains?->first()?->domain;
-
-        if ($user->is_company() && $company && $domain) {
-            if ($company->subscribed) {
-                $protocol = request()->secure() ? 'https://' : 'http://';
-                $this->redirect($protocol.$domain);
+        if ($companies->isEmpty()) {
+            if ($user) {
+                Filament::auth()->login($user, $remember);
+                session()->regenerate();
+                $this->redirect(route('subscribe'));
 
                 return null;
             }
 
+            $this->throwFailureValidationException();
+        }
+
+        $payload = [
+            'email' => $result['email'],
+            'user_id' => $user?->id,
+            'companies' => $companies->map(fn ($company) => [
+                'company_id' => $company->company_id,
+                'company_name' => $company->company_name,
+                'tenant_id' => $company->tenant_id,
+                'domain' => $company->domain,
+                'has_subscription' => (bool) $company->has_subscription,
+            ])->all(),
+        ];
+
+        if ($companies->count() > 1) {
+            if ($user) {
+                Filament::auth()->login($user, $remember);
+                session()->regenerate();
+            } else {
+                session()->regenerate();
+            }
+
+            session()->put(CompanyPortalController::SESSION_KEY, $payload);
+            $this->redirect(route('company-portal.choose'));
+
+            return null;
+        }
+
+        $company = $companies->first();
+
+        if ($user && ! $company->has_subscription) {
+            Filament::auth()->login($user, $remember);
+            session()->regenerate();
             $this->redirect(route('subscribe'));
 
             return null;
         }
 
-        return app(LoginResponse::class);
+        if ($user) {
+            Filament::auth()->login($user, $remember);
+        }
+
+        session()->regenerate();
+        session()->forget(CompanyPortalController::SESSION_KEY);
+
+        $this->redirect(CompanyPortalHandoff::url(
+            $result['email'],
+            $company->tenant_id,
+            $company->domain,
+        ));
+
+        return null;
     }
 }

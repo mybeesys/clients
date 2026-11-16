@@ -284,9 +284,12 @@ class Registration extends Register
      *
      * @return array{ok: bool, message?: string, code?: string, type?: string, value?: float, discount?: float, label?: string}
      */
-    public function previewPlanCoupon(?string $code = null, float $amount = 0): array
+    /**
+     * @param  array{period?: string, monthly_subtotal?: float, yearly_months_charged?: int}|null  $context
+     */
+    public function previewPlanCoupon(?string $code = null, float $amount = 0, ?array $context = null): array
     {
-        return app(CouponApplicator::class)->preview($code, max(0, $amount));
+        return app(CouponApplicator::class)->preview($code, max(0, $amount), is_array($context) ? $context : []);
     }
 
     public function register(): ?RegistrationResponse
@@ -464,6 +467,6 @@ class Registration extends Register
         return Action::make('login')
             ->link()
             ->label(__('filament-panels::pages/auth/register.actions.login.label'))
-            ->url('/');
+            ->url(route('login'));
     }
 }

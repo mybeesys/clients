@@ -53,6 +53,12 @@ class CompanyResource extends Resource
                 TextColumn::make('name')
                     ->label(__('fields.name'))
                     ->searchable(),
+                TextColumn::make('login_code')
+                    ->label(__('fields.login_code'))
+                    ->searchable()
+                    ->copyable()
+                    ->placeholder('—')
+                    ->toggleable(),
                 TextColumn::make('tenant_link')
                     ->label(__('fields.tenant_system_link'))
                     ->state(fn (Company $record): ?string => TenantApplicationUrl::forCompany($record))

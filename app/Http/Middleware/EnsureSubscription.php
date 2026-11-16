@@ -6,6 +6,10 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * Company systems are entered from /login with a company code, or from the
+ * company domain. The central admin panel must not bounce staff into a tenant.
+ */
 class EnsureSubscription
 {
     /**
@@ -15,19 +19,6 @@ class EnsureSubscription
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $user = auth()->user();
-        $company = $user->defaultCompany();
-        $domain = $user->defaultTenant()?->domains?->first()?->domain;
-
-        if ($user->is_company() && $company && $domain) {
-            if ($company->subscription) {
-                $protocol = request()->secure() ? 'https://' : 'http://';
-
-                return redirect($protocol . $domain);
-            }
-
-            return redirect(route('subscribe'));
-        }
         return $next($request);
     }
 }

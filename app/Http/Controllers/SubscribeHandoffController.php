@@ -117,7 +117,7 @@ class SubscribeHandoffController extends Controller
             : __('main.subscribe.handoff_invalid');
 
         return redirect()
-            ->route('filament.admin.auth.login')
+            ->route('login')
             ->withErrors(['email' => $message]);
     }
 }

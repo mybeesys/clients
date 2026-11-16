@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Services\CompanyMembershipService;
+use App\Support\CompanyLoginCode;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -28,7 +29,8 @@ class Company extends Model
         'website',
         'state',
         'city',
-        'phone'
+        'phone',
+        'login_code',
     ];
 
     public function user()

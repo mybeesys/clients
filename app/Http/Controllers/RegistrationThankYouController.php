@@ -12,7 +12,7 @@ class RegistrationThankYouController extends Controller
         $data = session()->pull('registration_thank_you');
 
         if (! is_array($data)) {
-            return redirect()->route('filament.admin.auth.login');
+            return redirect()->route('login');
         }
 
         return view('auth.registration-thank-you', $data);

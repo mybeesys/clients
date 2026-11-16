@@ -110,7 +110,7 @@
         @endif
 
         <div class="actions">
-            <a href="{{ route('filament.admin.auth.login') }}" class="btn btn-secondary">
+            <a href="{{ route('login') }}" class="btn btn-secondary">
                 {{ __('main.registration_thank_you.back_to_login') }}
             </a>
         </div>

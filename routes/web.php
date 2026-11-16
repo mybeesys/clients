@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\CentralLoginController;
+use App\Http\Controllers\CompanyPortalController;
 use App\Http\Controllers\ConfirmRegistrationEmailController;
 use App\Http\Controllers\HyperPayCheckoutController;
 use App\Http\Controllers\Internal\GrantTenantAdminPermissionsController;
@@ -15,7 +17,7 @@ use App\Livewire\ManageSubscription;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return to_route('filament.admin.auth.login');
+    return to_route('login');
 });
 
 Route::get(
@@ -23,10 +25,22 @@ Route::get(
     GrantTenantAdminPermissionsController::class,
 )->name('internal.tenants.grant-admin-permissions');
 
+Route::redirect('/admin/login', '/login');
 
-Route::get('/login', function () {
-    return to_route('filament.admin.auth.login');
-})->name('login');
+Route::middleware(LocalizationMiddleware::class)->group(function () {
+    Route::get('/login', [CentralLoginController::class, 'show'])
+        ->middleware('guest')
+        ->name('login');
+    Route::post('/login', [CentralLoginController::class, 'store'])
+        ->middleware('guest')
+        ->name('login.store');
+
+    Route::get('/enter-company', [CompanyPortalController::class, 'choose'])
+        ->name('company-portal.choose');
+    Route::get('/enter-company/{tenantId}', [CompanyPortalController::class, 'enter'])
+        ->where('tenantId', '[A-Za-z0-9_-]+')
+        ->name('company-portal.enter');
+});
 
 Route::get('/register/thank-you', RegistrationThankYouController::class)
     ->name('register.thank-you');
@@ -77,7 +91,17 @@ Route::post('/plan/subscribe', [SubscriptionController::class, 'store'])->middle
 Route::post('/switch-plan', [SubscriptionController::class, 'switchPlan'])->middleware('auth');
 
 Route::get('/set-locale/{locale}', function ($locale) {
+    if (! in_array($locale, ['ar', 'en'], true)) {
+        return redirect()->back();
+    }
+
     session()->put('locale', $locale);
     app()->setLocale($locale);
+
+    $redirect = request()->query('redirect');
+    if (is_string($redirect) && $redirect !== '' && str_starts_with($redirect, url('/'))) {
+        return redirect()->to($redirect);
+    }
+
     return redirect()->back();
 })->name('set_locale');

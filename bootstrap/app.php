@@ -16,6 +16,9 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\ConfigureSubscribeEmbedSession::class,
         ]);
 
+        $middleware->redirectGuestsTo('/login');
+        $middleware->redirectUsersTo('/admin');
+
         $middleware->validateCsrfTokens(except: [
             'pay/hyperpay/*/result',
         ]);

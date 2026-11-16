@@ -109,20 +109,20 @@
                 }
             },
             /**
-             * Each cashier device needs a branch seat — keep establishments ≥ pos_devices
-             * so both extras are billed as separate line amounts.
+             * Cashier count IS the branch count — keep establishments locked to pos_devices.
              */
             syncBranchesForPosDevices() {
-                if (!this.modules.includes('cashier_pos')) return;
+                if (!this.modules.includes('cashier_pos')) {
+                    const quota = (this.catalog.quotas || []).find(q => q.key === 'establishments') || {};
+                    this.establishments = Number(quota.included ?? 1);
+
+                    return;
+                }
                 const pos = Number(this.pos_devices || 0);
-                if (pos <= 0) return;
                 const quota = (this.catalog.quotas || []).find(q => q.key === 'establishments') || {};
                 const max = Number(quota.max ?? 9999);
                 const min = Number(quota.min ?? 1);
-                const needed = Math.min(max, Math.max(min, pos));
-                if (Number(this.establishments || 0) < needed) {
-                    this.establishments = needed;
-                }
+                this.establishments = Math.min(max, Math.max(min, pos > 0 ? pos : min));
             },
             isCore(modOrKey) {
                 return false;
@@ -137,6 +137,8 @@
                 ['pos_devices', 'waiter_seats', 'kitchen_devices', 'employees', 'screen_devices'].forEach(k => inlineKeys.add(k));
 
                 return (this.catalog.quotas || []).filter(quota => {
+                    // Branches are controlled by the cashier counter — hide the bottom branch stepper.
+                    if (quota.key === 'establishments') return false;
                     if (inlineKeys.has(quota.key)) return false;
                     if (!quota.linked_module) return true;
                     return this.modules.includes(quota.linked_module);
@@ -471,15 +473,28 @@
                 }
                 return this.monthlyTotal;
             },
-            get periodTotal() {
+            vatRate() {
+                return Number(this.catalog.vat_rate ?? 0.15);
+            },
+            get periodNet() {
                 return Math.max(0, this.periodSubtotal - Number(this.coupon_discount || 0));
+            },
+            get vatAmount() {
+                return Math.round((this.periodNet * this.vatRate()) * 100) / 100;
+            },
+            get periodTotal() {
+                return Math.round((this.periodNet + this.vatAmount) * 100) / 100;
             },
             async applyCoupon() {
                 if (this.coupon_loading) return;
                 this.coupon_loading = true;
                 this.coupon_message = '';
                 try {
-                    const result = await this.$wire.previewPlanCoupon(this.coupon_input, this.periodSubtotal);
+                    const result = await this.$wire.previewPlanCoupon(this.coupon_input, this.periodSubtotal, {
+                        period: this.period,
+                        monthly_subtotal: this.monthlyTotal,
+                        yearly_months_charged: this.yearlyMonthsCharged(),
+                    });
                     if (result?.ok) {
                         this.coupon_code = result.code || '';
                         this.coupon_input = this.coupon_code;
@@ -512,7 +527,11 @@
                     return;
                 }
                 try {
-                    const result = await this.$wire.previewPlanCoupon(this.coupon_code, this.periodSubtotal);
+                    const result = await this.$wire.previewPlanCoupon(this.coupon_code, this.periodSubtotal, {
+                        period: this.period,
+                        monthly_subtotal: this.monthlyTotal,
+                        yearly_months_charged: this.yearlyMonthsCharged(),
+                    });
                     if (result?.ok) {
                         this.coupon_discount = Number(result.discount || 0);
                         this.coupon_label = result.label || this.coupon_code;

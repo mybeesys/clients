@@ -13,11 +13,24 @@ class Coupon extends Model
 
     protected $casts = [
         'active' => 'boolean',
+        'start' => 'date',
+        'end' => 'date',
+        'value' => 'float',
+        'max_discount' => 'float',
+        'apply_months' => 'integer',
+        'uses_limit' => 'integer',
+        'uses_count' => 'integer',
     ];
 
     public function plans()
     {
         return $this->belongsToMany(Plan::class, 'coupons_plans');
     }
-}
 
+    public function isCustomized(): bool
+    {
+        return ($this->apply_mode && $this->apply_mode !== 'full')
+            || ($this->max_discount !== null && (float) $this->max_discount > 0)
+            || filled($this->applicable_period);
+    }
+}

@@ -79,11 +79,11 @@ class EntitlementPricer
         }
 
         $posDevices = 0;
-        if (in_array('cashier_pos', $modules, true)) {
+        $cashierSelected = in_array('cashier_pos', $modules, true);
+        if ($cashierSelected) {
             $posDevices = $this->clampQuota('pos_devices', (int) ($input['pos_devices'] ?? 0));
-            // One branch seat per cashier device — bill both extras separately.
-            $establishments = max($establishments, $posDevices);
-            $establishments = $this->clampQuota('establishments', $establishments);
+            // Cashier count IS the branch count — one seat per device, billed once via pos_devices.
+            $establishments = $this->clampQuota('establishments', $posDevices);
         }
 
         $waiterSeats = 0;
@@ -124,12 +124,15 @@ class EntitlementPricer
             fn (int $extra) => __('main.wizard.plan_extra_employees', ['count' => $extra]),
             $includedEmployees,
         );
-        $monthly += $this->appendExtraQuota(
-            $lineItems,
-            'establishments',
-            $establishments,
-            fn (int $extra) => __('main.wizard.plan_extra_branches', ['count' => $extra])
-        );
+        // Branches are driven by cashier devices when POS is selected — do not bill twice.
+        if (! $cashierSelected) {
+            $monthly += $this->appendExtraQuota(
+                $lineItems,
+                'establishments',
+                $establishments,
+                fn (int $extra) => __('main.wizard.plan_extra_branches', ['count' => $extra])
+            );
+        }
 
         if ($screenDevices > 0) {
             $monthly += $this->appendExtraQuota(
@@ -177,8 +180,13 @@ class EntitlementPricer
         $discount = 0.0;
 
         if (filled($couponCode)) {
-            $coupon = $this->coupons->requireValid($couponCode);
-            $discount = $this->coupons->discountAmount($coupon, $periodSubtotal);
+            $couponContext = [
+                'period' => $period,
+                'monthly_subtotal' => round($monthly, 2),
+                'yearly_months_charged' => $yearlyMonths,
+            ];
+            $coupon = $this->coupons->requireValid($couponCode, $couponContext);
+            $discount = $this->coupons->discountAmount($coupon, $periodSubtotal, $couponContext);
             $couponId = $coupon->id;
             $couponCode = $coupon->code;
 
@@ -194,7 +202,10 @@ class EntitlementPricer
             $couponCode = null;
         }
 
-        $periodTotal = round(max(0, $periodSubtotal - $discount), 2);
+        $net = round(max(0, $periodSubtotal - $discount), 2);
+        $vatRate = $this->catalog->vatRate();
+        $vatAmount = round($net * $vatRate, 2);
+        $periodTotal = round($net + $vatAmount, 2);
 
         return [
             'period' => $period,
@@ -210,6 +221,9 @@ class EntitlementPricer
             'monthly_subtotal' => round($monthly, 2),
             'period_subtotal' => $periodSubtotal,
             'discount' => $discount,
+            'vat_rate' => $vatRate,
+            'vat_amount' => $vatAmount,
+            'period_total_ex_vat' => $net,
             'period_total' => $periodTotal,
             'yearly_months_charged' => $yearlyMonths,
             'coupon_code' => $couponCode,
@@ -280,8 +294,14 @@ class EntitlementPricer
         $deltas = [];
         $lineItems = [];
         $monthly = 0.0;
+        $cashierSelected = in_array('cashier_pos', $modules, true);
 
         foreach (self::ADDON_QUOTA_KEYS as $key) {
+            // Branches follow cashier devices — never bill a separate branch top-up with POS.
+            if ($key === 'establishments' && $cashierSelected) {
+                continue;
+            }
+
             $currentValue = $current[$key];
             $requested = array_key_exists($key, $targetQuotas)
                 ? (int) $targetQuotas[$key]
@@ -338,6 +358,15 @@ class EntitlementPricer
             ];
         }
 
+        if ($cashierSelected) {
+            $posTarget = $resolved['pos_devices'] ?? $current['pos_devices'];
+            $resolved['establishments'] = max($current['establishments'], $posTarget);
+            $deltas['establishments'] = max(0, $resolved['establishments'] - $current['establishments']);
+        } elseif (! array_key_exists('establishments', $resolved)) {
+            $resolved['establishments'] = $current['establishments'];
+            $deltas['establishments'] = 0;
+        }
+
         if ($lineItems === []) {
             throw ValidationException::withMessages([
                 'addon' => __('main.subscribe.addon_no_changes'),
@@ -345,6 +374,9 @@ class EntitlementPricer
         }
 
         $periodSubtotal = round($monthly * $remainingMonths, 2);
+        $vatRate = $this->catalog->vatRate();
+        $vatAmount = round($periodSubtotal * $vatRate, 2);
+        $periodTotal = round($periodSubtotal + $vatAmount, 2);
 
         return [
             'intent' => 'addon',
@@ -362,7 +394,10 @@ class EntitlementPricer
             'monthly_subtotal' => round($monthly, 2),
             'period_subtotal' => $periodSubtotal,
             'discount' => 0.0,
-            'period_total' => $periodSubtotal,
+            'vat_rate' => $vatRate,
+            'vat_amount' => $vatAmount,
+            'period_total_ex_vat' => $periodSubtotal,
+            'period_total' => $periodTotal,
             'coupon_code' => null,
             'coupon_id' => null,
             'period' => ($entitlement->period === 'Year') ? 'Year' : 'Month',

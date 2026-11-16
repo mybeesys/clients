@@ -14,6 +14,9 @@ return [
 
     'currency' => 'SAR',
 
+    /** VAT rate applied on the payable total (prices in the catalog are exclusive of tax). */
+    'vat_rate' => 0.15,
+
     /** Annual billing: charge this many months, grant a full 12-month term (10 = two months free). */
     'yearly_months_charged' => 10,
 
@@ -123,8 +126,8 @@ return [
             'requires' => [],
             'inline_quota' => 'pos_devices',
             'includes' => [
-                'en' => ['POS checkout', 'Tables & areas', 'Counter order flow'],
-                'ar' => ['كاشير المبيعات', 'الطاولات والمناطق', 'تدفق طلبات العداد'],
+                'en' => ['POS checkout', 'Tables & areas', 'One branch per cashier device'],
+                'ar' => ['كاشير المبيعات', 'الطاولات والمناطق', 'فرع واحد لكل جهاز كاشير'],
             ],
             'menu_keys' => ['pos_roles', 'tables', 'areas'],
             'api_prefixes' => [

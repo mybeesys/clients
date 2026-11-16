@@ -17,7 +17,7 @@ class RegistrationProgressController extends Controller
         $tenant = $this->tenant();
 
         if ($tenant === null) {
-            return redirect()->route('filament.admin.auth.login');
+            return redirect()->route('login');
         }
 
         if ((string) $tenant->provision_error === 'provision_start_failed') {
@@ -53,7 +53,7 @@ class RegistrationProgressController extends Controller
         $tenant = $this->tenant();
 
         if ($tenant === null) {
-            return redirect()->route('filament.admin.auth.login');
+            return redirect()->route('login');
         }
 
         if ((string) $tenant->provision_status !== 'ready') {
